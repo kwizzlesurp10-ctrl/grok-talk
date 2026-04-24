@@ -21,6 +21,7 @@
             level: 47,
             xp: 8420,
             fusions: 1284,
+            ritualFusionsCount: 0,
             collectionCount: 64,
             totalPower: 94700,
             collection: [],
@@ -73,6 +74,9 @@
                 gameState = { ...gameState, ...parsed };
                 if (parsed.collection) userPandas = parsed.collection;
                 if (parsed.recentFusions) gameState.recentFusions = parsed.recentFusions;
+                if (typeof gameState.ritualFusionsCount !== "number" || gameState.ritualFusionsCount < 0) {
+                    gameState.ritualFusionsCount = 0;
+                }
             } else {
                 // First time - add some recent
                 gameState.recentFusions = [
@@ -274,6 +278,170 @@
         }
 
         // ==================== CODEX (BESTIARY) ====================
+        let activeCodexTab = "bestiary";
+
+        const CODEX_ACHIEVEMENTS = [
+            { id: "first_fusion", title: "First Spark", desc: "Complete your first successful fusion in the lab.", check: (s) => s.fusions >= 1 },
+            { id: "fusion_10", title: "Chain Reactor", desc: "Reach 10 total fusions on record.", check: (s) => s.fusions >= 10 },
+            { id: "fusion_100", title: "Mass Synthesis", desc: "Reach 100 total fusions.", check: (s) => s.fusions >= 100 },
+            { id: "col_5", title: "Keeper of Five", desc: "Hold at least 5 pandas in your collection.", check: (s, c) => c.length >= 5 },
+            { id: "col_15", title: "Sanctuary", desc: "Expand your collection to 15+ unique pandas.", check: (s, c) => c.length >= 15 },
+            { id: "level_20", title: "Ascension", desc: "Attain level 20 or higher.", check: (s) => s.level >= 20 },
+            { id: "level_50", title: "Overclocked", desc: "Attain level 50 or higher.", check: (s) => s.level >= 50 },
+            { id: "ritual_once", title: "Ritualist", desc: "Complete at least one Ritual-mode fusion.", check: (s) => (s.ritualFusionsCount || 0) >= 1 },
+            { id: "mythic_owner", title: "Mythic Bond", desc: "Own a mythic-rarity panda in your collection.", check: (s, c) => c.some((p) => p.rarity === "mythic") },
+            { id: "legendary_trio", title: "Trinity of Legends", desc: "Own 3+ legendary or mythic pandas at once.", check: (s, c) => c.filter((p) => p.rarity === "legendary" || p.rarity === "mythic").length >= 3 },
+        ];
+
+        const FUSION_TREE_RECIPES = [
+            { a: "Classic Panda", b: "Inferno Panda", result: "Steam Panda", mode: "basic", extra: "Fire + Balanced" },
+            { a: "Shadow Panda", b: "Mystic Panda", result: "Void Walker", mode: "basic", extra: "Dark + Arcane" },
+            { a: "Golden Fortune", b: "Thunder Panda", result: "Solar Flare", mode: "ritual", extra: "Light + Electric" },
+            { a: "Inferno Panda", b: "Mystic Panda", result: "Inferno Mystic", mode: "ritual", extra: "Fire + Arcane" },
+            { a: "Frostbite Panda", b: "Golden Fortune", result: "Frost Eternal", mode: "ritual", extra: "Ice + Light" },
+            { a: "Thunder Panda", b: "Crystal Panda", result: "Plasma Sovereign", mode: "basic", extra: "Electric + Crystal" },
+        ];
+
+        const CATALYSTS = [
+            { id: "c1", name: "Neon Stabilizer", icon: "fa-atom", effect: "−5% base fusion XP variance", unlocked: (s) => s.level >= 5 },
+            { id: "c2", name: "Bamboo Resonance Core", icon: "fa-seedling", effect: "Balanced + Hybrid outcomes slightly favor higher PWR", unlocked: (s) => s.fusions >= 25 },
+            { id: "c3", name: "Ritual Ink", icon: "fa-scroll", effect: "Ritual fusions: +2% crit fusion chance (cosmetic: Protocol aura)", unlocked: (s) => (s.ritualFusionsCount || 0) >= 3 || s.fusions >= 80 },
+            { id: "c4", name: "Panda Prismatic Array", icon: "fa-infinity", effect: "Unlocked: displays rare combo hints in the Fusion Tree", unlocked: (s) => s.fusions >= 200 },
+        ];
+
+        const CODEX_ALL_ENTRY_NAMES = [
+            ...basePandas.map((p) => p.name),
+            "Steam Panda",
+            "Eclipse Guardian",
+            "Solar Flare",
+            "Void Walker",
+            "Quantum Overlord",
+            "Plasma Sovereign",
+            "Inferno Mystic",
+            "Frost Eternal",
+            "Chaos Weaver",
+            "Bamboo Titan",
+            "Nebula Phantom",
+            "Celestial Harmony",
+        ];
+
+        function switchCodexTab(tabId) {
+            activeCodexTab = tabId;
+            const tabs = {
+                bestiary: "tab-bestiary",
+                achievements: "tab-achievements",
+                catalysts: "tab-catalysts",
+                "fusion-tree": "tab-fusion-tree",
+            };
+            const activeClass = "px-6 py-3 text-sm font-bold cursor-pointer border-b-2 border-purple-400 text-purple-400";
+            const idleClass = "px-6 py-3 text-sm font-bold cursor-pointer text-gray-400 hover:text-white";
+            Object.keys(tabs).forEach((k) => {
+                const el = document.getElementById(tabs[k]);
+                if (el) el.className = k === tabId ? activeClass : idleClass;
+            });
+            document.querySelectorAll(".codex-subpanel").forEach((p) => p.classList.add("hidden"));
+            const panel = document.getElementById("codex-panel-" + tabId);
+            if (panel) panel.classList.remove("hidden");
+            if (tabId === "bestiary") {
+                filterCodex();
+                updateRecentCodexStrip();
+                updateCodexProgressBar();
+            } else if (tabId === "achievements") {
+                renderAchievements();
+            } else if (tabId === "catalysts") {
+                renderCatalysts();
+            } else if (tabId === "fusion-tree") {
+                renderFusionTree();
+            }
+        }
+
+        function updateCodexProgressBar() {
+            const total = Math.max(1, CODEX_ALL_ENTRY_NAMES.length);
+            const found = new Set(
+                userPandas.map((p) => p.name).filter((n) => CODEX_ALL_ENTRY_NAMES.includes(n)),
+            );
+            const pct = Math.round((found.size / total) * 100);
+            const t = document.getElementById("codex-progress-text");
+            const b = document.getElementById("codex-progress-bar");
+            if (t) t.textContent = pct + "%";
+            if (b) b.style.width = Math.min(100, pct) + "%";
+        }
+
+        function updateRecentCodexStrip() {
+            const el = document.getElementById("recent-codex");
+            if (!el) return;
+            el.innerHTML = "";
+            const names = new Set();
+            const recent = [...userPandas].reverse().filter((p) => {
+                if (names.has(p.name)) return false;
+                names.add(p.name);
+                return true;
+            }).slice(0, 6);
+            if (recent.length === 0) {
+                el.innerHTML = "<div class=\"text-xs text-gray-500 py-2\">No discoveries yet — fuse in the lab!</div>";
+                return;
+            }
+            recent.forEach((p) => {
+                const chip = document.createElement("button");
+                chip.type = "button";
+                chip.className = "flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-2xl border border-gray-700 bg-[#1a1f2e] hover:border-purple-400/50 text-left";
+                chip.innerHTML = "<span class=\"text-2xl\">" + p.emoji + "</span><span class=\"text-xs font-semibold max-w-[7rem] truncate\">" + p.name + "</span>";
+                el.appendChild(chip);
+            });
+        }
+
+        function renderAchievements() {
+            const root = document.getElementById("achievements-grid");
+            if (!root) return;
+            root.innerHTML = "";
+            const unlockedN = CODEX_ACHIEVEMENTS.filter((a) => a.check(gameState, userPandas)).length;
+            CODEX_ACHIEVEMENTS.forEach((a) => {
+                const ok = a.check(gameState, userPandas);
+                const card = document.createElement("div");
+                card.className = "cyber-card rounded-2xl p-4 border " + (ok ? "border-emerald-500/60 bg-emerald-950/20" : "border-gray-700 opacity-80");
+                card.innerHTML = "\n                    <div class=\"flex items-start gap-3\">\n                        <div class=\"text-2xl w-10 text-center\">" + (ok ? "🏆" : "🔒") + "</div>\n                        <div class=\"min-w-0 flex-1\">\n                            <div class=\"font-bold text-sm " + (ok ? "text-emerald-300" : "text-gray-300") + "\">" + a.title + "</div>\n                            <div class=\"text-xs text-gray-400 mt-1\">" + a.desc + "</div>\n                            <div class=\"text-[10px] mt-2 font-mono " + (ok ? "text-emerald-400" : "text-gray-600") + "\">" + (ok ? "UNLOCKED" : "IN PROGRESS") + "</div>\n                        </div>\n                    </div>\n                ";
+                root.appendChild(card);
+            });
+            const h = document.querySelector("#codex-panel-achievements .section-header");
+            if (h && h.parentElement) {
+                const sub = h.parentElement.querySelector("p.text-gray-400");
+                if (sub) sub.textContent = unlockedN + " / " + CODEX_ACHIEVEMENTS.length + " unlocked • Milestones across your fusion journey";
+            }
+        }
+
+        function renderCatalysts() {
+            const root = document.getElementById("catalysts-grid");
+            if (!root) return;
+            root.innerHTML = "";
+            CATALYSTS.forEach((c) => {
+                const on = c.unlocked(gameState);
+                const row = document.createElement("div");
+                row.className = "cyber-card rounded-2xl p-5 border " + (on ? "border-cyan-500/40" : "border-gray-800");
+                row.innerHTML = "\n                    <div class=\"flex gap-4\">\n                        <div class=\"w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/30 to-fuchsia-500/30 flex items-center justify-center flex-shrink-0\">\n                            <i class=\"fas " + c.icon + " text-xl " + (on ? "text-cyan-300" : "text-gray-600") + "\"></i>\n                        </div>\n                        <div class=\"min-w-0 flex-1\">\n                            <div class=\"font-bold\">" + c.name + "</div>\n                            <div class=\"text-sm text-gray-400 mt-1\">" + c.effect + "</div>\n                            <div class=\"text-xs mt-2 " + (on ? "text-emerald-400" : "text-amber-500/80") + "\">" + (on ? "Active — your Protocol recognizes this catalyst." : "Locked — keep fusing to awaken.") + "</div>\n                        </div>\n                    </div>\n                ";
+                root.appendChild(row);
+            });
+        }
+
+        function collectionHasPandaName(name) {
+            return userPandas.some((p) => p.name === name);
+        }
+
+        function renderFusionTree() {
+            const root = document.getElementById("fusion-tree-root");
+            if (!root) return;
+            root.innerHTML = "";
+            FUSION_TREE_RECIPES.forEach((r) => {
+                const haveA = collectionHasPandaName(r.a);
+                const haveB = collectionHasPandaName(r.b);
+                const haveR = collectionHasPandaName(r.result);
+                const row = document.createElement("div");
+                row.className = "cyber-card rounded-2xl p-4 border border-gray-700 " + (haveR ? "ring-1 ring-emerald-500/30" : "");
+                const dim = (ok) => (ok ? "" : "opacity-50 grayscale");
+                row.innerHTML = "\n                    <div class=\"flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-sm\">\n                        <div class=\"text-center " + dim(haveA) + "\">\n                            <div class=\"text-3xl\">🐼</div>\n                            <div class=\"text-xs font-mono text-gray-400 max-w-[8rem] truncate\">" + r.a + "</div>\n                        </div>\n                        <div class=\"text-fuchsia-400 font-mono text-xs\">+</div>\n                        <div class=\"text-center " + dim(haveB) + "\">\n                            <div class=\"text-3xl\">🐼</div>\n                            <div class=\"text-xs font-mono text-gray-400 max-w-[8rem] truncate\">" + r.b + "</div>\n                        </div>\n                        <div class=\"text-cyan-400 font-mono text-sm\">&rarr;</div>\n                        <div class=\"text-center " + dim(haveR) + "\">\n                            <div class=\"text-3xl\">✨</div>\n                            <div class=\"text-xs font-bold " + (haveR ? "text-emerald-400" : "text-gray-500") + " max-w-[9rem]\">" + r.result + "</div>\n                        </div>\n                    </div>\n                    <div class=\"text-center text-[10px] text-gray-500 mt-2 font-mono\">" + r.mode.toUpperCase() + " &bull; " + (r.extra || "") + " &bull; parents: " + (haveA && haveB ? "ready" : "need both in collection to fuse") + "</div>\n                ";
+                root.appendChild(row);
+            });
+        }
+
         function renderCodex(filteredEntries = null) {
             const container = document.getElementById('codex-grid');
             if (!container) return;
@@ -342,6 +510,8 @@
                 card.onclick = () => showCodexDetail(index, entry);
                 container.appendChild(card);
             });
+            updateRecentCodexStrip();
+            updateCodexProgressBar();
         }
 
         function filterCodex() {
@@ -694,6 +864,9 @@
                 
                 // Update stats with mode bonuses
                 gameState.fusions++;
+                if (currentFusionMode === "ritual") {
+                    gameState.ritualFusionsCount = (gameState.ritualFusionsCount || 0) + 1;
+                }
                 let xpGain = Math.floor(Math.random() * 120) + 85;
                 if (currentFusionMode === 'advanced') xpGain = Math.floor(xpGain * 1.4);
                 if (currentFusionMode === 'ritual') xpGain = Math.floor(xpGain * 2.1);
@@ -1307,8 +1480,8 @@
             if (section === 'collection') {
                 renderCollection();
             }
-            if (section === 'codex') {
-                renderCodex();
+            if (section === "codex") {
+                switchCodexTab("bestiary");
             }
         }
 

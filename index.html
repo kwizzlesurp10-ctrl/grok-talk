@@ -375,6 +375,7 @@
                          class="px-6 py-3 text-sm font-bold cursor-pointer text-gray-400 hover:text-white">FUSION TREE</div>
                 </div>
 
+                <div id="codex-panel-bestiary" class="codex-subpanel">
                 <div class="flex items-center justify-between mb-6" id="codex-header">
                     <div>
                         <h1 class="section-header">The Codex of Fusions</h1>
@@ -434,6 +435,31 @@
                 <div class="mt-8 text-center text-xs text-gray-500">
                     <i class="fas fa-info-circle mr-1"></i> 
                     Entries are unlocked as you discover new pandas in your Collection
+                </div>
+                </div>
+
+                <div id="codex-panel-achievements" class="codex-subpanel hidden">
+                    <div class="mb-6">
+                        <h1 class="section-header">Protocol Achievements</h1>
+                        <p class="text-gray-400 text-sm">Track your milestones as Master of the Fusion Protocol. Progress is saved with your game.</p>
+                    </div>
+                    <div id="achievements-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
+
+                <div id="codex-panel-catalysts" class="codex-subpanel hidden">
+                    <div class="mb-6">
+                        <h1 class="section-header">Catalysts</h1>
+                        <p class="text-gray-400 text-sm">Artifacts and reagents that modify fusion odds, costs, and XP. Unlock them through fusions, levels, and codex progress.</p>
+                    </div>
+                    <div id="catalysts-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                </div>
+
+                <div id="codex-panel-fusion-tree" class="codex-subpanel hidden">
+                    <div class="mb-6">
+                        <h1 class="section-header">Fusion Tree</h1>
+                        <p class="text-gray-400 text-sm">Known stable pairings. Match parents in the Fusion Lab (mode affects ritual-only legendaries). Dimmed = not yet in your collection.</p>
+                    </div>
+                    <div id="fusion-tree-root" class="space-y-3"></div>
                 </div>
             </div>
 
