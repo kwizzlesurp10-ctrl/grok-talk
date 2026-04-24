@@ -1576,11 +1576,12 @@
             const target = document.getElementById('section-' + section);
             if (target) target.classList.remove('hidden');
             
-            // Update nav active states
+            // Update desktop and mobile nav active states
+            const activeIds = new Set([`nav-${section}`, `nav-mobile-${section}`]);
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.classList.remove('active');
                 link.removeAttribute("aria-current");
-                if (link.id === 'nav-' + section) {
+                if (activeIds.has(link.id)) {
                     link.classList.add('active');
                     link.setAttribute("aria-current", "page");
                 }
