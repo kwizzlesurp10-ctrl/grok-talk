@@ -24,6 +24,8 @@ assert.match(appSrc, /level:\s*0/, "new users should start at level 0");
 assert.match(appSrc, /fusions:\s*0/, "new users should start with zero fusion history");
 assert.ok(appSrc.includes("battle-fighter--defeated"), "defeated battle foes should vanish from view");
 assert.ok(appSrc.includes("__createBattleMatch"), "battle foes should be generated from player level");
+assert.ok(appSrc.includes("renderBattleChampionSelect"), "arena should let users choose a panda before battle");
+assert.ok(appSrc.includes("startDemoBattle(championIndex"), "battle should start from a selected collection panda");
 assert.ok(read("styles.css").includes(".cyber-card"));
 assert.ok(read("styles.css").includes("battleDefeatedVanish"));
 

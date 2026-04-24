@@ -1363,9 +1363,9 @@
             return div.innerHTML;
         }
 
-        function __createBattleMatch() {
+        function __createBattleMatch(selectedChampion = null) {
             const playerLevel = Math.max(0, Number(gameState.level) || 0);
-            const champion = [...userPandas].sort((a, b) => (b.power || 0) - (a.power || 0))[0] || basePandas[0];
+            const champion = selectedChampion || [...userPandas].sort((a, b) => (b.power || 0) - (a.power || 0))[0] || basePandas[0];
             const championPower = Math.max(1, Number(champion.power) || 1);
             const enemyLevelFloor = Math.max(0, playerLevel - 1);
             const enemyLevelCeil = Math.max(enemyLevelFloor, playerLevel + (playerLevel < 3 ? 0 : 1));
@@ -1394,9 +1394,56 @@
             };
         }
 
-        function startDemoBattle() {
+        function renderBattleChampionSelect() {
             const arenaSection = document.getElementById("section-arena");
-            const battle = __createBattleMatch();
+            const champions = userPandas.length > 0 ? userPandas : [{ ...basePandas[0], id: "starter-preview" }];
+            const sortedChampions = champions
+                .map((p, index) => ({ panda: p, index }))
+                .sort((a, b) => (b.panda.power || 0) - (a.panda.power || 0));
+            arenaSection.innerHTML = `
+                <div class="max-w-5xl mx-auto">
+                    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+                        <div>
+                            <div class="uppercase tracking-[3px] text-xs text-red-400">ARENA LOADOUT</div>
+                            <div class="text-4xl font-black">Choose Your Panda</div>
+                            <p class="text-sm text-gray-400 mt-2 max-w-xl">Pick a champion from your collection. HP, damage, and the opponent matchup scale from this panda and your current level.</p>
+                        </div>
+                        <button type="button" onclick="navigateTo('collection')" class="px-5 py-2 text-xs border border-gray-700 rounded-2xl hover:bg-[#1a1f2e] transition-colors">
+                            VIEW COLLECTION
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="battle-champion-grid">
+                        ${sortedChampions.map(({ panda, index }) => {
+                            const rarityColor = getRarityColor(panda.rarity || "common");
+                            return `
+                                <button type="button"
+                                        onclick="startDemoBattle(${index})"
+                                        class="cyber-card text-left rounded-3xl p-5 border border-gray-700 hover:border-red-400 transition-all group">
+                                    <div class="flex items-start gap-4">
+                                        <div class="text-6xl transition-transform group-hover:scale-110" aria-hidden="true">${panda.emoji || "🐼"}</div>
+                                        <div class="min-w-0 flex-1">
+                                            <div class="font-black text-xl truncate">${__escapeBattleText(panda.name || "Unknown Panda")}</div>
+                                            <div class="flex flex-wrap gap-2 mt-2 text-[10px] font-bold">
+                                                <span class="px-2.5 py-1 rounded-full" style="background:${rarityColor}25;color:${rarityColor}">${__escapeBattleText((panda.rarity || "common").toUpperCase())}</span>
+                                                <span class="px-2.5 py-1 rounded-full bg-emerald-400/10 text-emerald-300">${Number(panda.power) || 1} PWR</span>
+                                            </div>
+                                            <div class="text-xs text-gray-400 mt-3 line-clamp-2">${__escapeBattleText(panda.desc || "Ready for battle.")}</div>
+                                            <div class="mt-4 text-xs text-red-300 font-mono">SELECT CHAMPION →</div>
+                                        </div>
+                                    </div>
+                                </button>
+                            `;
+                        }).join("")}
+                    </div>
+                </div>
+            `;
+        }
+
+        function startDemoBattle(championIndex = 0) {
+            const arenaSection = document.getElementById("section-arena");
+            const selectedChampion = userPandas[championIndex] || userPandas[0] || basePandas[0];
+            const battle = __createBattleMatch(selectedChampion);
             window.__activeBattle = battle;
             const safePlayerName = __escapeBattleText(battle.playerName);
             const safeEnemyName = __escapeBattleText(battle.enemyName);
