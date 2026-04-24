@@ -12,6 +12,9 @@
                 }
             };
         }
+        if (typeof tailwind !== "undefined") {
+            initTailwind();
+        }
 
         // Game State
         let gameState = {
@@ -1468,7 +1471,6 @@
 
         // Initialize everything
         function initializeApp() {
-            initTailwind();
             loadGameState();
             
             // Set initial section to dashboard
@@ -1511,8 +1513,14 @@
             // setTimeout(() => { if (userPandas.length > 1) { selectPandaForSlot('alpha', userPandas[0]); selectPandaForSlot('beta', userPandas[1]); } }, 800);
         }
 
-        // Boot the app
-        window.onload = initializeApp;
+        function scheduleInit() {
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", initializeApp, { once: true });
+            } else {
+                initializeApp();
+            }
+        }
+        scheduleInit();
         
         // Expose some functions for console debugging (fun)
         window.FusionPanda = {
