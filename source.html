@@ -265,6 +265,11 @@
                     <span>My Collection</span>
                 </div>
                 
+                <div onclick="navigateTo('codex')" class="nav-link flex items-center gap-x-3 px-4 py-3 text-sm font-medium cursor-pointer mb-1" id="nav-codex">
+                    <i class="fas fa-scroll w-5 text-purple-400"></i>
+                    <span>Codex</span>
+                </div>
+                
                 <div onclick="navigateTo('upgrades')" class="nav-link flex items-center gap-x-3 px-4 py-3 text-sm font-medium cursor-pointer mb-1" id="nav-upgrades">
                     <i class="fas fa-rocket w-5 text-amber-400"></i>
                     <span>Upgrades</span>
@@ -457,6 +462,22 @@
                             <div class="text-xs uppercase tracking-[2px] text-gray-400">FUSION CORE</div>
                         </div>
                         
+                        <!-- Advanced Fusion Mode Selector -->
+                        <div class="flex gap-1 mb-3 w-full max-w-[210px] mx-auto">
+                            <div onclick="setFusionMode('basic')" id="mode-basic"
+                                 class="flex-1 text-center py-1.5 px-3 text-xs font-bold rounded-2xl cursor-pointer bg-emerald-500 text-black transition-all active-mode">
+                                BASIC
+                            </div>
+                            <div onclick="setFusionMode('advanced')" id="mode-advanced"
+                                 class="flex-1 text-center py-1.5 px-3 text-xs font-bold rounded-2xl cursor-pointer bg-[#1a1f2e] hover:bg-fuchsia-400/20 border border-fuchsia-400/50 transition-all">
+                                ADVANCED
+                            </div>
+                            <div onclick="setFusionMode('ritual')" id="mode-ritual"
+                                 class="flex-1 text-center py-1.5 px-3 text-xs font-bold rounded-2xl cursor-pointer bg-[#1a1f2e] hover:bg-amber-400/20 border border-amber-400/50 transition-all">
+                                RITUAL
+                            </div>
+                        </div>
+                        
                         <button onclick="performFusion()" id="fuse-btn"
                                 class="neon-button px-10 py-4 rounded-3xl text-lg font-black flex items-center gap-x-3 shadow-[0_0_25px_rgba(0,255,157,0.5)] disabled:opacity-40 disabled:cursor-not-allowed"
                                 disabled>
@@ -464,7 +485,9 @@
                             <i class="fas fa-bolt"></i>
                         </button>
                         
-                        <div class="text-[10px] mt-3 text-center text-gray-500 max-w-[140px]">Energy cost: <span class="font-mono">250 EP</span></div>
+                        <div class="text-[10px] mt-3 text-center text-gray-500 max-w-[140px]">
+                            Energy cost: <span id="energy-cost" class="font-mono text-emerald-400">250 EP</span>
+                        </div>
                     </div>
 
                     <!-- Right Panda Slot -->
@@ -530,6 +553,82 @@
 
                 <div class="panda-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4" id="collection-grid">
                     <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- CODEX SECTION (Bestiary) -->
+            <div id="section-codex" class="section hidden">
+                <!-- Codex Tabs -->
+                <div class="flex border-b border-gray-700 mb-6">
+                    <div onclick="switchCodexTab('bestiary')" id="tab-bestiary"
+                         class="px-6 py-3 text-sm font-bold cursor-pointer border-b-2 border-purple-400 text-purple-400">BESTIARY</div>
+                    <div onclick="switchCodexTab('achievements')" id="tab-achievements"
+                         class="px-6 py-3 text-sm font-bold cursor-pointer text-gray-400 hover:text-white">ACHIEVEMENTS</div>
+                    <div onclick="switchCodexTab('catalysts')" id="tab-catalysts"
+                         class="px-6 py-3 text-sm font-bold cursor-pointer text-gray-400 hover:text-white">CATALYSTS</div>
+                    <div onclick="switchCodexTab('fusion-tree')" id="tab-fusion-tree"
+                         class="px-6 py-3 text-sm font-bold cursor-pointer text-gray-400 hover:text-white">FUSION TREE</div>
+                </div>
+
+                <div class="flex items-center justify-between mb-6" id="codex-header">
+                    <div>
+                        <h1 class="section-header">The Codex of Fusions</h1>
+                        <p class="text-gray-400 text-sm">Ancient knowledge of all known panda species and legendary hybrids • <span id="codex-count">42</span> entries</p>
+                    </div>
+                    
+                    <div class="flex items-center gap-x-2" id="codex-controls">
+                        <div class="relative">
+                            <input type="text" id="codex-search" placeholder="Search codex..." 
+                                   class="bg-[#1a1f2e] border border-gray-700 text-sm pl-10 py-2.5 w-64 rounded-2xl focus:outline-none focus:border-purple-400 placeholder:text-gray-500"
+                                   onkeyup="filterCodex()">
+                            <i class="fas fa-search absolute left-4 top-3.5 text-gray-500"></i>
+                        </div>
+                        
+                        <select id="codex-filter" onchange="filterCodex()" 
+                                class="bg-[#1a1f2e] border border-gray-700 text-sm px-4 py-2.5 rounded-2xl text-white">
+                            <option value="">All Types</option>
+                            <option value="Balanced">Balanced</option>
+                            <option value="Fire">Fire</option>
+                            <option value="Ice">Ice</option>
+                            <option value="Dark">Dark</option>
+                            <option value="Electric">Electric</option>
+                            <option value="Light">Light</option>
+                            <option value="Arcane">Arcane</option>
+                            <option value="Crystal">Crystal</option>
+                            <option value="Hybrid">Hybrid</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Codex Progress -->
+                <div class="mb-6 cyber-card rounded-3xl p-4 border border-purple-400/30">
+                    <div class="flex justify-between text-xs mb-2 px-1">
+                        <span class="text-purple-400 font-bold">CODEX COMPLETION</span>
+                        <span id="codex-progress-text" class="font-mono">28%</span>
+                    </div>
+                    <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div id="codex-progress-bar" class="h-2 bg-gradient-to-r from-purple-400 to-fuchsia-500 rounded-full w-[28%]" style="width: 28%"></div>
+                    </div>
+                </div>
+
+                <!-- Recently Discovered -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <div class="text-sm font-semibold text-purple-400">RECENTLY DISCOVERED</div>
+                        <div onclick="navigateTo('collection')" class="text-xs text-purple-400 cursor-pointer hover:underline">VIEW ALL →</div>
+                    </div>
+                    <div class="flex gap-3 overflow-x-auto pb-2" id="recent-codex">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="panda-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" id="codex-grid">
+                    <!-- Populated dynamically by JS -->
+                </div>
+                
+                <div class="mt-8 text-center text-xs text-gray-500">
+                    <i class="fas fa-info-circle mr-1"></i> 
+                    Entries are unlocked as you discover new pandas in your Collection
                 </div>
             </div>
 
@@ -708,6 +807,13 @@
             <div class="px-8 pb-8 flex gap-3">
                 <button onclick="closeFusionModal()" 
                         class="flex-1 py-3 rounded-2xl border border-gray-700 text-sm font-medium hover:bg-[#1a1f2e]">CLOSE</button>
+                
+                <button onclick="evolveFusionResult()" id="evolve-btn"
+                        class="hidden flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black text-sm font-bold flex items-center justify-center gap-x-2">
+                    <i class="fas fa-sync-alt"></i> 
+                    <span>EVOLVE</span>
+                </button>
+                
                 <button onclick="addToCollectionAndClose()" 
                         class="flex-1 neon-button py-3 rounded-2xl text-sm font-bold">ADD TO COLLECTION</button>
             </div>
@@ -774,6 +880,7 @@
         // Current selected for fusion
         let selectedAlpha = null;
         let selectedBeta = null;
+        let currentFusionMode = 'basic'; // basic | advanced | ritual
 
         function saveGameState() {
             localStorage.setItem('fusionPandaMaster', JSON.stringify({
@@ -990,6 +1097,166 @@
             renderCollection(filtered);
         }
 
+        // ==================== CODEX (BESTIARY) ====================
+        function renderCodex(filteredEntries = null) {
+            const container = document.getElementById('codex-grid');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            // Base codex entries (all known species)
+            const codexData = [
+                ...basePandas,
+                // Legendary Hybrids
+                { id: 'leg1', name: "Steam Panda", emoji: "🌫️🔥", type: "Hybrid", power: 31, rarity: "epic", color: "#64748b", desc: "Born from the eternal love between Fire and Ice during the Great Shattering. Creates the Steam Valleys where all elements coexist peacefully." },
+                { id: 'leg2', name: "Eclipse Guardian", emoji: "🌑☀️", type: "Hybrid", power: 45, rarity: "legendary", color: "#6366f1", desc: "The first successful Dark + Light fusion. It now guards the Veil Between Worlds and appears only during rare celestial alignments." },
+                { id: 'leg3', name: "Solar Flare", emoji: "☀️⚡", type: "Hybrid", power: 42, rarity: "mythic", color: "#f59e0b", desc: "Created in a desperate Ritual during the Second Fracture. It is both the ultimate weapon and a warning of what happens when the Protocol is pushed too far." },
+                { id: 'leg4', name: "Void Walker", emoji: "🕳️🐼", type: "Hybrid", power: 38, rarity: "legendary", color: "#4f46e5", desc: "The only known Dark + Mystic fusion. It walked through the code of the Master Protocol itself and now exists partially outside of reality." },
+                { id: 'leg5', name: "Quantum Overlord", emoji: "👑🐼", type: "Mythic", power: 88, rarity: "mythic", color: "#f43f5e", desc: "The First Panda. The being who performed the very first fusion. Said to have become one with the Master Protocol itself." },
+                // Expanded Lore Entries
+                { id: 'leg6', name: "Plasma Sovereign", emoji: "⚡💎", type: "Hybrid", power: 51, rarity: "legendary", color: "#eab308", desc: "Electric + Crystal fusion born during the Lightning Eclipse. Commands storms of pure crystal energy that can rewrite local reality." },
+                { id: 'leg7', name: "Inferno Mystic", emoji: "🔥🔮", type: "Hybrid", power: 47, rarity: "epic", color: "#f97316", desc: "Arcane + Fire fusion. The living embodiment of the first spell ever cast by a panda during the Age of Whispering Flames." },
+                { id: 'leg8', name: "Frost Eternal", emoji: "❄️🌌", type: "Hybrid", power: 39, rarity: "legendary", color: "#67e8f9", desc: "Ice + Light fusion that froze time itself during the longest winter in recorded panda history. Still watches over the frozen peaks." },
+                { id: 'leg9', name: "Chaos Weaver", emoji: "🌀🐼", type: "Hybrid", power: 62, rarity: "mythic", color: "#c026ff", desc: "The only successful 3-element fusion (Dark + Arcane + Electric). It weaves the threads of fate and can see possible futures." },
+                { id: 'leg10', name: "Bamboo Titan", emoji: "🌿🐼", type: "Balanced", power: 55, rarity: "legendary", color: "#4ade80", desc: "The ancient guardian of the Eternal Grove. Said to be the original form of the First Panda before the first fusion ever occurred." },
+                { id: 'leg11', name: "Nebula Phantom", emoji: "🌌🕳️", type: "Hybrid", power: 58, rarity: "mythic", color: "#6366f1", desc: "Dark + Crystal fusion that exists in multiple dimensions simultaneously. It is rarely seen in our reality but leaves trails of starlight." },
+                { id: 'leg12', name: "Celestial Harmony", emoji: "✨🌈", type: "Hybrid", power: 49, rarity: "legendary", color: "#fbbf24", desc: "The ultimate Light + Electric + Arcane fusion. It sings the song of creation and can calm even the most unstable Ritual fusions." }
+            ];
+            
+            const entriesToShow = filteredEntries || codexData;
+            document.getElementById('codex-count').innerText = entriesToShow.length;
+            
+            entriesToShow.forEach((entry, index) => {
+                const isUnlocked = userPandas.some(p => p.name === entry.name || (p.type === entry.type && p.rarity === entry.rarity));
+                
+                const card = document.createElement('div');
+                card.className = `panda-card cyber-card rounded-3xl p-5 border border-gray-700 cursor-pointer group ${!isUnlocked ? 'opacity-75 grayscale-[0.3]' : ''}`;
+                
+                const rarityColor = getRarityColor(entry.rarity);
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-3">
+                        <div class="text-6xl transition-transform group-hover:scale-110">${entry.emoji}</div>
+                        <div class="px-3 py-1 text-xs font-bold rounded-full text-center" style="background: ${rarityColor}25; color: ${rarityColor}">
+                            ${entry.rarity.toUpperCase()}
+                        </div>
+                    </div>
+                    
+                    <div class="font-black text-xl mb-1">${entry.name}</div>
+                    <div class="flex items-center gap-x-2 mb-3">
+                        <span class="px-2.5 py-px text-xs rounded" style="background: ${entry.color}25; color: ${entry.color}">${entry.type}</span>
+                        <span class="text-xs text-emerald-400 font-mono">${entry.power} PWR</span>
+                    </div>
+                    
+                    <div class="text-xs text-gray-400 line-clamp-3 mb-4">
+                        ${entry.desc.substring(0, 120)}${entry.desc.length > 120 ? '...' : ''}
+                    </div>
+                    
+                    <div class="flex justify-between items-center text-xs">
+                        <div class="${isUnlocked ? 'text-emerald-400' : 'text-gray-500'}">
+                            <i class="fas ${isUnlocked ? 'fa-check-circle' : 'fa-lock'} mr-1"></i>
+                            ${isUnlocked ? 'Discovered' : 'Locked'}
+                        </div>
+                        <div onclick="event.stopImmediatePropagation(); showCodexDetail(${index}, ${JSON.stringify(entry).replace(/"/g, '&quot;')});" 
+                             class="px-3 py-1 bg-white/5 hover:bg-white/10 rounded-2xl transition-colors">
+                            READ LORE
+                        </div>
+                    </div>
+                `;
+                
+                card.onclick = () => showCodexDetail(index, entry);
+                container.appendChild(card);
+            });
+        }
+
+        function filterCodex() {
+            const searchTerm = document.getElementById('codex-search').value.toLowerCase();
+            const typeFilter = document.getElementById('codex-filter').value;
+            
+            const codexData = [
+                ...basePandas,
+                { id: 'leg1', name: "Steam Panda", emoji: "🌫️🔥", type: "Hybrid", power: 31, rarity: "epic", color: "#64748b", desc: "Born from the eternal love between Fire and Ice during the Great Shattering." },
+                { id: 'leg2', name: "Eclipse Guardian", emoji: "🌑☀️", type: "Hybrid", power: 45, rarity: "legendary", color: "#6366f1", desc: "The first successful Dark + Light fusion. Guardian of the Veil Between Worlds." },
+                { id: 'leg3', name: "Solar Flare", emoji: "☀️⚡", type: "Hybrid", power: 42, rarity: "mythic", color: "#f59e0b", desc: "Born in a desperate Ritual during the Second Fracture." },
+                { id: 'leg4', name: "Void Walker", emoji: "🕳️🐼", type: "Hybrid", power: 38, rarity: "legendary", color: "#4f46e5", desc: "The only known Dark + Mystic fusion that walked through the Master Protocol." },
+                { id: 'leg5', name: "Quantum Overlord", emoji: "👑🐼", type: "Mythic", power: 88, rarity: "mythic", color: "#f43f5e", desc: "The First Panda who performed the very first fusion and became one with the Protocol." },
+                { id: 'leg6', name: "Plasma Sovereign", emoji: "⚡💎", type: "Hybrid", power: 51, rarity: "legendary", color: "#eab308", desc: "Electric + Crystal fusion born during the Lightning Eclipse." },
+                { id: 'leg7', name: "Inferno Mystic", emoji: "🔥🔮", type: "Hybrid", power: 47, rarity: "epic", color: "#f97316", desc: "Arcane + Fire fusion. Embodiment of the first spell ever cast." },
+                { id: 'leg8', name: "Frost Eternal", emoji: "❄️🌌", type: "Hybrid", power: 39, rarity: "legendary", color: "#67e8f9", desc: "Ice + Light fusion that froze time during the longest winter." },
+                { id: 'leg9', name: "Chaos Weaver", emoji: "🌀🐼", type: "Hybrid", power: 62, rarity: "mythic", color: "#c026ff", desc: "The only successful 3-element fusion. Weaves the threads of fate." },
+                { id: 'leg10', name: "Bamboo Titan", emoji: "🌿🐼", type: "Balanced", power: 55, rarity: "legendary", color: "#4ade80", desc: "Ancient guardian of the Eternal Grove and original form of the First Panda." },
+                { id: 'leg11', name: "Nebula Phantom", emoji: "🌌🕳️", type: "Hybrid", power: 58, rarity: "mythic", color: "#6366f1", desc: "Dark + Crystal fusion that exists in multiple dimensions." },
+                { id: 'leg12', name: "Celestial Harmony", emoji: "✨🌈", type: "Hybrid", power: 49, rarity: "legendary", color: "#fbbf24", desc: "Ultimate Light + Electric + Arcane fusion that sings the song of creation." }
+            ];
+            
+            let filtered = codexData;
+            
+            if (searchTerm) {
+                filtered = filtered.filter(p => 
+                    p.name.toLowerCase().includes(searchTerm) || 
+                    p.type.toLowerCase().includes(searchTerm) ||
+                    p.desc.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            if (typeFilter) {
+                filtered = filtered.filter(p => p.type === typeFilter);
+            }
+            
+            renderCodex(filtered);
+        }
+
+        function showCodexDetail(index, entry) {
+            const modalHTML = `
+                <div onclick="this.remove()" class="fixed inset-0 bg-black/90 z-[130] flex items-center justify-center p-4">
+                    <div onclick="event.stopImmediatePropagation()" class="cyber-card w-full max-w-2xl rounded-3xl overflow-hidden border border-purple-400/50">
+                        <div class="px-8 pt-8 pb-6 relative bg-gradient-to-b from-[#0f1117] to-transparent">
+                            <button onclick="event.target.closest('.fixed').remove()" class="absolute top-6 right-6 text-gray-400 hover:text-white text-2xl">×</button>
+                            
+                            <div class="flex justify-center mb-4">
+                                <div class="text-[140px]">${entry.emoji}</div>
+                            </div>
+                            
+                            <div class="text-center">
+                                <div class="inline-block px-5 py-1 rounded-full text-sm font-extrabold tracking-widest mb-3" 
+                                     style="background: ${getRarityColor(entry.rarity)}30; color: ${getRarityColor(entry.rarity)}">
+                                    ${entry.rarity.toUpperCase()} • ${entry.type}
+                                </div>
+                                
+                                <div class="text-4xl font-black mb-2">${entry.name}</div>
+                                <div class="text-2xl text-emerald-400 font-mono">${entry.power} POWER</div>
+                            </div>
+                        </div>
+                        
+                        <div class="px-8 pb-8">
+                            <div class="text-sm text-gray-300 leading-relaxed mb-6">
+                                ${entry.desc}
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4 text-xs">
+                                <div class="bg-[#1a1f2e] rounded-2xl p-4">
+                                    <div class="text-purple-400 font-bold mb-1">ORIGIN</div>
+                                    <div>The Great Shattering • Era of the First Masters</div>
+                                </div>
+                                <div class="bg-[#1a1f2e] rounded-2xl p-4">
+                                    <div class="text-purple-400 font-bold mb-1">KNOWN FOR</div>
+                                    <div>${entry.type === 'Hybrid' ? 'Legendary fusion synergy' : 'Foundational species of the Protocol'}</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 text-center">
+                                <button onclick="event.target.closest('.fixed').remove(); navigateTo('fusion-lab');" 
+                                        class="px-8 py-3 rounded-2xl border border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-black transition-all text-sm font-bold">
+                                    FUSE WITH THIS SPECIES
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        }
+
         function showPandaDetail(index) {
             const panda = userPandas[index];
             const modalHTML = `
@@ -1152,6 +1419,7 @@
             
             // Enable fuse button if both selected
             updateFuseButton();
+            updateEnergyCost();
         }
 
         function clearSlot(slot) {
@@ -1172,6 +1440,7 @@
             slotEl.style.borderColor = '';
             
             updateFuseButton();
+            updateEnergyCost();
         }
 
         function updateFuseButton() {
@@ -1185,6 +1454,49 @@
             }
         }
 
+        function setFusionMode(mode) {
+            currentFusionMode = mode;
+            
+            // Update UI buttons
+            document.querySelectorAll('[id^="mode-"]').forEach(el => {
+                el.classList.remove('bg-emerald-500', 'text-black', 'active-mode');
+                el.classList.add('bg-[#1a1f2e]', 'border', 'border-white/20');
+                
+                if (el.id === `mode-${mode}`) {
+                    el.classList.remove('bg-[#1a1f2e]', 'border-white/20');
+                    if (mode === 'basic') {
+                        el.classList.add('bg-emerald-500', 'text-black');
+                    } else if (mode === 'advanced') {
+                        el.classList.add('bg-fuchsia-500', 'text-black');
+                    } else if (mode === 'ritual') {
+                        el.classList.add('bg-amber-500', 'text-black');
+                    }
+                }
+            });
+            
+            // Update energy cost display
+            updateEnergyCost();
+        }
+
+        function updateEnergyCost() {
+            const costEl = document.getElementById('energy-cost');
+            if (!costEl || !selectedAlpha || !selectedBeta) {
+                if (costEl) costEl.innerText = '250 EP';
+                return;
+            }
+            
+            let baseCost = 250;
+            const powerAvg = (selectedAlpha.power + selectedBeta.power) / 2;
+            
+            if (currentFusionMode === 'advanced') baseCost = Math.floor(baseCost * 1.6);
+            if (currentFusionMode === 'ritual') baseCost = Math.floor(baseCost * 2.8);
+            
+            // Scale with power
+            const finalCost = Math.floor(baseCost + (powerAvg * 1.8));
+            costEl.innerText = `${finalCost} EP`;
+            costEl.style.color = currentFusionMode === 'ritual' ? '#fbbf24' : '#10b981';
+        }
+
         function performFusion() {
             if (!selectedAlpha || !selectedBeta) return;
             
@@ -1192,9 +1504,11 @@
             btn.disabled = true;
             btn.innerHTML = `<span>FUSING...</span> <i class="fas fa-spinner fa-spin ml-2"></i>`;
             
-            // Simulate fusion delay
+            // Simulate fusion delay (longer for ritual)
+            const delay = currentFusionMode === 'ritual' ? 2450 : 1450;
+            
             setTimeout(() => {
-                const newPanda = createFusionResult(selectedAlpha, selectedBeta);
+                const newPanda = createFusionResult(selectedAlpha, selectedBeta, currentFusionMode);
                 
                 // Show result modal
                 showFusionResult(newPanda);
@@ -1202,9 +1516,12 @@
                 // Reset slots
                 resetFusionSlots();
                 
-                // Update stats
+                // Update stats with mode bonuses
                 gameState.fusions++;
-                gameState.xp += Math.floor(Math.random() * 120) + 85;
+                let xpGain = Math.floor(Math.random() * 120) + 85;
+                if (currentFusionMode === 'advanced') xpGain = Math.floor(xpGain * 1.4);
+                if (currentFusionMode === 'ritual') xpGain = Math.floor(xpGain * 2.1);
+                gameState.xp += xpGain;
                 
                 // Level up check
                 if (gameState.xp >= 10000) {
@@ -1232,58 +1549,106 @@
                 btn.innerHTML = `<span>FUSE</span> <i class="fas fa-bolt"></i>`;
                 btn.disabled = true;
                 
-            }, 1450);
+            }, delay);
         }
 
-        function createFusionResult(pandaA, pandaB) {
-            // Create hybrid name
-            let hybridName = '';
+        function createFusionResult(pandaA, pandaB, mode = 'basic') {
             const types = [pandaA.type, pandaB.type];
+            let hybridName = '';
             
+            // === ADVANCED SYNERGY SYSTEM ===
+            let synergyBonus = 0;
+            let synergyName = '';
+            let isCritical = false;
+            
+            // Elemental synergies
             if (types.includes('Fire') && types.includes('Ice')) {
-                hybridName = 'Steam';
+                synergyName = 'Steam';
+                synergyBonus = 25;
             } else if (types.includes('Dark') && types.includes('Light')) {
-                hybridName = 'Eclipse';
+                synergyName = 'Eclipse';
+                synergyBonus = 22;
             } else if (types.includes('Electric') && types.includes('Crystal')) {
-                hybridName = 'Plasma';
+                synergyName = 'Plasma';
+                synergyBonus = 28;
             } else if (types.includes('Arcane') && types.includes('Fire')) {
-                hybridName = 'Inferno Mystic';
+                synergyName = 'Inferno Mystic';
+                synergyBonus = 20;
+            } else if (pandaA.type === pandaB.type && pandaA.type !== 'Hybrid') {
+                synergyName = 'Pure';
+                synergyBonus = 15; // Same type bonus
+            } else if (['Fire', 'Ice', 'Electric', 'Dark'].includes(pandaA.type) && 
+                       ['Ice', 'Fire', 'Crystal', 'Light'].includes(pandaB.type)) {
+                synergyBonus = 12; // Opposites attract
+            }
+            
+            // Generate name
+            if (synergyName) {
+                hybridName = synergyName;
             } else {
-                // Generic fusion name
-                const prefixes = ['Ultra', 'Mega', 'Neo', 'Quantum', 'Astral', 'Primal', 'Void', 'Nova'];
+                const prefixes = ['Ultra', 'Mega', 'Neo', 'Quantum', 'Astral', 'Primal', 'Void', 'Nova', 'Eternal', 'Chaos'];
                 hybridName = prefixes[Math.floor(Math.random() * prefixes.length)];
             }
             
             const fullName = `${hybridName} ${pandaA.name.split(' ').pop() || 'Panda'}`;
             
-            // Calculate power
-            const basePower = Math.floor((pandaA.power + pandaB.power) / 2);
-            const bonus = Math.floor(Math.random() * 18) + 14;
-            const finalPower = basePower + bonus;
+            // === POWER CALCULATION (Advanced Mechanics) ===
+            let basePower = Math.floor((pandaA.power + pandaB.power) / 2);
+            let bonus = Math.floor(Math.random() * 18) + 14;
             
-            // Determine rarity
+            // Mode multipliers
+            if (mode === 'advanced') {
+                bonus += 22;
+                basePower = Math.floor(basePower * 1.18);
+            } else if (mode === 'ritual') {
+                bonus += 48;
+                basePower = Math.floor(basePower * 1.35);
+            }
+            
+            // Apply synergy
+            const finalPower = Math.floor(basePower + bonus + (synergyBonus * 0.8));
+            
+            // === RARITY & CRITICAL SYSTEM ===
             let rarity = 'epic';
-            const rand = Math.random();
-            if (rand > 0.88) rarity = 'mythic';
-            else if (rand > 0.65) rarity = 'legendary';
-            else if (rand > 0.35) rarity = 'epic';
-            else rarity = 'rare';
+            let rand = Math.random();
             
-            // Pick emoji combo or new
+            // Mode-based rarity chances
+            if (mode === 'ritual') {
+                if (rand > 0.72) rarity = 'mythic';
+                else if (rand > 0.38) rarity = 'legendary';
+                else rarity = 'epic';
+            } else if (mode === 'advanced') {
+                if (rand > 0.91) rarity = 'mythic';
+                else if (rand > 0.58) rarity = 'legendary';
+                else if (rand > 0.22) rarity = 'epic';
+                else rarity = 'rare';
+            } else {
+                if (rand > 0.88) rarity = 'mythic';
+                else if (rand > 0.65) rarity = 'legendary';
+                else if (rand > 0.35) rarity = 'epic';
+                else rarity = 'rare';
+            }
+            
+            // Critical Fusion chance (extra visual + power)
+            if (Math.random() < 0.18 || (mode === 'ritual' && Math.random() < 0.35)) {
+                isCritical = true;
+                rarity = (rarity === 'rare') ? 'epic' : (rarity === 'epic' ? 'legendary' : 'mythic');
+            }
+            
+            // === EMOJI & TYPE ===
             let emoji = '🐼';
             if (pandaA.emoji.includes('🔥') || pandaB.emoji.includes('🔥')) emoji = '🌋';
             else if (pandaA.emoji.includes('❄️') || pandaB.emoji.includes('❄️')) emoji = '🌨️';
             else if (pandaA.emoji.includes('⚡') || pandaB.emoji.includes('⚡')) emoji = '⚡';
             else if (pandaA.emoji.includes('🌑') || pandaB.emoji.includes('🌑')) emoji = '🌌';
             else if (pandaA.emoji.includes('✨') || pandaB.emoji.includes('✨')) emoji = '🌟';
-            else emoji = pandaA.emoji + pandaB.emoji.split('🐼')[0] || '🐼';
+            else emoji = pandaA.emoji + (pandaB.emoji.includes('🐼') ? '' : pandaB.emoji);
             
-            // Type
             let newType = 'Hybrid';
-            if (types.length === 2 && types[0] !== types[1]) {
-                newType = `${types[0]}-${types[1]}`;
-            }
+            if (synergyName) newType = synergyName;
+            else if (types[0] !== types[1]) newType = `${types[0]}-${types[1]}`;
             
+            // Final panda object
             const newPanda = {
                 id: 'f' + Date.now(),
                 name: fullName,
@@ -1292,16 +1657,21 @@
                 power: finalPower,
                 rarity: rarity,
                 color: getRarityColor(rarity),
-                desc: `A magnificent fusion of ${pandaA.name} and ${pandaB.name}. This hybrid possesses incredible ${newType.toLowerCase()} abilities.`,
-                acquired: new Date().toISOString().split('T')[0]
+                desc: `Advanced ${mode} fusion of ${pandaA.name} and ${pandaB.name}. ${synergyName ? 'Powerful ' + synergyName + ' synergy detected!' : ''} ${isCritical ? 'CRITICAL FUSION!' : ''}`,
+                acquired: new Date().toISOString().split('T')[0],
+                isCritical: isCritical,
+                fusionMode: mode
             };
             
-            // Add to collection if not duplicate name (rare)
+            // Add to collection
             const exists = userPandas.some(p => p.name === newPanda.name);
             if (!exists) {
                 userPandas.push(newPanda);
                 gameState.collectionCount = userPandas.length;
             }
+            
+            // Store critical flag for modal
+            window.lastFusionWasCritical = isCritical;
             
             return newPanda;
         }
@@ -1324,23 +1694,51 @@
             rarityText.innerText = newPanda.rarity.toUpperCase();
             rarityText.style.color = rarityColor;
             
-            const bonus = Math.floor(Math.random() * 25) + 12;
+            // Dynamic bonus based on mode & critical
+            let bonus = Math.floor(Math.random() * 25) + 12;
+            if (newPanda.fusionMode === 'advanced') bonus += 18;
+            if (newPanda.fusionMode === 'ritual') bonus += 35;
+            if (newPanda.isCritical) bonus += 45;
             document.getElementById('fusion-result-bonus').innerText = `+${bonus}%`;
             
-            // Confetti explosion
-            createConfetti();
+            // Critical fusion visual flair
+            const emojiEl = document.getElementById('fusion-result-emoji');
+            if (newPanda.isCritical) {
+                emojiEl.style.animation = 'fusion-pulse 0.6s infinite';
+                emojiEl.style.filter = 'drop-shadow(0 0 40px #fbbf24) drop-shadow(0 0 80px #f43f5e)';
+                setTimeout(() => {
+                    if (emojiEl) emojiEl.style.animation = '';
+                }, 4200);
+            } else {
+                emojiEl.style.filter = '';
+            }
+            
+            // Confetti explosion (more intense on critical/ritual)
+            const particleCount = (newPanda.isCritical || newPanda.fusionMode === 'ritual') ? 110 : 65;
+            createConfetti(particleCount);
             
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             
-            // Auto close after 12s? No, let user close
+            // Store current panda for evolve button
+            window.currentFusionResult = newPanda;
+            
+            // Show evolve button for powerful results
+            const evolveBtn = document.getElementById('evolve-btn');
+            if (evolveBtn) {
+                if (newPanda.power > 55 || ['legendary', 'mythic'].includes(newPanda.rarity)) {
+                    evolveBtn.classList.remove('hidden');
+                } else {
+                    evolveBtn.classList.add('hidden');
+                }
+            }
         }
 
-        function createConfetti() {
+        function createConfetti(count = 65) {
             const colors = ['#00ff9d', '#ff00aa', '#00f0ff', '#fbbf24', '#f43f5e'];
             const container = document.getElementById('fusion-result-modal');
             
-            for (let i = 0; i < 65; i++) {
+            for (let i = 0; i < count; i++) {
                 setTimeout(() => {
                     const particle = document.createElement('div');
                     particle.className = 'particle';
@@ -1400,9 +1798,50 @@
             modal.classList.remove('flex');
             modal.classList.add('hidden');
             
+            // Hide evolve button
+            const evolveBtn = document.getElementById('evolve-btn');
+            if (evolveBtn) evolveBtn.classList.add('hidden');
+            
             // Clear any remaining particles
             const particles = modal.querySelectorAll('.particle');
             particles.forEach(p => p.remove());
+        }
+
+        function evolveFusionResult() {
+            const current = window.currentFusionResult;
+            if (!current) return;
+            
+            const modal = document.getElementById('fusion-result-modal');
+            
+            // Evolve: boost power + upgrade rarity
+            current.power = Math.floor(current.power * 1.28) + 12;
+            if (current.rarity === 'rare') current.rarity = 'epic';
+            else if (current.rarity === 'epic') current.rarity = 'legendary';
+            else if (current.rarity === 'legendary') current.rarity = 'mythic';
+            
+            current.name = 'Evolved ' + current.name;
+            current.desc = 'Evolved form of the original fusion. Even more powerful!';
+            current.emoji = current.emoji + '✨';
+            
+            // Update modal live
+            document.getElementById('fusion-result-name').innerText = current.name;
+            document.getElementById('fusion-result-power').innerText = current.power;
+            document.getElementById('fusion-result-emoji').innerHTML = current.emoji;
+            
+            const rarityColor = getRarityColor(current.rarity);
+            document.getElementById('fusion-result-rarity').innerText = current.rarity.toUpperCase();
+            document.getElementById('fusion-result-rarity').style.background = `${rarityColor}30`;
+            document.getElementById('fusion-result-rarity').style.color = rarityColor;
+            document.getElementById('fusion-result-rarity-text').innerText = current.rarity.toUpperCase();
+            document.getElementById('fusion-result-rarity-text').style.color = rarityColor;
+            
+            // Hide evolve button after use
+            document.getElementById('evolve-btn').classList.add('hidden');
+            
+            // Extra confetti for evolution
+            createConfetti(45);
+            
+            showToast("Panda evolved to new heights! +28% power", "success");
         }
 
         function resetFusionSlots() {
@@ -1692,6 +2131,9 @@
             if (section === 'collection') {
                 renderCollection();
             }
+            if (section === 'codex') {
+                renderCodex();
+            }
         }
 
         function showToast(message, type = "success") {
@@ -1875,6 +2317,11 @@
             
             // Make sure fuse button starts disabled
             document.getElementById('fuse-btn').disabled = true;
+            
+            // Initialize advanced fusion mode
+            setTimeout(() => {
+                setFusionMode('basic');
+            }, 300);
             
             // Easter egg hint in console
             console.log('%c[FusionPanda Master] Konami code enabled! Try ↑↑↓↓←→←→BA', 'color:#64748b');

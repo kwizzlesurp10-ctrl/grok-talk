@@ -70,6 +70,11 @@
                     <span>My Collection</span>
                 </div>
                 
+                <div onclick="navigateTo('codex')" class="nav-link flex items-center gap-x-3 px-4 py-3 text-sm font-medium cursor-pointer mb-1" id="nav-codex">
+                    <i class="fas fa-scroll w-5 text-purple-400"></i>
+                    <span>Codex</span>
+                </div>
+                
                 <div onclick="navigateTo('upgrades')" class="nav-link flex items-center gap-x-3 px-4 py-3 text-sm font-medium cursor-pointer mb-1" id="nav-upgrades">
                     <i class="fas fa-rocket w-5 text-amber-400"></i>
                     <span>Upgrades</span>
@@ -262,6 +267,22 @@
                             <div class="text-xs uppercase tracking-[2px] text-gray-400">FUSION CORE</div>
                         </div>
                         
+                        <!-- Advanced Fusion Mode Selector -->
+                        <div class="flex gap-1 mb-3 w-full max-w-[210px] mx-auto">
+                            <div onclick="setFusionMode('basic')" id="mode-basic"
+                                 class="flex-1 text-center py-1.5 px-3 text-xs font-bold rounded-2xl cursor-pointer bg-emerald-500 text-black transition-all active-mode">
+                                BASIC
+                            </div>
+                            <div onclick="setFusionMode('advanced')" id="mode-advanced"
+                                 class="flex-1 text-center py-1.5 px-3 text-xs font-bold rounded-2xl cursor-pointer bg-[#1a1f2e] hover:bg-fuchsia-400/20 border border-fuchsia-400/50 transition-all">
+                                ADVANCED
+                            </div>
+                            <div onclick="setFusionMode('ritual')" id="mode-ritual"
+                                 class="flex-1 text-center py-1.5 px-3 text-xs font-bold rounded-2xl cursor-pointer bg-[#1a1f2e] hover:bg-amber-400/20 border border-amber-400/50 transition-all">
+                                RITUAL
+                            </div>
+                        </div>
+                        
                         <button onclick="performFusion()" id="fuse-btn"
                                 class="neon-button px-10 py-4 rounded-3xl text-lg font-black flex items-center gap-x-3 shadow-[0_0_25px_rgba(0,255,157,0.5)] disabled:opacity-40 disabled:cursor-not-allowed"
                                 disabled>
@@ -269,7 +290,9 @@
                             <i class="fas fa-bolt"></i>
                         </button>
                         
-                        <div class="text-[10px] mt-3 text-center text-gray-500 max-w-[140px]">Energy cost: <span class="font-mono">250 EP</span></div>
+                        <div class="text-[10px] mt-3 text-center text-gray-500 max-w-[140px]">
+                            Energy cost: <span id="energy-cost" class="font-mono text-emerald-400">250 EP</span>
+                        </div>
                     </div>
 
                     <!-- Right Panda Slot -->
@@ -335,6 +358,82 @@
 
                 <div class="panda-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4" id="collection-grid">
                     <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- CODEX SECTION (Bestiary) -->
+            <div id="section-codex" class="section hidden">
+                <!-- Codex Tabs -->
+                <div class="flex border-b border-gray-700 mb-6">
+                    <div onclick="switchCodexTab('bestiary')" id="tab-bestiary"
+                         class="px-6 py-3 text-sm font-bold cursor-pointer border-b-2 border-purple-400 text-purple-400">BESTIARY</div>
+                    <div onclick="switchCodexTab('achievements')" id="tab-achievements"
+                         class="px-6 py-3 text-sm font-bold cursor-pointer text-gray-400 hover:text-white">ACHIEVEMENTS</div>
+                    <div onclick="switchCodexTab('catalysts')" id="tab-catalysts"
+                         class="px-6 py-3 text-sm font-bold cursor-pointer text-gray-400 hover:text-white">CATALYSTS</div>
+                    <div onclick="switchCodexTab('fusion-tree')" id="tab-fusion-tree"
+                         class="px-6 py-3 text-sm font-bold cursor-pointer text-gray-400 hover:text-white">FUSION TREE</div>
+                </div>
+
+                <div class="flex items-center justify-between mb-6" id="codex-header">
+                    <div>
+                        <h1 class="section-header">The Codex of Fusions</h1>
+                        <p class="text-gray-400 text-sm">Ancient knowledge of all known panda species and legendary hybrids • <span id="codex-count">42</span> entries</p>
+                    </div>
+                    
+                    <div class="flex items-center gap-x-2" id="codex-controls">
+                        <div class="relative">
+                            <input type="text" id="codex-search" placeholder="Search codex..." 
+                                   class="bg-[#1a1f2e] border border-gray-700 text-sm pl-10 py-2.5 w-64 rounded-2xl focus:outline-none focus:border-purple-400 placeholder:text-gray-500"
+                                   onkeyup="filterCodex()">
+                            <i class="fas fa-search absolute left-4 top-3.5 text-gray-500"></i>
+                        </div>
+                        
+                        <select id="codex-filter" onchange="filterCodex()" 
+                                class="bg-[#1a1f2e] border border-gray-700 text-sm px-4 py-2.5 rounded-2xl text-white">
+                            <option value="">All Types</option>
+                            <option value="Balanced">Balanced</option>
+                            <option value="Fire">Fire</option>
+                            <option value="Ice">Ice</option>
+                            <option value="Dark">Dark</option>
+                            <option value="Electric">Electric</option>
+                            <option value="Light">Light</option>
+                            <option value="Arcane">Arcane</option>
+                            <option value="Crystal">Crystal</option>
+                            <option value="Hybrid">Hybrid</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Codex Progress -->
+                <div class="mb-6 cyber-card rounded-3xl p-4 border border-purple-400/30">
+                    <div class="flex justify-between text-xs mb-2 px-1">
+                        <span class="text-purple-400 font-bold">CODEX COMPLETION</span>
+                        <span id="codex-progress-text" class="font-mono">28%</span>
+                    </div>
+                    <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div id="codex-progress-bar" class="h-2 bg-gradient-to-r from-purple-400 to-fuchsia-500 rounded-full w-[28%]" style="width: 28%"></div>
+                    </div>
+                </div>
+
+                <!-- Recently Discovered -->
+                <div class="mb-6">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <div class="text-sm font-semibold text-purple-400">RECENTLY DISCOVERED</div>
+                        <div onclick="navigateTo('collection')" class="text-xs text-purple-400 cursor-pointer hover:underline">VIEW ALL →</div>
+                    </div>
+                    <div class="flex gap-3 overflow-x-auto pb-2" id="recent-codex">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+
+                <div class="panda-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" id="codex-grid">
+                    <!-- Populated dynamically by JS -->
+                </div>
+                
+                <div class="mt-8 text-center text-xs text-gray-500">
+                    <i class="fas fa-info-circle mr-1"></i> 
+                    Entries are unlocked as you discover new pandas in your Collection
                 </div>
             </div>
 
@@ -513,6 +612,13 @@
             <div class="px-8 pb-8 flex gap-3">
                 <button onclick="closeFusionModal()" 
                         class="flex-1 py-3 rounded-2xl border border-gray-700 text-sm font-medium hover:bg-[#1a1f2e]">CLOSE</button>
+                
+                <button onclick="evolveFusionResult()" id="evolve-btn"
+                        class="hidden flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-400 to-yellow-500 text-black text-sm font-bold flex items-center justify-center gap-x-2">
+                    <i class="fas fa-sync-alt"></i> 
+                    <span>EVOLVE</span>
+                </button>
+                
                 <button onclick="addToCollectionAndClose()" 
                         class="flex-1 neon-button py-3 rounded-2xl text-sm font-bold">ADD TO COLLECTION</button>
             </div>
