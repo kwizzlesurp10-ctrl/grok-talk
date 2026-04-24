@@ -1,5 +1,7 @@
 {
   "name": "fusionpanda-master",
+  "version": "4.2.1",
+  "description": "FusionPanda Master — static fusion game: lab, collection, codex, arena. Build: npm run build",
   "private": true,
   "scripts": {
     "start": "npx -y serve -l 3000 .",

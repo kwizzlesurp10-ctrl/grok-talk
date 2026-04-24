@@ -192,3 +192,38 @@
             border-radius: 9999px;
             transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
+
+        .skip-link {
+            position: absolute;
+            left: -9999px;
+            z-index: 1000;
+            padding: 0.75rem 1.25rem;
+            background: #00ff9d;
+            color: #0a0a0f;
+            font-weight: 700;
+            font-size: 0.875rem;
+            text-decoration: none;
+            border-radius: 0 0 0.5rem 0;
+        }
+
+        .skip-link:focus {
+            left: 0;
+            top: 0;
+            outline: 2px solid #fff;
+            outline-offset: 2px;
+        }
+
+        :where(a, button, [role="button"], input, select, textarea, .nav-link):focus-visible {
+            outline: 2px solid #00ff9d;
+            outline-offset: 2px;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }

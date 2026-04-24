@@ -1471,8 +1471,10 @@
             // Update nav active states
             document.querySelectorAll('.nav-link').forEach(link => {
                 link.classList.remove('active');
+                link.removeAttribute("aria-current");
                 if (link.id === 'nav-' + section) {
                     link.classList.add('active');
+                    link.setAttribute("aria-current", "page");
                 }
             });
             
@@ -1533,6 +1535,15 @@
                             </div>
                             
                             <div>
+                                <div class="font-semibold mb-3 text-xs tracking-widest text-gray-400">KEYBOARD</div>
+                                <div class="text-xs text-gray-400 space-y-1 py-1">
+                                    <div><span class="font-mono text-emerald-500/90">Esc</span> — close top dialog / overlay</div>
+                                    <div><span class="font-mono text-emerald-500/90">⌘ + /</span> (Ctrl + /) — search collection</div>
+                                    <div><span class="font-mono text-emerald-500/90">?</span> with body focus — go to Fusion Lab</div>
+                                </div>
+                            </div>
+                            
+                            <div>
                                 <div class="font-semibold mb-3 text-xs tracking-widest text-gray-400">PREFERENCES</div>
                                 
                                 <div class="flex items-center justify-between py-3">
@@ -1584,8 +1595,58 @@
             }
         }
 
+        function closeTopModalOrOverlay() {
+            const fusionResult = document.getElementById("fusion-result-modal");
+            if (fusionResult && !fusionResult.classList.contains("hidden")) {
+                closeFusionModal();
+                return true;
+            }
+            const pandaSel = document.getElementById("panda-selector-modal");
+            if (pandaSel && !pandaSel.classList.contains("hidden")) {
+                closePandaSelector();
+                return true;
+            }
+            const overlays = Array.from(document.querySelectorAll("body > div")).filter(
+                (d) =>
+                    d.classList &&
+                    d.classList.contains("fixed") &&
+                    d.classList.contains("inset-0") &&
+                    d.id !== "fusion-result-modal" &&
+                    d.id !== "panda-selector-modal" &&
+                    !d.classList.contains("hidden") &&
+                    window.getComputedStyle(d).display !== "none",
+            );
+            const top = overlays[overlays.length - 1];
+            if (top) {
+                top.remove();
+                return true;
+            }
+            return false;
+        }
+
+        function wireNavLinkAccessibility() {
+            document.querySelectorAll(".nav-link").forEach((el) => {
+                el.setAttribute("role", "button");
+                if (!el.hasAttribute("tabindex")) {
+                    el.setAttribute("tabindex", "0");
+                }
+                el.addEventListener("keydown", (ev) => {
+                    if (ev.key === "Enter" || ev.key === " ") {
+                        ev.preventDefault();
+                        el.click();
+                    }
+                });
+            });
+        }
+
         function initKeyboardShortcuts() {
             document.addEventListener('keydown', function(e) {
+                if (e.key === "Escape") {
+                    if (closeTopModalOrOverlay()) {
+                        e.preventDefault();
+                    }
+                    return;
+                }
                 if (e.metaKey && e.key === "/") {
                     e.preventDefault();
                     const search = document.getElementById('search-input');
@@ -1661,6 +1722,7 @@
                 }
             }, 6500);
             
+            wireNavLinkAccessibility();
             initKeyboardShortcuts();
             
             // Make sure fuse button starts disabled
