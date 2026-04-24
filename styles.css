@@ -218,6 +218,204 @@
             outline-offset: 2px;
         }
 
+        .battle-stage {
+            position: relative;
+            border-radius: 1.5rem;
+            background: radial-gradient(ellipse 80% 50% at 50% 50%, #1a1f2e 0%, #0a0a0f 70%);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .battle-stage--victory {
+            animation: battleVictoryPulse 1.2s ease-in-out 2;
+            border-color: rgba(251, 191, 36, 0.5);
+        }
+
+        @keyframes battleVictoryPulse {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
+            }
+            50% {
+                box-shadow: 0 0 40px 6px rgba(251, 191, 36, 0.35);
+            }
+        }
+
+        .battle-fighter {
+            position: relative;
+            z-index: 0;
+            transition: transform 0.2s ease, filter 0.2s;
+        }
+
+        .battle-fighter__emoji {
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+
+        .battle-anim-attack-left .battle-fighter__emoji {
+            animation: battleLungeLeft 0.45s ease-out;
+        }
+
+        .battle-anim-attack-right .battle-fighter__emoji {
+            animation: battleLungeRight 0.45s ease-out;
+        }
+
+        @keyframes battleLungeLeft {
+            0% {
+                transform: translateX(0) scale(1);
+            }
+            40% {
+                transform: translateX(12px) scale(1.12);
+            }
+            100% {
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        @keyframes battleLungeRight {
+            0% {
+                transform: translateX(0) scale(1);
+            }
+            40% {
+                transform: translateX(-12px) scale(1.12);
+            }
+            100% {
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        .battle-anim-shake {
+            animation: battleShake 0.45s ease;
+        }
+
+        @keyframes battleShake {
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+            20% {
+                transform: translateX(-6px);
+            }
+            40% {
+                transform: translateX(6px);
+            }
+            60% {
+                transform: translateX(-4px);
+            }
+            80% {
+                transform: translateX(4px);
+            }
+        }
+
+        .battle-anim-flash {
+            position: absolute;
+            inset: 0;
+            border-radius: 1.5rem;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .battle-anim-flash--red.battle-anim-flash--on {
+            animation: battleFlashRed 0.4s ease;
+        }
+
+        .battle-anim-flash--emerald.battle-anim-flash--on {
+            animation: battleFlashEm 0.4s ease;
+        }
+
+        @keyframes battleFlashRed {
+            0% {
+                opacity: 0;
+                background: #ef4444;
+            }
+            35% {
+                opacity: 0.4;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        @keyframes battleFlashEm {
+            0% {
+                opacity: 0;
+                background: #10b981;
+            }
+            35% {
+                opacity: 0.4;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .battle-dmg {
+            position: absolute;
+            left: 50%;
+            top: 28%;
+            transform: translateX(-50%);
+            font-weight: 900;
+            font-size: 1.5rem;
+            text-shadow: 0 0 12px currentColor;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .battle-dmg--float {
+            animation: battleDmgFloat 0.9s ease-out forwards;
+        }
+
+        @keyframes battleDmgFloat {
+            0% {
+                opacity: 0;
+                transform: translateX(-50%) translateY(0) scale(0.6);
+            }
+            15% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(-6px) scale(1.1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-36px) scale(0.9);
+            }
+        }
+
+        .battle-beam {
+            height: 6px;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, #10b981, #a855f7, #f43f5e);
+            transform: scaleX(0);
+            transform-origin: left center;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+        }
+
+        .battle-beam--to-enemy {
+            animation: battleBeamToEnemy 0.38s ease-out forwards;
+        }
+
+        .battle-beam--to-player {
+            transform-origin: right center;
+            transform: scaleX(0);
+            animation: battleBeamToPlayer 0.38s ease-out forwards;
+        }
+
+        @keyframes battleBeamToEnemy {
+            from {
+                transform: scaleX(0);
+            }
+            to {
+                transform: scaleX(1);
+            }
+        }
+
+        @keyframes battleBeamToPlayer {
+            from {
+                transform: scaleX(0);
+            }
+            to {
+                transform: scaleX(1);
+            }
+        }
+
         @media (prefers-reduced-motion: reduce) {
             *,
             *::before,

@@ -1323,141 +1323,249 @@
             }, 650);
         }
 
+        function __battleWait(ms) {
+            return new Promise((r) => setTimeout(r, ms));
+        }
+
+        function __resetBeam(el) {
+            if (!el) return;
+            el.classList.remove("battle-beam--to-enemy", "battle-beam--to-player", "battle-beam--special");
+            void el.offsetWidth;
+        }
+
+        function __spawnBattleFloatingDmg(anchor, value, isSpecial) {
+            if (!anchor) return;
+            const el = document.createElement("div");
+            el.className = "battle-dmg battle-dmg--float";
+            el.style.color = isSpecial ? "#e879f9" : "#34d399";
+            el.textContent = `-${value}`;
+            anchor.appendChild(el);
+            setTimeout(() => {
+                el.remove();
+            }, 1000);
+        }
+
+        function __syncBattleHpBars() {
+            const b = window.__activeBattle;
+            if (!b) return;
+            const pBar = document.getElementById("battle-hp-player-bar");
+            const pText = document.getElementById("battle-hp-player-text");
+            const eBar = document.getElementById("battle-hp-enemy-bar");
+            const eText = document.getElementById("battle-hp-enemy-text");
+            const pPct = Math.max(0, (b.playerCur / b.playerMax) * 100);
+            const ePct = Math.max(0, (b.enemyCur / b.enemyMax) * 100);
+            if (pBar) pBar.style.width = pPct + "%";
+            if (eBar) eBar.style.width = ePct + "%";
+            if (pText) pText.textContent = `${Math.max(0, b.playerCur)} / ${b.playerMax} HP`;
+            if (eText) eText.textContent = `${Math.max(0, b.enemyCur)} / ${b.enemyMax} HP`;
+        }
+
+        function __appendBattleLogLine(className, html) {
+            const log = document.getElementById("battle-log");
+            if (!log) return;
+            const line = document.createElement("div");
+            if (className) line.className = className;
+            line.innerHTML = html;
+            log.appendChild(line);
+            log.scrollTop = log.scrollHeight;
+        }
+
         function startDemoBattle() {
-            const arenaSection = document.getElementById('section-arena');
-            
+            const arenaSection = document.getElementById("section-arena");
+            window.__activeBattle = {
+                playerCur: 185,
+                playerMax: 200,
+                enemyCur: 134,
+                enemyMax: 200,
+                round: 1,
+                ended: false,
+            };
             arenaSection.innerHTML = `
-                <div class="max-w-3xl mx-auto">
+                <div class="max-w-4xl mx-auto">
                     <div class="flex justify-between items-center mb-6">
                         <div>
-                            <div class="uppercase tracking-[3px] text-xs text-red-400">LIVE DEMO</div>
+                            <div class="uppercase tracking-[3px] text-xs text-red-400">LIVE ARENA</div>
                             <div class="text-4xl font-black">Epic Showdown</div>
                         </div>
-                        <button onclick="location.reload()" class="px-5 py-2 text-xs border border-gray-700 rounded-2xl flex items-center gap-x-2 hover:bg-red-950 transition-colors">
-                            <i class="fas fa-redo"></i> <span>END BATTLE</span>
+                        <button type="button" onclick="location.reload()" class="px-5 py-2 text-xs border border-gray-700 rounded-2xl flex items-center gap-x-2 hover:bg-red-950/40 transition-colors">
+                            <i class="fas fa-redo" aria-hidden="true"></i> <span>END BATTLE</span>
                         </button>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
-                        <!-- Player Panda -->
-                        <div class="md:col-span-2 cyber-card rounded-3xl p-6 text-center border border-emerald-400">
-                            <div class="text-xs mb-2 text-emerald-400">YOUR CHAMPION</div>
-                            <div class="text-8xl mb-4">🌟🐼</div>
-                            <div class="font-black text-2xl">Nova Guardian</div>
-                            <div class="text-sm text-emerald-400">LVL 42 • 47 PWR</div>
-                            
-                            <div class="mt-5 h-2 bg-gray-800 rounded">
-                                <div class="h-2 bg-emerald-400 w-[92%] rounded"></div>
+                    <div id="battle-stage" class="battle-stage p-4 md:p-6 mb-6" role="img" aria-label="Battle arena, two fighters, animated attacks">
+                    <div class="grid grid-cols-1 md:grid-cols-7 gap-3 md:gap-2 items-stretch min-h-[280px]">
+                        <div id="battle-fighter-player" class="battle-fighter md:col-span-3 cyber-card rounded-3xl p-4 md:p-6 text-center border border-emerald-500/50">
+                            <div class="battle-anim-flash battle-anim-flash--emerald pointer-events-none" id="battle-flash-player" aria-hidden="true"></div>
+                            <div class="text-xs mb-1 text-emerald-400">YOUR CHAMPION</div>
+                            <div class="text-6xl sm:text-8xl mb-2 min-h-[5rem] flex items-center justify-center" aria-hidden="true">
+                                <span class="battle-fighter__emoji" id="battle-emoji-player">🌟🐼</span>
                             </div>
-                            <div class="text-xs mt-1 text-gray-400">HEALTH 92%</div>
+                            <div class="font-black text-lg md:text-2xl">Nova Guardian</div>
+                            <div class="text-xs sm:text-sm text-emerald-400/90 mb-3">LVL 42 · FUSION STRIKE</div>
+                            <div class="mt-1 h-2.5 bg-gray-800/90 rounded-full overflow-hidden">
+                                <div id="battle-hp-player-bar" class="h-2.5 bg-emerald-400 rounded-full transition-[width] duration-500 ease-out" style="width:92.5%"></div>
+                            </div>
+                            <div id="battle-hp-player-text" class="text-xs mt-1.5 text-gray-400 font-mono">185 / 200 HP</div>
                         </div>
                         
-                        <div class="md:col-span-1 flex justify-center">
+                        <div class="md:col-span-1 flex flex-col justify-center items-center gap-3 py-2 min-h-[100px]">
                             <div class="text-center">
-                                <div class="text-red-500 text-6xl font-black mb-1">VS</div>
-                                <div class="text-xs tracking-[4px]">ROUND 3</div>
+                                <div class="text-red-500 text-4xl md:text-5xl font-black" aria-hidden="true">VS</div>
+                                <div class="text-[10px] tracking-[0.2em] text-gray-500 mt-1">ROUND <span id="battle-round">1</span></div>
                             </div>
+                            <div class="w-full max-w-[100px] px-1" aria-hidden="true">
+                                <div id="battle-beam" class="battle-beam w-full"></div>
+                            </div>
+                            <p class="text-[9px] text-center text-gray-600 max-w-[7rem] leading-tight">Beams = fusion energy (demo)</p>
                         </div>
                         
-                        <!-- Enemy -->
-                        <div class="md:col-span-2 cyber-card rounded-3xl p-6 text-center border border-red-400">
-                            <div class="text-xs mb-2 text-red-400">OPPONENT</div>
-                            <div class="text-8xl mb-4">👹🐼</div>
-                            <div class="font-black text-2xl">Doombringer</div>
-                            <div class="text-sm text-red-400">LVL 51 • 51 PWR</div>
-                            
-                            <div class="mt-5 h-2 bg-gray-800 rounded">
-                                <div class="h-2 bg-red-500 w-[67%] rounded"></div>
+                        <div id="battle-fighter-enemy" class="battle-fighter md:col-span-3 cyber-card rounded-3xl p-4 md:p-6 text-center border border-red-500/50">
+                            <div class="battle-anim-flash battle-anim-flash--red pointer-events-none" id="battle-flash-enemy" aria-hidden="true"></div>
+                            <div class="text-xs mb-1 text-red-400">RIVAL</div>
+                            <div class="text-6xl sm:text-8xl mb-2 min-h-[5rem] flex items-center justify-center" aria-hidden="true">
+                                <span class="battle-fighter__emoji" id="battle-emoji-enemy">👹🐼</span>
                             </div>
-                            <div class="text-xs mt-1 text-gray-400">HEALTH 67%</div>
+                            <div class="font-black text-lg md:text-2xl">Doombringer</div>
+                            <div class="text-xs sm:text-sm text-red-400/90 mb-3">LVL 51 · VOID TITAN</div>
+                            <div class="mt-1 h-2.5 bg-gray-800/90 rounded-full overflow-hidden">
+                                <div id="battle-hp-enemy-bar" class="h-2.5 bg-gradient-to-r from-rose-500 to-red-600 rounded-full transition-[width] duration-500 ease-out" style="width:67%"></div>
+                            </div>
+                            <div id="battle-hp-enemy-text" class="text-xs mt-1.5 text-gray-400 font-mono">134 / 200 HP</div>
+                        </div>
+                    </div>
+                    </div>
+                    
+                    <div class="mt-2 cyber-card rounded-3xl p-4 text-sm">
+                        <div class="flex items-center justify-between text-xs px-1 mb-2">
+                            <div class="font-mono text-gray-400">COMBAT LOG</div>
+                            <div class="font-mono text-emerald-500/90 text-[10px]">◇ ANIMATED</div>
+                        </div>
+                        <div class="space-y-1.5 text-xs font-mono bg-black/50 p-3 rounded-2xl max-h-36 overflow-y-auto" id="battle-log">
+                            <div class="text-gray-500">The arena hums. Choose Attack or Special — moves play on the stage above.</div>
                         </div>
                     </div>
                     
-                    <div class="mt-8 cyber-card rounded-3xl p-5 text-sm">
-                        <div class="flex items-center justify-between text-xs px-2 mb-3">
-                            <div>BATTLE LOG</div>
-                            <div class="font-mono text-red-400">LIVE</div>
-                        </div>
-                        
-                        <div class="space-y-2 text-xs font-mono bg-black/50 p-4 rounded-2xl max-h-48 overflow-auto" id="battle-log">
-                            <div class="text-emerald-400">Nova Guardian used <span class="font-bold">STELLAR BURST</span> → 28 DMG</div>
-                            <div>Doombringer countered with <span class="font-bold">SHADOW SLASH</span> → 19 DMG</div>
-                            <div class="text-emerald-400">Critical hit! Nova used <span class="font-bold">FUSION RAY</span> → 41 DMG</div>
-                        </div>
-                    </div>
-                    
-                    <div class="flex justify-center gap-x-3 mt-8">
-                        <button onclick="simulateBattleAttack(this)" class="px-8 py-3 text-sm bg-red-500 hover:bg-red-600 transition-colors rounded-2xl font-bold flex items-center gap-x-2">
-                            <span>ATTACK</span> <i class="fas fa-fist-raised"></i>
+                    <div class="flex flex-wrap justify-center gap-3 mt-6">
+                        <button type="button" id="battle-attack-btn" onclick="void simulateBattleAttack(this, false)" class="px-8 py-3 text-sm bg-red-600 hover:bg-red-500 transition-colors rounded-2xl font-bold flex items-center gap-x-2">
+                            <span>ATTACK</span> <i class="fas fa-fist-raised" aria-hidden="true"></i>
                         </button>
-                        <button onclick="simulateBattleAttack(this, true)" class="px-8 py-3 text-sm border border-emerald-400 text-emerald-400 hover:bg-emerald-400 hover:text-black transition-all rounded-2xl font-bold flex items-center gap-x-2">
-                            <span>SPECIAL</span> <i class="fas fa-magic"></i>
+                        <button type="button" id="battle-special-btn" onclick="void simulateBattleAttack(this, true)" class="px-8 py-3 text-sm border border-fuchsia-400 text-fuchsia-300 hover:bg-fuchsia-500/20 transition-all rounded-2xl font-bold flex items-center gap-x-2">
+                            <span>SPECIAL</span> <i class="fas fa-magic" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
             `;
+            __syncBattleHpBars();
         }
 
-        function simulateBattleAttack(element, isSpecial = false) {
-            const log = document.getElementById('battle-log');
-            if (!log) return;
-            
-            const attacks = isSpecial ? 
-                ["CRITICAL FUSION BEAM", "DIMENSION RIFT", "PANDAS UNITE"] : 
-                ["BAMBOO SLAM", "PAW STRIKE", "ROAR OF FURY"];
-            
+        async function simulateBattleAttack(element, isSpecial = false) {
+            const b = window.__activeBattle;
+            const log = document.getElementById("battle-log");
+            if (!log || !b || b.ended) return;
+            const pCard = document.getElementById("battle-fighter-player");
+            const eCard = document.getElementById("battle-fighter-enemy");
+            const pFlash = document.getElementById("battle-flash-player");
+            const eFlash = document.getElementById("battle-flash-enemy");
+            const beam = document.getElementById("battle-beam");
+            const atkBtn = document.getElementById("battle-attack-btn");
+            const spBtn = document.getElementById("battle-special-btn");
+            if (!pCard || !eCard) return;
+            if (element && element.disabled) return;
+            if (atkBtn) atkBtn.disabled = true;
+            if (spBtn) spBtn.disabled = true;
+            const attacks = isSpecial
+                ? ["CRITICAL FUSION BEAM", "DIMENSION RIFT", "PANDAS UNITE"]
+                : ["BAMBOO SLAM", "PAW STRIKE", "ROAR OF FURY"];
             const attackName = attacks[Math.floor(Math.random() * attacks.length)];
-            const dmg = isSpecial ? Math.floor(Math.random() * 28) + 35 : Math.floor(Math.random() * 18) + 14;
-            
-            const newLine = document.createElement('div');
-            newLine.className = isSpecial ? 'text-fuchsia-400' : 'text-emerald-400';
-            newLine.innerHTML = `You used <span class="font-bold">${attackName}</span> → <span class="font-mono">${dmg} DMG</span>`;
-            
-            log.appendChild(newLine);
-            log.scrollTop = log.scrollHeight;
-            
-            // Enemy counter
-            setTimeout(() => {
-                if (!log) return;
-                const enemyAttacks = ["VOID CRUSH", "HELLFIRE ROAR", "DARK PULSE"];
-                const enemyAttack = enemyAttacks[Math.floor(Math.random() * enemyAttacks.length)];
-                const enemyDmg = Math.floor(Math.random() * 22) + 12;
-                
-                const enemyLine = document.createElement('div');
-                enemyLine.className = 'text-red-400';
-                enemyLine.innerHTML = `Doombringer used <span class="font-bold">${enemyAttack}</span> → <span class="font-mono">${enemyDmg} DMG</span>`;
-                log.appendChild(enemyLine);
-                log.scrollTop = log.scrollHeight;
-                
-                // Random chance to win
-                if (Math.random() > 0.65) {
-                    setTimeout(() => {
-                        if (log) {
-                            const winLine = document.createElement('div');
-                            winLine.className = 'text-amber-400 font-bold pt-3 border-t border-gray-800 mt-2';
-                            winLine.innerHTML = `🏆 VICTORY! You defeated Doombringer! +650 XP`;
-                            log.appendChild(winLine);
-                            
-                            showToast("Battle won! +650 XP earned", "success");
-                            
-                            gameState.xp += 650;
-                            if (gameState.xp >= 10000) {
-                                gameState.level++;
-                                gameState.xp = gameState.xp % 10000;
-                                setTimeout(showLevelUp, 1200);
-                            }
-                            saveGameState();
-                            updateDashboard();
-                        }
-                    }, 1400);
+            const dmg = isSpecial
+                ? Math.floor(Math.random() * 28) + 35
+                : Math.floor(Math.random() * 18) + 14;
+            pCard.classList.add("battle-anim-attack-left");
+            __resetBeam(beam);
+            if (beam) {
+                if (isSpecial) {
+                    beam.classList.add("battle-beam--special");
+                    beam.style.background =
+                        "linear-gradient(90deg, #a855f7, #e879f9, #f43f5e)";
+                } else {
+                    beam.style.background =
+                        "linear-gradient(90deg, #10b981, #2dd4bf, #a855f7)";
                 }
-            }, 1100);
-            
-            // Disable buttons temporarily
-            element.disabled = true;
-            setTimeout(() => {
-                if (element) element.disabled = false;
-            }, 2100);
+                beam.classList.add("battle-beam--to-enemy");
+            }
+            await __battleWait(120);
+            b.enemyCur = Math.max(0, b.enemyCur - dmg);
+            __syncBattleHpBars();
+            eCard.classList.add("battle-anim-shake");
+            if (eFlash) eFlash.classList.add("battle-anim-flash--on", "battle-anim-flash--red");
+            __spawnBattleFloatingDmg(eCard, dmg, isSpecial);
+            __appendBattleLogLine(
+                isSpecial ? "text-fuchsia-300" : "text-emerald-300",
+                `Nova used <span class="font-bold">${attackName}</span> <span class="text-white/60">→</span> <span class="font-mono">${dmg} DMG</span>`,
+            );
+            await __battleWait(450);
+            pCard.classList.remove("battle-anim-attack-left");
+            eCard.classList.remove("battle-anim-shake");
+            if (eFlash) eFlash.classList.remove("battle-anim-flash--on", "battle-anim-flash--red");
+            if (beam) {
+                beam.classList.remove("battle-beam--to-enemy", "battle-beam--special");
+            }
+            if (b.enemyCur <= 0) {
+                b.ended = true;
+                b.enemyCur = 0;
+                __syncBattleHpBars();
+                document.getElementById("battle-stage")?.classList.add("battle-stage--victory");
+                __appendBattleLogLine(
+                    "text-amber-300 font-bold border-t border-amber-500/20 pt-2 mt-1",
+                    "🏆 VICTORY! Doombringer is down! +650 XP",
+                );
+                showToast("Battle won! +650 XP earned", "success");
+                gameState.xp += 650;
+                if (gameState.xp >= 10000) {
+                    gameState.level++;
+                    gameState.xp = gameState.xp % 10000;
+                    setTimeout(showLevelUp, 1200);
+                }
+                saveGameState();
+                updateDashboard();
+                return;
+            }
+            await __battleWait(380);
+            const roundEl = document.getElementById("battle-round");
+            const enemyAttacks = ["VOID CRUSH", "HELLFIRE ROAR", "DARK PULSE"];
+            const enemyAttack = enemyAttacks[Math.floor(Math.random() * enemyAttacks.length)];
+            const enemyDmg = Math.floor(Math.random() * 22) + 12;
+            eCard.classList.add("battle-anim-attack-right");
+            __resetBeam(beam);
+            if (beam) {
+                beam.style.background = "linear-gradient(90deg, #f43f5e, #a855f7, #10b981)";
+                beam.classList.add("battle-beam--to-player");
+            }
+            await __battleWait(120);
+            b.playerCur = Math.max(0, b.playerCur - enemyDmg);
+            __syncBattleHpBars();
+            pCard.classList.add("battle-anim-shake");
+            if (pFlash) pFlash.classList.add("battle-anim-flash--on", "battle-anim-flash--emerald");
+            __spawnBattleFloatingDmg(pCard, enemyDmg, false);
+            __appendBattleLogLine(
+                "text-rose-300",
+                `Doombringer: <span class="font-bold">${enemyAttack}</span> <span class="text-white/60">→</span> <span class="font-mono text-white">${enemyDmg} DMG</span>`,
+            );
+            await __battleWait(450);
+            eCard.classList.remove("battle-anim-attack-right");
+            pCard.classList.remove("battle-anim-shake");
+            if (pFlash) pFlash.classList.remove("battle-anim-flash--on", "battle-anim-flash--emerald");
+            if (beam) {
+                beam.classList.remove("battle-beam--to-player");
+            }
+            b.round += 1;
+            if (roundEl) {
+                roundEl.textContent = String(b.round);
+            }
+            if (!b.ended) {
+                if (atkBtn) atkBtn.disabled = false;
+                if (spBtn) spBtn.disabled = false;
+            }
         }
 
         function navigateTo(section) {
