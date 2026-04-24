@@ -230,6 +230,30 @@
             border-color: rgba(251, 191, 36, 0.5);
         }
 
+        .battle-fighter--defeated {
+            animation: battleDefeatedVanish 0.75s ease-in forwards;
+            pointer-events: none;
+        }
+
+        @keyframes battleDefeatedVanish {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+            70% {
+                opacity: 0.2;
+                transform: translateY(16px) scale(0.82);
+                filter: blur(2px);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(24px) scale(0.72);
+                visibility: hidden;
+                filter: blur(4px);
+            }
+        }
+
         @keyframes battleVictoryPulse {
             0%,
             100% {

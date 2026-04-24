@@ -20,6 +20,11 @@ assert.ok(appSrc.length > 1000);
 assert.ok(appSrc.includes("DOMContentLoaded"), "app should boot on DOMContentLoaded (reliable on Vercel)");
 assert.ok(appSrc.includes("initTailwind"), "tailwind config must be applied");
 assert.ok(appSrc.includes("nav-mobile-"), "active nav logic should cover mobile links");
+assert.match(appSrc, /level:\s*0/, "new users should start at level 0");
+assert.match(appSrc, /fusions:\s*0/, "new users should start with zero fusion history");
+assert.ok(appSrc.includes("battle-fighter--defeated"), "defeated battle foes should vanish from view");
+assert.ok(appSrc.includes("__createBattleMatch"), "battle foes should be generated from player level");
 assert.ok(read("styles.css").includes(".cyber-card"));
+assert.ok(read("styles.css").includes("battleDefeatedVanish"));
 
 process.stdout.write("build sanity ok\n");
