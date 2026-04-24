@@ -1,0 +1,230 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600&display=swap");
+
+:root {
+    --neon-green: #00ff9d;
+    --neon-pink: #ff00aa;
+    --neon-blue: #00f0ff;
+}
+
+body {
+    font-family: "Inter", system-ui, sans-serif;
+}
+
+.logo-font {
+    font-family: "Space Grotesk", "Inter", sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+}
+
+.neon-text {
+    text-shadow:
+        0 0 10px var(--neon-green),
+        0 0 20px var(--neon-green);
+}
+
+.neon-pink-text {
+    text-shadow:
+        0 0 10px var(--neon-pink),
+        0 0 20px var(--neon-pink);
+}
+
+.cyber-card {
+    background: #0f1117;
+    border: 1px solid #1f2937;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.cyber-card:hover {
+    border-color: #00ff9d;
+    box-shadow: 0 0 25px rgba(0, 255, 157, 0.15);
+    transform: translateY(-4px);
+}
+
+.panda-card {
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.panda-card:hover {
+    transform: scale(1.05) rotate(1deg);
+    box-shadow: 0 0 30px rgba(0, 255, 157, 0.3);
+}
+
+.panda-card::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.panda-card:hover::before {
+    opacity: 1;
+}
+
+.fusion-glow {
+    animation: fusion-pulse 2s infinite ease-in-out;
+}
+
+@keyframes fusion-pulse {
+    0%,
+    100% {
+        box-shadow:
+            0 0 15px #00ff9d,
+            0 0 30px #00ff9d;
+    }
+    50% {
+        box-shadow:
+            0 0 30px #ff00aa,
+            0 0 50px #ff00aa;
+    }
+}
+
+.neon-button {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    background: linear-gradient(45deg, #00ff9d, #00f0ff);
+    color: #0a0a0f;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.neon-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px #00ff9d;
+}
+
+.neon-button::after {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -100%;
+    width: 50%;
+    height: 200%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    transition: 0.6s;
+}
+
+.neon-button:hover::after {
+    left: 250%;
+}
+
+.section-header {
+    font-size: 1.75rem;
+    font-weight: 700;
+    background: linear-gradient(90deg, #fff, #00ff9d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.1;
+}
+
+.panda-emoji {
+    font-size: 4.5rem;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+    transition: transform 0.4s ease;
+}
+
+.panda-card:hover .panda-emoji {
+    transform: scale(1.15) rotate(5deg);
+}
+
+.stat-value {
+    font-variant-numeric: tabular-nums;
+}
+
+.fusion-chamber {
+    background: radial-gradient(circle at center, #1a1f2e 0%, #0f1117 70%);
+    border: 2px solid #374151;
+}
+
+.slot {
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.slot.active {
+    border-color: #00ff9d;
+    box-shadow: 0 0 25px rgba(0, 255, 157, 0.4);
+    transform: scale(1.02);
+}
+
+.nav-link {
+    transition: all 0.2s ease;
+}
+
+.nav-link.active {
+    background-color: #1f2937;
+    color: #00ff9d;
+    border-radius: 8px;
+}
+
+.master-badge {
+    background: linear-gradient(90deg, #ff00aa, #00f0ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 50;
+}
+
+.glitch {
+    animation: glitch 0.3s infinite;
+}
+
+@keyframes glitch {
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+    20% {
+        transform: translate(-1px, 1px);
+    }
+    40% {
+        transform: translate(1px, -1px);
+    }
+    60% {
+        transform: translate(-0.5px, -0.5px);
+    }
+    80% {
+        transform: translate(0.5px, 0.5px);
+    }
+}
+
+.panda-grid {
+    scrollbar-width: thin;
+    scrollbar-color: #374151 #1f2937;
+}
+
+.metric-bar {
+    height: 6px;
+    background: linear-gradient(90deg, #00ff9d, #00f0ff);
+    border-radius: 9999px;
+    transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes spin-slow {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin-slow {
+    animation: spin-slow 10s linear infinite;
+}

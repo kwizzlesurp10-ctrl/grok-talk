@@ -1,0 +1,9 @@
+{
+  "name": "fusionpanda-master",
+  "private": true,
+  "scripts": {
+    "start": "npx -y serve -l 3000 .",
+    "build:html": "node strip.cjs",
+    "test": "node tests/build.test.cjs"
+  }
+}
