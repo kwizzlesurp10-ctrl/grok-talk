@@ -26,6 +26,8 @@
             level: 0,
             xp: 0,
             lifetimeEarnedXp: 0,
+            saveSchemaVersion: 2,
+            fireChallengeFusions: 0,
             fusions: 0,
             ritualFusionsCount: 0,
             collectionCount: 1,
@@ -79,6 +81,20 @@
                     const lvl = Math.max(0, Number(gameState.level) || 0);
                     gameState.lifetimeEarnedXp = Math.floor(f * 95 + lvl * 400);
                 }
+                if (typeof gameState.saveSchemaVersion !== "number" || gameState.saveSchemaVersion < 1) {
+                    gameState.saveSchemaVersion = 2;
+                }
+                if (typeof gameState.fireChallengeFusions !== "number" || gameState.fireChallengeFusions < 0) {
+                    gameState.fireChallengeFusions = 0;
+                }
+                if (typeof parsed.saveSchemaVersion === "undefined" || Number(parsed.saveSchemaVersion) < 2) {
+                    const approxFire = Math.min(
+                        3,
+                        Math.floor(Math.max(0, Number(gameState.fusions) || 0) / 40),
+                    );
+                    gameState.fireChallengeFusions = approxFire;
+                    gameState.saveSchemaVersion = 2;
+                }
             } else {
                 gameState.recentFusions = [];
                 saveGameState();
@@ -103,15 +119,34 @@
             const hint = document.getElementById("daily-challenge-reward-hint");
             if (!btn || !label) return;
             const earned = Math.max(0, Number(gameState.lifetimeEarnedXp) || 0);
-            const ok = earned >= DAILY_CHALLENGE_REWARD_XP_THRESHOLD;
+            const fireN = Math.min(3, Math.max(0, Math.floor(Number(gameState.fireChallengeFusions) || 0)));
+            const xpOk = earned >= DAILY_CHALLENGE_REWARD_XP_THRESHOLD;
+            const fireOk = fireN >= 3;
+            const ok = xpOk && fireOk;
             btn.disabled = !ok;
             btn.setAttribute("aria-disabled", ok ? "false" : "true");
-            label.textContent = ok ? "CLAIM REWARD" : "EARN XP TO UNLOCK";
+            if (ok) {
+                label.textContent = "CLAIM REWARD";
+            } else if (!xpOk) {
+                label.textContent = "EARN XP TO UNLOCK";
+            } else {
+                label.textContent = `FIRE ${fireN}/3`;
+            }
             if (hint) {
-                const left = Math.max(0, DAILY_CHALLENGE_REWARD_XP_THRESHOLD - earned);
-                hint.innerHTML = ok
-                    ? `<span class="text-emerald-400/90">Challenge complete — claim your reward.</span>`
-                    : `Earn <span class="font-mono text-emerald-400/90">${DAILY_CHALLENGE_REWARD_XP_THRESHOLD}</span> lifetime XP from fusions &amp; battles (<span class="font-mono text-gray-300">${earned}</span> / ${DAILY_CHALLENGE_REWARD_XP_THRESHOLD}). <span class="font-mono text-amber-400/90">${left}</span> to go.`;
+                const leftXp = Math.max(0, DAILY_CHALLENGE_REWARD_XP_THRESHOLD - earned);
+                const leftFire = Math.max(0, 3 - fireN);
+                if (ok) {
+                    hint.innerHTML = `<span class="text-emerald-400/90">Inferno protocol met — claim your reward.</span>`;
+                } else {
+                    hint.innerHTML = [
+                        !xpOk
+                            ? `Earn <span class="font-mono text-emerald-400/90">${DAILY_CHALLENGE_REWARD_XP_THRESHOLD}</span> lifetime XP (<span class="font-mono text-gray-300">${earned}</span> / ${DAILY_CHALLENGE_REWARD_XP_THRESHOLD}). <span class="font-mono text-amber-400/90">${leftXp}</span> XP to go.`
+                            : `<span class="text-emerald-400/80">XP requirement met.</span>`,
+                        !fireOk
+                            ? ` Fuse until <span class="font-mono text-orange-300">3</span> fusion results include Fire (<span class="font-mono text-gray-300">${fireN}</span> / 3). <span class="font-mono text-amber-400/90">${leftFire}</span> to go.`
+                            : "",
+                    ].join("");
+                }
             }
         }
 
@@ -136,6 +171,23 @@
             document.getElementById('collection-count').innerText = userPandas.length;
 
             syncDailyChallengeRewardUi();
+            syncFireChallengeUi();
+        }
+
+        function __resultCountsTowardFireChallenge(panda) {
+            if (!panda) return false;
+            const t = String(panda.type || "").toLowerCase();
+            return t === "fire" || t.includes("fire");
+        }
+
+        function syncFireChallengeUi() {
+            const countEl = document.getElementById("daily-challenge-fire-count");
+            const barEl = document.getElementById("daily-challenge-fire-bar");
+            if (!countEl || !barEl) return;
+            const n = Math.min(3, Math.max(0, Math.floor(Number(gameState.fireChallengeFusions) || 0)));
+            countEl.textContent = String(n);
+            const pct = (n / 3) * 100;
+            barEl.style.width = pct + "%";
         }
 
         function renderRecentFusions() {
@@ -828,25 +880,44 @@
 
         function setFusionMode(mode) {
             currentFusionMode = mode;
-            
-            // Update UI buttons
-            document.querySelectorAll('[id^="mode-"]').forEach(el => {
-                el.classList.remove('bg-emerald-500', 'text-black', 'active-mode');
-                el.classList.add('bg-[#1a1f2e]', 'border', 'border-white/20');
-                
-                if (el.id === `mode-${mode}`) {
-                    el.classList.remove('bg-[#1a1f2e]', 'border-white/20');
-                    if (mode === 'basic') {
-                        el.classList.add('bg-emerald-500', 'text-black');
-                    } else if (mode === 'advanced') {
-                        el.classList.add('bg-fuchsia-500', 'text-black');
-                    } else if (mode === 'ritual') {
-                        el.classList.add('bg-amber-500', 'text-black');
-                    }
+
+            const basic = document.getElementById("mode-basic");
+            const advanced = document.getElementById("mode-advanced");
+            const ritual = document.getElementById("mode-ritual");
+            const resetInactive = (el, borderClass) => {
+                if (!el) return;
+                el.classList.remove(
+                    "bg-emerald-500",
+                    "bg-fuchsia-500",
+                    "bg-amber-500",
+                    "text-black",
+                    "active-mode",
+                );
+                el.classList.add("bg-[#1a1f2e]", "border", borderClass);
+            };
+
+            resetInactive(basic, "border-emerald-400/40");
+            resetInactive(advanced, "border-fuchsia-400/50");
+            resetInactive(ritual, "border-amber-400/50");
+
+            const active = document.getElementById(`mode-${mode}`);
+            if (active) {
+                active.classList.remove(
+                    "bg-[#1a1f2e]",
+                    "border",
+                    "border-emerald-400/40",
+                    "border-fuchsia-400/50",
+                    "border-amber-400/50",
+                );
+                if (mode === "basic") {
+                    active.classList.add("bg-emerald-500", "text-black");
+                } else if (mode === "advanced") {
+                    active.classList.add("bg-fuchsia-500", "text-black");
+                } else if (mode === "ritual") {
+                    active.classList.add("bg-amber-500", "text-black");
                 }
-            });
-            
-            // Update energy cost display
+            }
+
             updateEnergyCost();
         }
 
@@ -892,6 +963,12 @@
                 gameState.fusions++;
                 if (currentFusionMode === "ritual") {
                     gameState.ritualFusionsCount = (gameState.ritualFusionsCount || 0) + 1;
+                }
+                if (__resultCountsTowardFireChallenge(newPanda)) {
+                    gameState.fireChallengeFusions = Math.min(
+                        3,
+                        (Number(gameState.fireChallengeFusions) || 0) + 1,
+                    );
                 }
                 let xpGain = Math.floor(Math.random() * 120) + 85;
                 if (currentFusionMode === 'advanced') xpGain = Math.floor(xpGain * 1.4);
@@ -1301,6 +1378,11 @@
                 showToast("Earn more XP from fusions and battles to unlock this reward.", "info");
                 return;
             }
+            const fireN = Math.min(3, Math.max(0, Math.floor(Number(gameState.fireChallengeFusions) || 0)));
+            if (fireN < 3) {
+                showToast("Complete the Inferno challenge: fuse until you get 3 Fire-type results (progress on the card).", "info");
+                return;
+            }
 
             showToast("Daily Challenge Completed! +280 XP & 1 Rare Panda", "success");
 
@@ -1327,6 +1409,7 @@
             
             userPandas.push(rewardPanda);
             gameState.fusions += 5;
+            gameState.fireChallengeFusions = 0;
             
             saveGameState();
             updateDashboard();
@@ -1495,12 +1578,12 @@
             const safeEnemyName = __escapeBattleText(battle.enemyName);
             arenaSection.innerHTML = `
                 <div class="max-w-4xl mx-auto">
-                    <div class="flex justify-between items-center mb-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
                         <div>
                             <div class="uppercase tracking-[3px] text-xs text-red-400">LIVE ARENA</div>
-                            <div class="text-4xl font-black">Epic Showdown</div>
+                            <div class="text-2xl sm:text-4xl font-black">Epic Showdown</div>
                         </div>
-                        <button type="button" onclick="location.reload()" class="px-5 py-2 text-xs border border-gray-700 rounded-2xl flex items-center gap-x-2 hover:bg-red-950/40 transition-colors">
+                        <button type="button" onclick="location.reload()" class="w-full sm:w-auto px-5 py-2.5 text-xs border border-gray-700 rounded-2xl flex items-center justify-center gap-x-2 hover:bg-red-950/40 transition-colors">
                             <i class="fas fa-redo" aria-hidden="true"></i> <span>END BATTLE</span>
                         </button>
                     </div>
@@ -1558,11 +1641,11 @@
                         </div>
                     </div>
                     
-                    <div class="flex flex-wrap justify-center gap-3 mt-6">
-                        <button type="button" id="battle-attack-btn" onclick="void simulateBattleAttack(this, false)" class="px-8 py-3 text-sm bg-red-600 hover:bg-red-500 transition-colors rounded-2xl font-bold flex items-center gap-x-2">
+                    <div class="flex flex-col sm:flex-row flex-wrap justify-center gap-2 sm:gap-3 mt-6">
+                        <button type="button" id="battle-attack-btn" onclick="void simulateBattleAttack(this, false)" class="w-full sm:w-auto min-w-[10rem] px-6 sm:px-8 py-3 text-sm bg-red-600 hover:bg-red-500 transition-colors rounded-2xl font-bold flex items-center justify-center gap-x-2">
                             <span>ATTACK</span> <i class="fas fa-fist-raised" aria-hidden="true"></i>
                         </button>
-                        <button type="button" id="battle-special-btn" onclick="void simulateBattleAttack(this, true)" class="px-8 py-3 text-sm border border-fuchsia-400 text-fuchsia-300 hover:bg-fuchsia-500/20 transition-all rounded-2xl font-bold flex items-center gap-x-2">
+                        <button type="button" id="battle-special-btn" onclick="void simulateBattleAttack(this, true)" class="w-full sm:w-auto min-w-[10rem] px-6 sm:px-8 py-3 text-sm border border-fuchsia-400 text-fuchsia-300 hover:bg-fuchsia-500/20 transition-all rounded-2xl font-bold flex items-center justify-center gap-x-2">
                             <span>SPECIAL</span> <i class="fas fa-magic" aria-hidden="true"></i>
                         </button>
                     </div>
