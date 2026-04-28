@@ -5,6 +5,9 @@
             tailwind.config = {
                 theme: {
                     extend: {
+                        screens: {
+                            xs: "380px"
+                        },
                         fontFamily: {
                             'grotesk': ['Space Grotesk', 'system-ui', 'sans-serif']
                         }
@@ -17,9 +20,12 @@
         }
 
         // Game State
+        const DAILY_CHALLENGE_REWARD_XP_THRESHOLD = 500;
+
         let gameState = {
             level: 0,
             xp: 0,
+            lifetimeEarnedXp: 0,
             fusions: 0,
             ritualFusionsCount: 0,
             collectionCount: 1,
@@ -68,6 +74,11 @@
                 if (typeof gameState.ritualFusionsCount !== "number" || gameState.ritualFusionsCount < 0) {
                     gameState.ritualFusionsCount = 0;
                 }
+                if (typeof gameState.lifetimeEarnedXp !== "number" || gameState.lifetimeEarnedXp < 0) {
+                    const f = Math.max(0, Number(gameState.fusions) || 0);
+                    const lvl = Math.max(0, Number(gameState.level) || 0);
+                    gameState.lifetimeEarnedXp = Math.floor(f * 95 + lvl * 400);
+                }
             } else {
                 gameState.recentFusions = [];
                 saveGameState();
@@ -80,9 +91,35 @@
             renderRecentFusions();
         }
 
+        function bumpLifetimeEarnedXp(amount) {
+            const n = Math.max(0, Math.floor(Number(amount) || 0));
+            if (!n) return;
+            gameState.lifetimeEarnedXp = (Number(gameState.lifetimeEarnedXp) || 0) + n;
+        }
+
+        function syncDailyChallengeRewardUi() {
+            const btn = document.getElementById("daily-challenge-claim-btn");
+            const label = document.getElementById("daily-challenge-claim-label");
+            const hint = document.getElementById("daily-challenge-reward-hint");
+            if (!btn || !label) return;
+            const earned = Math.max(0, Number(gameState.lifetimeEarnedXp) || 0);
+            const ok = earned >= DAILY_CHALLENGE_REWARD_XP_THRESHOLD;
+            btn.disabled = !ok;
+            btn.setAttribute("aria-disabled", ok ? "false" : "true");
+            label.textContent = ok ? "CLAIM REWARD" : "EARN XP TO UNLOCK";
+            if (hint) {
+                const left = Math.max(0, DAILY_CHALLENGE_REWARD_XP_THRESHOLD - earned);
+                hint.innerHTML = ok
+                    ? `<span class="text-emerald-400/90">Challenge complete — claim your reward.</span>`
+                    : `Earn <span class="font-mono text-emerald-400/90">${DAILY_CHALLENGE_REWARD_XP_THRESHOLD}</span> lifetime XP from fusions &amp; battles (<span class="font-mono text-gray-300">${earned}</span> / ${DAILY_CHALLENGE_REWARD_XP_THRESHOLD}). <span class="font-mono text-amber-400/90">${left}</span> to go.`;
+            }
+        }
+
         function updateDashboard() {
             // Update nav level
             document.getElementById('nav-level').innerText = gameState.level;
+            const navLvCompact = document.getElementById("nav-level-compact");
+            if (navLvCompact) navLvCompact.innerText = gameState.level;
             
             // Dashboard values
             document.getElementById('dash-level').innerText = gameState.level;
@@ -97,6 +134,8 @@
             
             // Update collection count in nav
             document.getElementById('collection-count').innerText = userPandas.length;
+
+            syncDailyChallengeRewardUi();
         }
 
         function renderRecentFusions() {
@@ -857,6 +896,7 @@
                 let xpGain = Math.floor(Math.random() * 120) + 85;
                 if (currentFusionMode === 'advanced') xpGain = Math.floor(xpGain * 1.4);
                 if (currentFusionMode === 'ritual') xpGain = Math.floor(xpGain * 2.1);
+                bumpLifetimeEarnedXp(xpGain);
                 gameState.xp += xpGain;
                 
                 // Level up check
@@ -1119,6 +1159,7 @@
             showToast("Panda added to your collection! 🐼", "success");
             
             // Bonus: small XP
+            bumpLifetimeEarnedXp(35);
             gameState.xp += 35;
             if (gameState.xp >= 10000) {
                 gameState.level++;
@@ -1255,10 +1296,15 @@
         }
 
         function claimDailyChallenge() {
-            const btns = event.currentTarget;
-            
+            const earned = Math.max(0, Number(gameState.lifetimeEarnedXp) || 0);
+            if (earned < DAILY_CHALLENGE_REWARD_XP_THRESHOLD) {
+                showToast("Earn more XP from fusions and battles to unlock this reward.", "info");
+                return;
+            }
+
             showToast("Daily Challenge Completed! +280 XP & 1 Rare Panda", "success");
-            
+
+            bumpLifetimeEarnedXp(280);
             gameState.xp += 280;
             if (gameState.xp >= 10000) {
                 gameState.level++;
@@ -1589,6 +1635,7 @@
                     `🏆 VICTORY! ${__escapeBattleText(b.enemyName)} vanished from the arena! +650 XP`,
                 );
                 showToast("Battle won! +650 XP earned", "success");
+                bumpLifetimeEarnedXp(650);
                 gameState.xp += 650;
                 if (gameState.xp >= 10000) {
                     gameState.level++;
@@ -1864,6 +1911,7 @@
                     };
                     
                     userPandas.push(legendary);
+                    bumpLifetimeEarnedXp(999);
                     gameState.xp += 999;
                     if (gameState.xp >= 10000) {
                         gameState.level++;
