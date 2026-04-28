@@ -17,45 +17,51 @@
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <!-- Top Navigation -->
     <nav class="border-b border-gray-800 bg-[#0f1117]/95 backdrop-blur-lg fixed w-full z-50" aria-label="Primary">
-        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <div class="flex items-center gap-x-4">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 min-h-14 sm:h-16 py-2 sm:py-0 flex flex-wrap sm:flex-nowrap items-center justify-between gap-x-2 gap-y-2">
+            <div class="flex items-center gap-x-2 sm:gap-x-3 min-w-0 flex-1 sm:flex-none">
                 <!-- Logo -->
-                <div class="flex items-center gap-x-3">
-                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 via-cyan-400 to-fuchsia-500 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.5)]">
-                        <span class="text-3xl">🐼</span>
+                <div class="flex items-center gap-x-2 sm:gap-x-3 min-w-0">
+                    <div class="w-9 h-9 sm:w-11 sm:h-11 shrink-0 rounded-2xl bg-gradient-to-br from-emerald-400 via-cyan-400 to-fuchsia-500 flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.5)]">
+                        <span class="text-2xl sm:text-3xl">🐼</span>
                     </div>
-                    <div>
-                        <div class="logo-font text-3xl font-black tracking-tighter">FUSIONPANDA</div>
-                        <div class="text-[10px] text-emerald-400 -mt-1 tracking-[3px] font-mono">MASTER PROTOCOL v4.2</div>
+                    <div class="min-w-0">
+                        <div class="logo-font text-lg sm:text-2xl md:text-3xl font-black tracking-tighter truncate">FUSIONPANDA</div>
+                        <div class="text-[9px] sm:text-[10px] text-emerald-400 -mt-0.5 sm:-mt-1 tracking-[2px] sm:tracking-[3px] font-mono truncate">MASTER PROTOCOL v4.2</div>
                     </div>
                 </div>
             </div>
 
-            <div class="flex items-center gap-x-4">
+            <div class="flex items-center gap-x-2 sm:gap-x-4 shrink-0 ml-auto">
                 <!-- User Info -->
-                <div class="flex items-center gap-x-3 px-4 py-1.5 rounded-2xl bg-[#1a1f2e] border border-gray-700">
-                    <div class="text-right">
-                        <div class="text-sm font-semibold">Master_Zero</div>
-                        <div class="text-[10px] text-emerald-400 flex items-center gap-x-1 justify-end">
-                            <i class="fas fa-circle text-[8px]"></i> 
-                            <span>ONLINE • LEVEL <span id="nav-level">0</span></span>
+                <div class="hidden xs:flex items-center gap-x-2 sm:gap-x-3 pl-2 pr-2 sm:px-4 py-1 sm:py-1.5 rounded-2xl bg-[#1a1f2e] border border-gray-700 max-w-[min(100vw-8rem,14rem)] sm:max-w-none">
+                    <div class="text-right min-w-0">
+                        <div class="text-xs sm:text-sm font-semibold truncate">Master_Zero</div>
+                        <div class="text-[9px] sm:text-[10px] text-emerald-400 flex items-center gap-x-1 justify-end">
+                            <i class="fas fa-circle text-[8px] shrink-0"></i>
+                            <span class="truncate">ONLINE • LVL <span id="nav-level">0</span></span>
                         </div>
                     </div>
-                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-fuchsia-500 to-emerald-400 flex items-center justify-center ring-2 ring-offset-2 ring-offset-[#0a0a0f] ring-emerald-400/30">
-                        <span class="text-xl">🦍</span>
+                    <div class="w-8 h-8 sm:w-9 sm:h-9 shrink-0 rounded-full bg-gradient-to-br from-fuchsia-500 to-emerald-400 flex items-center justify-center ring-2 ring-offset-1 sm:ring-offset-2 ring-offset-[#0a0a0f] ring-emerald-400/30">
+                        <span class="text-lg sm:text-xl">🦍</span>
+                    </div>
+                </div>
+                <div class="xs:hidden flex items-center gap-x-1.5 rounded-2xl bg-[#1a1f2e] border border-gray-700 px-2 py-1" title="Master_Zero">
+                    <span class="text-[10px] font-mono text-emerald-400 whitespace-nowrap">LV <span id="nav-level-compact">0</span></span>
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-fuchsia-500 to-emerald-400 flex items-center justify-center ring-2 ring-offset-1 ring-offset-[#0a0a0f] ring-emerald-400/30">
+                        <span class="text-lg">🦍</span>
                     </div>
                 </div>
 
-                <button type="button" onclick="showSettings()" 
-                        class="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1a1f2e] rounded-2xl transition-colors"
+                <button type="button" onclick="showSettings()"
+                        class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#1a1f2e] rounded-2xl transition-colors shrink-0"
                         aria-label="Open settings">
-                    <i class="fas fa-cog text-xl" aria-hidden="true"></i>
+                    <i class="fas fa-cog text-lg sm:text-xl" aria-hidden="true"></i>
                 </button>
             </div>
         </div>
     </nav>
 
-    <main id="main-content" tabindex="-1" class="max-w-7xl mx-auto pt-16 flex">
+    <main id="main-content" tabindex="-1" class="max-w-7xl mx-auto pt-[4.5rem] sm:pt-16 flex">
         
         <!-- Sidebar Navigation -->
         <nav class="w-64 border-r border-gray-800 bg-[#0f1117] h-[calc(100vh-4rem)] fixed pt-6 px-3 hidden lg:block" aria-label="App sections">
@@ -223,10 +229,12 @@
                             </div>
                         </div>
                         
-                        <button onclick="claimDailyChallenge()" 
-                                class="mt-auto neon-button w-full py-2.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-x-2">
-                            <i class="fas fa-gift"></i>
-                            <span>CLAIM REWARD</span>
+                        <p id="daily-challenge-reward-hint" class="text-[10px] text-gray-500 text-center mt-2 px-1">Earn <span class="font-mono text-emerald-400/90">500</span> XP from fusions and battles to unlock.</p>
+                        <button type="button" onclick="claimDailyChallenge()" id="daily-challenge-claim-btn"
+                                class="mt-auto neon-button w-full py-2.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-x-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:hover:transform-none"
+                                disabled aria-disabled="true">
+                            <i class="fas fa-gift" aria-hidden="true"></i>
+                            <span id="daily-challenge-claim-label">CLAIM REWARD</span>
                         </button>
                     </div>
                 </div>
@@ -337,22 +345,22 @@
 
             <!-- COLLECTION SECTION -->
             <div id="section-collection" class="section hidden">
-                <div class="flex items-center justify-between mb-6">
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
                     <div>
                         <h1 class="section-header">Panda Archive</h1>
                         <p class="text-sm text-gray-400">Your legendary fusion collection • <span id="collection-count">64</span> / 128 discovered</p>
                     </div>
                     
-                    <div class="flex items-center gap-x-2">
-                        <div class="relative">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+                        <div class="relative flex-1 min-w-0">
                             <input type="text" id="search-input" placeholder="Search pandas..." 
-                                   class="bg-[#1a1f2e] border border-gray-700 text-sm pl-10 py-2.5 w-72 rounded-2xl focus:outline-none focus:border-emerald-400 placeholder:text-gray-500"
+                                   class="bg-[#1a1f2e] border border-gray-700 text-sm pl-10 py-2.5 w-full sm:w-72 rounded-2xl focus:outline-none focus:border-emerald-400 placeholder:text-gray-500"
                                    onkeyup="filterCollection()">
                             <i class="fas fa-search absolute left-4 top-3.5 text-gray-500"></i>
                         </div>
                         
                         <select id="filter-rarity" onchange="filterCollection()" 
-                                class="bg-[#1a1f2e] border border-gray-700 text-sm px-4 py-2.5 rounded-2xl text-white">
+                                class="bg-[#1a1f2e] border border-gray-700 text-sm px-4 py-2.5 rounded-2xl text-white w-full sm:w-auto shrink-0">
                             <option value="">All Rarities</option>
                             <option value="common">Common</option>
                             <option value="rare">Rare</option>
@@ -371,34 +379,34 @@
             <!-- CODEX SECTION (Bestiary) -->
             <div id="section-codex" class="section hidden">
                 <!-- Codex Tabs -->
-                <div class="flex border-b border-gray-700 mb-6">
+                <div class="flex overflow-x-auto border-b border-gray-700 mb-6 gap-1 pb-px -mx-1 px-1 sm:mx-0 sm:px-0 scrollbar-thin" role="tablist" aria-label="Codex sections">
                     <div onclick="switchCodexTab('bestiary')" id="tab-bestiary"
-                         class="px-6 py-3 text-sm font-bold cursor-pointer border-b-2 border-purple-400 text-purple-400">BESTIARY</div>
+                         class="shrink-0 px-3 sm:px-6 py-3 text-xs sm:text-sm font-bold cursor-pointer border-b-2 border-purple-400 text-purple-400 whitespace-nowrap">BESTIARY</div>
                     <div onclick="switchCodexTab('achievements')" id="tab-achievements"
-                         class="px-6 py-3 text-sm font-bold cursor-pointer text-gray-400 hover:text-white">ACHIEVEMENTS</div>
+                         class="shrink-0 px-3 sm:px-6 py-3 text-xs sm:text-sm font-bold cursor-pointer text-gray-400 hover:text-white whitespace-nowrap">ACHIEVEMENTS</div>
                     <div onclick="switchCodexTab('catalysts')" id="tab-catalysts"
-                         class="px-6 py-3 text-sm font-bold cursor-pointer text-gray-400 hover:text-white">CATALYSTS</div>
+                         class="shrink-0 px-3 sm:px-6 py-3 text-xs sm:text-sm font-bold cursor-pointer text-gray-400 hover:text-white whitespace-nowrap">CATALYSTS</div>
                     <div onclick="switchCodexTab('fusion-tree')" id="tab-fusion-tree"
-                         class="px-6 py-3 text-sm font-bold cursor-pointer text-gray-400 hover:text-white">FUSION TREE</div>
+                         class="shrink-0 px-3 sm:px-6 py-3 text-xs sm:text-sm font-bold cursor-pointer text-gray-400 hover:text-white whitespace-nowrap">FUSION TREE</div>
                 </div>
 
                 <div id="codex-panel-bestiary" class="codex-subpanel">
-                <div class="flex items-center justify-between mb-6" id="codex-header">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6" id="codex-header">
                     <div>
                         <h1 class="section-header">The Codex of Fusions</h1>
                         <p class="text-gray-400 text-sm">Ancient knowledge of all known panda species and legendary hybrids • <span id="codex-count">42</span> entries</p>
                     </div>
                     
-                    <div class="flex items-center gap-x-2" id="codex-controls">
-                        <div class="relative">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto" id="codex-controls">
+                        <div class="relative flex-1 min-w-0">
                             <input type="text" id="codex-search" placeholder="Search codex..." 
-                                   class="bg-[#1a1f2e] border border-gray-700 text-sm pl-10 py-2.5 w-64 rounded-2xl focus:outline-none focus:border-purple-400 placeholder:text-gray-500"
+                                   class="bg-[#1a1f2e] border border-gray-700 text-sm pl-10 py-2.5 w-full sm:w-64 rounded-2xl focus:outline-none focus:border-purple-400 placeholder:text-gray-500"
                                    onkeyup="filterCodex()">
                             <i class="fas fa-search absolute left-4 top-3.5 text-gray-500"></i>
                         </div>
                         
                         <select id="codex-filter" onchange="filterCodex()" 
-                                class="bg-[#1a1f2e] border border-gray-700 text-sm px-4 py-2.5 rounded-2xl text-white">
+                                class="bg-[#1a1f2e] border border-gray-700 text-sm px-4 py-2.5 rounded-2xl text-white w-full sm:w-auto shrink-0">
                             <option value="">All Types</option>
                             <option value="Balanced">Balanced</option>
                             <option value="Fire">Fire</option>
@@ -592,31 +600,36 @@
     </main>
 
     <!-- Mobile Navigation -->
-    <nav class="lg:hidden fixed bottom-0 inset-x-0 z-50 border-t border-gray-800 bg-[#0f1117]/95 backdrop-blur-lg px-2 py-2" aria-label="Mobile app sections">
-        <div class="grid grid-cols-5 gap-1 max-w-xl mx-auto">
-            <div onclick="navigateTo('dashboard')" class="nav-link active flex flex-col items-center justify-center gap-y-1 py-2 rounded-2xl text-[10px] font-medium cursor-pointer" id="nav-mobile-dashboard" aria-current="page">
-                <i class="fas fa-tachometer-alt text-emerald-400 text-base"></i>
-                <span>Home</span>
+    <nav class="lg:hidden fixed bottom-0 inset-x-0 z-50 border-t border-gray-800 bg-[#0f1117]/95 backdrop-blur-lg px-1 pt-1 pb-[max(0.5rem,env(safe-area-inset-bottom))]" aria-label="Mobile app sections">
+        <div class="grid grid-cols-6 gap-0.5 max-w-xl mx-auto">
+            <div onclick="navigateTo('dashboard')" class="nav-link active flex flex-col items-center justify-center gap-y-0.5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl text-[9px] sm:text-[10px] font-medium cursor-pointer min-w-0" id="nav-mobile-dashboard" aria-current="page">
+                <i class="fas fa-tachometer-alt text-emerald-400 text-sm sm:text-base"></i>
+                <span class="truncate max-w-full px-0.5">Home</span>
             </div>
 
-            <div onclick="navigateTo('fusion-lab')" class="nav-link flex flex-col items-center justify-center gap-y-1 py-2 rounded-2xl text-[10px] font-medium cursor-pointer" id="nav-mobile-fusion-lab">
-                <i class="fas fa-flask text-fuchsia-400 text-base"></i>
-                <span>Fuse</span>
+            <div onclick="navigateTo('fusion-lab')" class="nav-link flex flex-col items-center justify-center gap-y-0.5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl text-[9px] sm:text-[10px] font-medium cursor-pointer min-w-0" id="nav-mobile-fusion-lab">
+                <i class="fas fa-flask text-fuchsia-400 text-sm sm:text-base"></i>
+                <span class="truncate max-w-full px-0.5">Fuse</span>
             </div>
 
-            <div onclick="navigateTo('collection')" class="nav-link flex flex-col items-center justify-center gap-y-1 py-2 rounded-2xl text-[10px] font-medium cursor-pointer" id="nav-mobile-collection">
-                <i class="fas fa-book text-cyan-400 text-base"></i>
-                <span>Bag</span>
+            <div onclick="navigateTo('collection')" class="nav-link flex flex-col items-center justify-center gap-y-0.5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl text-[9px] sm:text-[10px] font-medium cursor-pointer min-w-0" id="nav-mobile-collection">
+                <i class="fas fa-book text-cyan-400 text-sm sm:text-base"></i>
+                <span class="truncate max-w-full px-0.5">Bag</span>
             </div>
 
-            <div onclick="navigateTo('codex')" class="nav-link flex flex-col items-center justify-center gap-y-1 py-2 rounded-2xl text-[10px] font-medium cursor-pointer" id="nav-mobile-codex">
-                <i class="fas fa-scroll text-purple-400 text-base"></i>
-                <span>Codex</span>
+            <div onclick="navigateTo('codex')" class="nav-link flex flex-col items-center justify-center gap-y-0.5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl text-[9px] sm:text-[10px] font-medium cursor-pointer min-w-0" id="nav-mobile-codex">
+                <i class="fas fa-scroll text-purple-400 text-sm sm:text-base"></i>
+                <span class="truncate max-w-full px-0.5">Codex</span>
             </div>
 
-            <div onclick="navigateTo('arena')" class="nav-link flex flex-col items-center justify-center gap-y-1 py-2 rounded-2xl text-[10px] font-medium cursor-pointer" id="nav-mobile-arena">
-                <i class="fas fa-swords text-red-400 text-base"></i>
-                <span>Arena</span>
+            <div onclick="navigateTo('upgrades')" class="nav-link flex flex-col items-center justify-center gap-y-0.5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl text-[9px] sm:text-[10px] font-medium cursor-pointer min-w-0" id="nav-mobile-upgrades">
+                <i class="fas fa-rocket text-amber-400 text-sm sm:text-base"></i>
+                <span class="truncate max-w-full px-0.5">Up</span>
+            </div>
+
+            <div onclick="navigateTo('arena')" class="nav-link flex flex-col items-center justify-center gap-y-0.5 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl text-[9px] sm:text-[10px] font-medium cursor-pointer min-w-0" id="nav-mobile-arena">
+                <i class="fas fa-swords text-red-400 text-sm sm:text-base"></i>
+                <span class="truncate max-w-full px-0.5">Arena</span>
             </div>
         </div>
     </nav>
@@ -689,7 +702,7 @@
     </div>
 
     <!-- Toast Container -->
-    <div id="toast-container" class="fixed bottom-5 right-5 z-[200] flex flex-col gap-y-2"></div>
+    <div id="toast-container" class="fixed bottom-[5.5rem] lg:bottom-5 right-3 sm:right-5 left-3 sm:left-auto z-[200] flex flex-col gap-y-2 max-w-md sm:max-w-xs mx-auto sm:mx-0"></div>
 
         <script defer src="/app.js"></script>
 </body>

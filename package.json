@@ -7,6 +7,6 @@
     "start": "npx -y serve -l 3000 .",
     "build:html": "node strip.cjs",
     "build": "npm run build:html && npm test",
-    "test": "node tests/build.test.cjs"
+    "test": "node tests/build.test.cjs && node tests/reward-gate.test.cjs"
   }
 }
