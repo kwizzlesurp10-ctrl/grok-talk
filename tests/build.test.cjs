@@ -12,7 +12,7 @@ assert.match(html, /id="main-content"/, "semantic main landmark for skip link ta
 assert.match(html, /aria-label="Mobile app sections"/, "mobile users need section navigation");
 assert.match(html, /id="nav-mobile-arena"/, "mobile nav should include Battle Arena");
 assert.match(html, /id="nav-mobile-upgrades"/, "mobile nav should include Upgrades to match desktop sections");
-assert.match(html, /id="daily-challenge-claim-btn"/, "daily challenge claim control should exist for scripted gating");
+assert.match(html, /id="daily-challenge-fire-count"/, "inferno challenge should expose fire fusion progress");
 assert.match(html, /disabled aria-disabled="true"/, "claim reward should start disabled until earned XP threshold is met");
 assert.match(html, /fusionpanda\.webmanifest/);
 assert.match(html, /meta name="description"/);
@@ -24,7 +24,7 @@ assert.ok(appSrc.includes("DOMContentLoaded"), "app should boot on DOMContentLoa
 assert.ok(appSrc.includes("initTailwind"), "tailwind config must be applied");
 assert.ok(appSrc.includes("nav-mobile-"), "active nav logic should cover mobile links");
 assert.ok(appSrc.includes("lifetimeEarnedXp"), "track lifetime XP earned for reward eligibility");
-assert.ok(appSrc.includes("syncDailyChallengeRewardUi"), "dashboard should sync claim reward button state");
+assert.ok(appSrc.includes("fireChallengeFusions"), "track inferno daily challenge fire fusion progress");
 assert.match(appSrc, /level:\s*0/, "new users should start at level 0");
 assert.match(appSrc, /fusions:\s*0/, "new users should start with zero fusion history");
 assert.ok(appSrc.includes("battle-fighter--defeated"), "defeated battle foes should vanish from view");

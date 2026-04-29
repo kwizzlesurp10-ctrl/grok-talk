@@ -32,10 +32,12 @@
             transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
-        .cyber-card:hover {
-            border-color: #00ff9d;
-            box-shadow: 0 0 25px rgba(0, 255, 157, 0.15);
-            transform: translateY(-4px);
+        @media (hover: hover) and (pointer: fine) {
+            .cyber-card:hover {
+                border-color: #00ff9d;
+                box-shadow: 0 0 25px rgba(0, 255, 157, 0.15);
+                transform: translateY(-4px);
+            }
         }
 
         .panda-card {
@@ -45,9 +47,11 @@
             overflow: hidden;
         }
 
-        .panda-card:hover {
-            transform: scale(1.05) rotate(1deg);
-            box-shadow: 0 0 30px rgba(0, 255, 157, 0.3);
+        @media (hover: hover) and (pointer: fine) {
+            .panda-card:hover {
+                transform: scale(1.05) rotate(1deg);
+                box-shadow: 0 0 30px rgba(0, 255, 157, 0.3);
+            }
         }
 
         .panda-card::before {
@@ -63,8 +67,10 @@
             pointer-events: none;
         }
 
-        .panda-card:hover::before {
-            opacity: 1;
+        @media (hover: hover) and (pointer: fine) {
+            .panda-card:hover::before {
+                opacity: 1;
+            }
         }
 
         .fusion-glow {
@@ -87,9 +93,11 @@
             letter-spacing: 1px;
         }
 
-        .neon-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 30px #00ff9d;
+        @media (hover: hover) and (pointer: fine) {
+            .neon-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 0 30px #00ff9d;
+            }
         }
 
         .neon-button::after {
@@ -108,12 +116,14 @@
             transition: 0.6s;
         }
 
-        .neon-button:hover::after {
-            left: 250%;
+        @media (hover: hover) and (pointer: fine) {
+            .neon-button:hover::after {
+                left: 250%;
+            }
         }
 
         .section-header {
-            font-size: 1.75rem;
+            font-size: clamp(1.25rem, 4.2vw, 1.75rem);
             font-weight: 700;
             background: linear-gradient(90deg, #fff, #00ff9d);
             -webkit-background-clip: text;
@@ -127,8 +137,10 @@
             transition: transform 0.4s ease;
         }
 
-        .panda-card:hover .panda-emoji {
-            transform: scale(1.15) rotate(5deg);
+        @media (hover: hover) and (pointer: fine) {
+            .panda-card:hover .panda-emoji {
+                transform: scale(1.15) rotate(5deg);
+            }
         }
 
         .stat-value {
@@ -182,6 +194,11 @@
         }
 
         .panda-grid {
+            scrollbar-width: thin;
+            scrollbar-color: #374151 #1f2937;
+        }
+
+        .scrollbar-thin {
             scrollbar-width: thin;
             scrollbar-color: #374151 #1f2937;
         }

@@ -54,6 +54,8 @@ function makeDomStub() {
         "daily-challenge-claim-btn",
         "daily-challenge-claim-label",
         "daily-challenge-reward-hint",
+        "daily-challenge-fire-count",
+        "daily-challenge-fire-bar",
         "toast-container",
         "mode-basic",
         "mode-advanced",
@@ -174,6 +176,8 @@ function runAppWithGameState(initial) {
         level: 0,
         xp: 0,
         lifetimeEarnedXp: 0,
+        saveSchemaVersion: 2,
+        fireChallengeFusions: 0,
         fusions: 0,
         ritualFusionsCount: 0,
         collectionCount: 1,
@@ -193,6 +197,8 @@ function runAppWithGameState(initial) {
         level: 0,
         xp: 0,
         lifetimeEarnedXp: 499,
+        saveSchemaVersion: 2,
+        fireChallengeFusions: 3,
         fusions: 0,
         ritualFusionsCount: 0,
         collectionCount: 1,
@@ -205,6 +211,29 @@ function runAppWithGameState(initial) {
     claimDailyChallenge();
     if (userPandas.length <= lenBefore) {
         throw new Error("claimDailyChallenge should add reward panda once threshold is met");
+    }
+}
+
+{
+    const { gameState, claimDailyChallenge, bumpLifetimeEarnedXp, userPandas } = runAppWithGameState({
+        level: 0,
+        xp: 0,
+        lifetimeEarnedXp: 499,
+        saveSchemaVersion: 2,
+        fireChallengeFusions: 2,
+        fusions: 0,
+        ritualFusionsCount: 0,
+        collectionCount: 1,
+        totalPower: 12,
+        collection: [],
+        recentFusions: [],
+    });
+    bumpLifetimeEarnedXp(1);
+    const lenBefore = userPandas.length;
+    const xpBefore = gameState.xp;
+    claimDailyChallenge();
+    if (gameState.xp !== xpBefore || userPandas.length !== lenBefore) {
+        throw new Error("claimDailyChallenge should not grant when fire fusion goal incomplete");
     }
 }
 
