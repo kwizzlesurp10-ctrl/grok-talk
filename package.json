@@ -1,12 +1,16 @@
 {
-  "name": "fusionpanda-master",
-  "version": "4.2.4",
-  "description": "FusionPanda Master — static fusion game: lab, collection, codex, arena. Build: npm run build",
-  "private": true,
+  "name": "panda-swarm",
+  "version": "2.0.0",
+  "dependencies": {
+    "next": "15.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "stripe": "latest",
+    "supabase": "latest"
+  },
   "scripts": {
-    "start": "npx -y serve -l 3000 .",
-    "build:html": "node strip.cjs",
-    "build": "npm run build:html && npm test",
-    "test": "node tests/build.test.cjs && node tests/reward-gate.test.cjs"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   }
 }
