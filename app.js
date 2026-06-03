@@ -36,7 +36,7 @@
             recentFusions: []
         };
 
-        // Base Pandas Data
+        // Base Pandas Data (Expanded with new production content)
         const basePandas = [
             { id: 1, name: "Classic Panda", emoji: "🐼", type: "Balanced", power: 12, rarity: "common", color: "#64748b", desc: "The original bamboo-loving legend. Reliable and steady in every fusion." },
             { id: 2, name: "Inferno Panda", emoji: "🔥🐼", type: "Fire", power: 18, rarity: "rare", color: "#f97316", desc: "Born in volcanic craters. Brings explosive energy to any fusion." },
@@ -45,7 +45,14 @@
             { id: 5, name: "Thunder Panda", emoji: "⚡🐼", type: "Electric", power: 19, rarity: "rare", color: "#eab308", desc: "Channeling the power of storms. Fast and shocking." },
             { id: 6, name: "Golden Fortune", emoji: "✨🐼", type: "Light", power: 27, rarity: "legendary", color: "#fbbf24", desc: "Extremely rare. Brings incredible luck and prosperity." },
             { id: 7, name: "Mystic Panda", emoji: "🔮🐼", type: "Arcane", power: 24, rarity: "epic", color: "#c026ff", desc: "Wielder of ancient panda magic. Unpredictable and wise." },
-            { id: 8, name: "Crystal Panda", emoji: "💎🐼", type: "Crystal", power: 16, rarity: "rare", color: "#67e8f9", desc: "Crystalline armor protects it from harm. Beautiful but deadly." }
+            { id: 8, name: "Crystal Panda", emoji: "💎🐼", type: "Crystal", power: 16, rarity: "rare", color: "#67e8f9", desc: "Crystalline armor protects it from harm. Beautiful but deadly." },
+
+            // New production content integration (from expanded roster)
+            { id: 9, name: "Ember Cub", emoji: "🔥🐼", type: "Fire", power: 85, rarity: "common", color: "#f97316", desc: "Newly discovered fire-type starter." },
+            { id: 10, name: "Inferno Guardian", emoji: "🔥🛡️", type: "Fire", power: 145, rarity: "rare", color: "#f97316", desc: "Elite fire guardian from the new roster." },
+            { id: 11, name: "Blazing Phoenix Panda", emoji: "🔥🦅", type: "Fire", power: 210, rarity: "epic", color: "#f97316", desc: "Mythic-level fire evolution." },
+            { id: 12, name: "Cyclone Striker", emoji: "🌪️🐼", type: "Wind", power: 138, rarity: "rare", color: "#22c55e", desc: "New wind-type from expanded content." },
+            { id: 13, name: "Storm Dragon Panda", emoji: "🐉💨", type: "Wind", power: 205, rarity: "epic", color: "#22c55e", desc: "High-tier wind evolution." },
         ];
 
         // User's unlocked pandas (new users start with one fair starter)
