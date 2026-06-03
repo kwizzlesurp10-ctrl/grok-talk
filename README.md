@@ -116,3 +116,11 @@ All modules are strictly typed, tested, and compiled as part of `npm run build`.
 
 Full migration of `app.js` and React UI port are planned for subsequent phases (v4.4+).
 
+
+
+## Latest (v4.3.1)
+- 15 base pandas in Fusion Lab (including 2 Mythics)
+- Mythic pandas have special visual treatment
+- Daily Challenge can now award new high-tier pandas
+- Full production transformation on `feat/production-grade-rebuild` (see PR #9)
+
