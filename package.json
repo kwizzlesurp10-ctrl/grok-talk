@@ -1,6 +1,6 @@
 {
   "name": "fusionpanda-master",
-  "version": "4.3.0",
+  "version": "4.3.1",
   "description": "FusionPanda Master — production-grade idle fusion RPG. Cyber-neon panda collection, fusion lab, codex, arena & daily challenges. Fully offline PWA.",
   "private": true,
   "type": "module",
