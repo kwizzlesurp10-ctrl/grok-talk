@@ -31,3 +31,15 @@ assert.ok(filtered.length >= 0, 'Search should not crash');
 
 console.log('[Core Tests] All smoke tests passed. (Full TS integration + Vitest in next phase)');
 process.exit(0);
+const { DailyChallenge } = require('../dist/core/DailyChallenge.js');
+
+const challenge = new DailyChallenge();
+const stats = { level: 10, xp: 800, lifetimeXp: 2800, fusionsPerformed: 45, fireFusions: 15 };
+challenge.updateProgress(stats);
+assert.ok(challenge.canClaim(), 'Should be able to claim reward');
+const reward = challenge.claimReward();
+assert.ok(reward.success, 'Claim should succeed');
+assert.strictEqual(reward.panda, 'Blaze Guardian');
+
+console.log('[Core Tests] All smoke tests passed. (Full TS integration + Vitest in next phase)');
+process.exit(0);
