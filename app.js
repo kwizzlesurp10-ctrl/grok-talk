@@ -881,44 +881,48 @@
         function setFusionMode(mode) {
             currentFusionMode = mode;
 
-            const basic = document.getElementById("mode-basic");
-            const advanced = document.getElementById("mode-advanced");
-            const ritual = document.getElementById("mode-ritual");
-            const resetInactive = (el, borderClass) => {
-                if (!el) return;
-                el.classList.remove(
-                    "bg-emerald-500",
-                    "bg-fuchsia-500",
-                    "bg-amber-500",
-                    "text-black",
-                    "active-mode",
-                );
-                el.classList.add("bg-[#1a1f2e]", "border", borderClass);
-            };
+            // Use rAF to avoid blocking the main thread (fixes INP 200ms issue on mode buttons)
+            requestAnimationFrame(() => {
+                const basic = document.getElementById("mode-basic");
+                const advanced = document.getElementById("mode-advanced");
+                const ritual = document.getElementById("mode-ritual");
 
-            resetInactive(basic, "border-emerald-400/40");
-            resetInactive(advanced, "border-fuchsia-400/50");
-            resetInactive(ritual, "border-amber-400/50");
+                const resetInactive = (el, borderClass) => {
+                    if (!el) return;
+                    el.classList.remove(
+                        "bg-emerald-500",
+                        "bg-fuchsia-500",
+                        "bg-amber-500",
+                        "text-black",
+                        "active-mode",
+                    );
+                    el.classList.add("bg-[#1a1f2e]", "border", borderClass);
+                };
 
-            const active = document.getElementById(`mode-${mode}`);
-            if (active) {
-                active.classList.remove(
-                    "bg-[#1a1f2e]",
-                    "border",
-                    "border-emerald-400/40",
-                    "border-fuchsia-400/50",
-                    "border-amber-400/50",
-                );
-                if (mode === "basic") {
-                    active.classList.add("bg-emerald-500", "text-black");
-                } else if (mode === "advanced") {
-                    active.classList.add("bg-fuchsia-500", "text-black");
-                } else if (mode === "ritual") {
-                    active.classList.add("bg-amber-500", "text-black");
+                resetInactive(basic, "border-emerald-400/40");
+                resetInactive(advanced, "border-fuchsia-400/50");
+                resetInactive(ritual, "border-amber-400/50");
+
+                const active = document.getElementById(`mode-${mode}`);
+                if (active) {
+                    active.classList.remove(
+                        "bg-[#1a1f2e]",
+                        "border",
+                        "border-emerald-400/40",
+                        "border-fuchsia-400/50",
+                        "border-amber-400/50",
+                    );
+                    if (mode === "basic") {
+                        active.classList.add("bg-emerald-500", "text-black");
+                    } else if (mode === "advanced") {
+                        active.classList.add("bg-fuchsia-500", "text-black");
+                    } else if (mode === "ritual") {
+                        active.classList.add("bg-amber-500", "text-black");
+                    }
                 }
-            }
+            });
 
-            updateEnergyCost();
+            requestAnimationFrame(() => updateEnergyCost());
         }
 
         function updateEnergyCost() {
