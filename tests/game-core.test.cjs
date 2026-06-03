@@ -43,3 +43,16 @@ assert.strictEqual(reward.panda, 'Blaze Guardian');
 
 console.log('[Core Tests] All smoke tests passed. (Full TS integration + Vitest in next phase)');
 process.exit(0);
+
+console.log("[Content Tests] Validating expanded panda roster...");
+
+const { getLegacyPandas, EXPANDED_INITIAL_POOL } = require("../dist/content/legacy-bridge.js");
+
+const allPandas = getLegacyPandas();
+assert.ok(allPandas.length >= 20, "Should have 20+ pandas in roster");
+assert.ok(allPandas.some(p => p.rarity === "mythic"), "Should include Mythic pandas");
+
+const pool = EXPANDED_INITIAL_POOL;
+assert.ok(pool.length >= 10, "Initial pool should be substantial");
+
+console.log("[Content Tests] New content integration verified.");
