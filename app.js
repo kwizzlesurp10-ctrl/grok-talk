@@ -1410,7 +1410,7 @@
             // Reward panda
             const rewardPanda = {
                 id: 'daily-' + Date.now(),
-                name: "Blaze Guardian",
+                name: ["Blaze Guardian", "Tempest Warden", "Quantum Overlord Panda", "Eternal Flame Sovereign"][Math.floor(Math.random()*4)],
                 emoji: "🦍🔥",
                 type: "Fire",
                 power: 29,
