@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM", "ES2022.Array", "ES2022.Object"],
+    "lib": ["ES2022", "DOM", "ES2022.Array"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
