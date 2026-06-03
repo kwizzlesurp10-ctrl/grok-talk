@@ -53,6 +53,8 @@
             { id: 11, name: "Blazing Phoenix Panda", emoji: "🔥🦅", type: "Fire", power: 210, rarity: "epic", color: "#f97316", desc: "Mythic-level fire evolution." },
             { id: 12, name: "Cyclone Striker", emoji: "🌪️🐼", type: "Wind", power: 138, rarity: "rare", color: "#22c55e", desc: "New wind-type from expanded content." },
             { id: 13, name: "Storm Dragon Panda", emoji: "🐉💨", type: "Wind", power: 205, rarity: "epic", color: "#22c55e", desc: "High-tier wind evolution." },
+            { id: 14, name: "Quantum Overlord Panda", emoji: "🌌🐼", type: "Lightning", power: 450, rarity: "mythic", color: "#a855f7", desc: "Mythic pinnacle — extremely rare." },
+            { id: 15, name: "Eternal Flame Sovereign", emoji: "🔥👑", type: "Fire", power: 440, rarity: "mythic", color: "#f97316", desc: "The ultimate fire evolution." },
         ];
 
         // User's unlocked pandas (new users start with one fair starter)
