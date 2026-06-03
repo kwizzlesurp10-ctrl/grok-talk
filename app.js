@@ -1080,7 +1080,7 @@
             
             // Mode-based rarity chances
             if (mode === 'ritual') {
-                if (rand > 0.72) rarity = 'mythic';
+                if (rand > 0.68) rarity = 'mythic';
                 else if (rand > 0.38) rarity = 'legendary';
                 else rarity = 'epic';
             } else if (mode === 'advanced') {
