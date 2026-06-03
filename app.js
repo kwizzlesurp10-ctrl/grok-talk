@@ -237,7 +237,7 @@
                 const isUnlocked = userPandas.some(up => up.name === panda.name || (up.type === panda.type && up.rarity === panda.rarity));
                 
                 const card = document.createElement('div');
-                card.className = `panda-card cyber-card rounded-2xl p-3 border border-gray-700 cursor-pointer flex flex-col items-center text-center ${!isUnlocked ? 'opacity-60' : ''}`;
+                card.className = `panda-card cyber-card rounded-2xl p-3 border border-gray-700 cursor-pointer ${panda.rarity === "mythic" ? "ring-2 ring-purple-400/70 shadow-\[0_0_20px_rgba(168,85,247,0.3)\]" : ""} flex flex-col items-center text-center ${!isUnlocked ? 'opacity-60' : ''}`;
                 
                 card.innerHTML = `
                     <div class="text-5xl mb-2 transition-transform">${panda.emoji}</div>
@@ -295,7 +295,7 @@
             
             pandasToShow.forEach((panda, index) => {
                 const card = document.createElement('div');
-                card.className = `panda-card cyber-card rounded-3xl p-4 border border-gray-700 cursor-pointer group`;
+                card.className = `panda-card cyber-card rounded-3xl p-4 border border-gray-700 cursor-pointer ${panda.rarity === "mythic" ? "ring-2 ring-purple-400/70 shadow-\[0_0_20px_rgba(168,85,247,0.3)\]" : ""} group`;
                 
                 const rarityColor = getRarityColor(panda.rarity);
                 
@@ -560,7 +560,7 @@
                 const isUnlocked = userPandas.some(p => p.name === entry.name || (p.type === entry.type && p.rarity === entry.rarity));
                 
                 const card = document.createElement('div');
-                card.className = `panda-card cyber-card rounded-3xl p-5 border border-gray-700 cursor-pointer group ${!isUnlocked ? 'opacity-75 grayscale-[0.3]' : ''}`;
+                card.className = `panda-card cyber-card rounded-3xl p-5 border border-gray-700 cursor-pointer ${panda.rarity === "mythic" ? "ring-2 ring-purple-400/70 shadow-\[0_0_20px_rgba(168,85,247,0.3)\]" : ""} group ${!isUnlocked ? 'opacity-75 grayscale-[0.3]' : ''}`;
                 
                 const rarityColor = getRarityColor(entry.rarity);
                 
@@ -784,7 +784,7 @@
             
             userPandas.forEach((panda, idx) => {
                 const card = document.createElement('div');
-                card.className = `panda-card cyber-card rounded-2xl p-4 border border-gray-700 cursor-pointer hover:border-emerald-400 flex flex-col`;
+                card.className = `panda-card cyber-card rounded-2xl p-4 border border-gray-700 cursor-pointer ${panda.rarity === "mythic" ? "ring-2 ring-purple-400/70 shadow-\[0_0_20px_rgba(168,85,247,0.3)\]" : ""} hover:border-emerald-400 flex flex-col`;
                 
                 const rarityColor = getRarityColor(panda.rarity);
                 
