@@ -1516,6 +1516,7 @@
                 playerPower: championPower,
                 enemyName: playerLevel < 5 ? "Training Bruiser" : playerLevel < 20 ? "Rift Stalker" : "Doombringer",
                 enemyEmoji: playerLevel < 5 ? "🥋🐼" : playerLevel < 20 ? "🌑🐼" : "👹🐼",
+                enemyArt: playerLevel < 8 ? "assets/arena/opponent-chroma-lynx.jpg" : (playerLevel < 15 ? "assets/arena/opponent-entropy-hare.jpg" : "assets/arena/opponent-prompt-colossus.jpg"), // Grok-generated rival concepts from arena spike
                 enemyLevel,
                 enemyPower: Math.max(6, Math.floor(championPower * (playerLevel < 3 ? 0.72 : 0.9))),
                 playerBaseDamage,
@@ -1615,11 +1616,15 @@
                             <p class="text-[9px] text-center text-gray-600 max-w-[7rem] leading-tight">Beams = fusion energy (demo)</p>
                         </div>
                         
-                        <div id="battle-fighter-enemy" class="battle-fighter md:col-span-3 cyber-card rounded-3xl p-4 md:p-6 text-center border border-red-500/50">
+                        <div id="battle-fighter-enemy" class="battle-fighter md:col-span-3 cyber-card rounded-3xl p-4 md:p-6 text-center border border-red-500/50 overflow-hidden">
                             <div class="battle-anim-flash battle-anim-flash--red pointer-events-none" id="battle-flash-enemy" aria-hidden="true"></div>
                             <div class="text-xs mb-1 text-red-400">RIVAL</div>
-                            <div class="text-6xl sm:text-8xl mb-2 min-h-[5rem] flex items-center justify-center" aria-hidden="true">
-                                <span class="battle-fighter__emoji" id="battle-emoji-enemy">${battle.enemyEmoji}</span>
+                            <div class="mb-2 min-h-[5rem] flex items-center justify-center relative" aria-hidden="true" style="background: radial-gradient(circle at 50% 40%, rgba(0,0,0,0.1), transparent);">
+                                ${battle.enemyArt ? `
+                                    <img src="${battle.enemyArt}" alt="${safeEnemyName}" class="max-h-28 md:max-h-32 w-auto rounded-2xl object-cover shadow-lg border border-white/10" style="max-width: 70%;"/>
+                                ` : `
+                                    <span class="battle-fighter__emoji text-6xl sm:text-8xl" id="battle-emoji-enemy">${battle.enemyEmoji}</span>
+                                `}
                             </div>
                             <div class="font-black text-lg md:text-2xl">${safeEnemyName}</div>
                             <div class="text-xs sm:text-sm text-red-400/90 mb-3">LVL ${battle.enemyLevel} · ${battle.enemyPower} PWR</div>
@@ -1727,6 +1732,13 @@
                 }
                 saveGameState();
                 updateDashboard();
+
+                // New: Grok-powered cinematic victory (from recent arena assets)
+                setTimeout(() => {
+                    if (typeof window.showVictoryCinematic === 'function') {
+                        window.showVictoryCinematic(b);
+                    }
+                }, 900);
                 return;
             }
             await __battleWait(380);
@@ -1766,6 +1778,128 @@
                 if (spBtn) spBtn.disabled = false;
             }
         }
+
+        // Grok-talk Battle Arena cinematic victory player
+        // Uses the high-quality Fusion Panda victory cutscene + concept art generated for the arena.
+        window.showVictoryCinematic = function showVictoryCinematic(battleData) {
+            const enemyName = (battleData && battleData.enemyName) || 'Void Howler';
+            const playerName = (battleData && battleData.playerName) || 'Fusion Panda';
+
+            // Remove any existing cinematic
+            const existing = document.getElementById('victory-cinematic-modal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.id = 'victory-cinematic-modal';
+            modal.className = 'fixed inset-0 z-[200] flex items-center justify-center bg-black/90 p-4';
+            modal.innerHTML = `
+                <div class="w-full max-w-[1080px] mx-auto">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <div>
+                            <div class="uppercase tracking-[3px] text-xs text-amber-400">GROK-TALK BATTLE ARENA</div>
+                            <div class="text-2xl font-black tracking-tighter">${playerName} <span class="text-amber-400">WINS</span></div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="vc-replay" class="px-4 py-2 rounded-2xl border border-zinc-700 hover:border-amber-400/70 text-sm font-medium flex items-center gap-2">
+                                <i class="fas fa-redo"></i> <span>REPLAY</span>
+                            </button>
+                            <button id="vc-close" class="px-4 py-2 rounded-2xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-sm font-medium">CLOSE</button>
+                        </div>
+                    </div>
+
+                    <div class="relative rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-black arena-glow" style="box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6);">
+                        <video id="vc-video" class="w-full aspect-video bg-black" playsinline controls poster="assets/arena/fusion-panda-victory-keyframe.jpg">
+                            <source src="assets/arena/fusion-panda-victory.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+
+                        <div id="vc-overlay" class="hidden absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end justify-center pb-8 pointer-events-none">
+                            <div class="text-center">
+                                <div class="inline-flex items-center gap-x-2 px-6 py-1.5 rounded-full bg-black/70 backdrop-blur border border-white/10 mb-2">
+                                    <i class="fas fa-trophy text-amber-400"></i>
+                                    <span class="font-semibold tracking-wider text-sm">${playerName.toUpperCase()} VICTORY</span>
+                                </div>
+                                <div class="text-xs text-zinc-400">${enemyName} defeated</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 text-center text-[10px] text-zinc-500 flex items-center justify-center gap-4">
+                        <span>10s cinematic • 720p • Grok Imagine + Video</span>
+                        <span class="hidden sm:inline">Click video for fusion particles</span>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            const video = modal.querySelector('#vc-video');
+            const overlay = modal.querySelector('#vc-overlay');
+            const closeBtn = modal.querySelector('#vc-close');
+            const replayBtn = modal.querySelector('#vc-replay');
+
+            function closeModal() {
+                modal.remove();
+                document.removeEventListener('keydown', onKey);
+            }
+
+            function onKey(e) {
+                if (e.key === 'Escape') closeModal();
+                if ((e.key === 'r' || e.key === 'R') && video) { video.currentTime = 0; video.play().catch(()=>{}); }
+            }
+
+            closeBtn.onclick = closeModal;
+            modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+            replayBtn.onclick = () => {
+                if (video) { video.currentTime = 0; video.play().catch(()=>{}); overlay && overlay.classList.add('hidden'); }
+            };
+
+            if (video) {
+                video.onended = () => {
+                    if (overlay) overlay.classList.remove('hidden');
+                };
+
+                // Easter egg particles on click (while playing)
+                video.addEventListener('click', (ev) => {
+                    if (video.paused) return;
+                    spawnFusionParticles(video.parentElement, 8);
+                });
+
+                // Auto play (may be blocked, user can click)
+                setTimeout(() => {
+                    video.play().catch(() => {});
+                }, 150);
+            }
+
+            document.addEventListener('keydown', onKey, { once: false });
+
+            // Simple fusion particle spawner (reused from prototype)
+            function spawnFusionParticles(container, count = 6) {
+                const rect = container.getBoundingClientRect();
+                for (let i = 0; i < count; i++) {
+                    const p = document.createElement('div');
+                    p.style.position = 'absolute';
+                    p.style.left = (Math.random() * rect.width) + 'px';
+                    p.style.top = (rect.height * (0.2 + Math.random() * 0.6)) + 'px';
+                    p.style.width = p.style.height = (3 + Math.random() * 5) + 'px';
+                    p.style.borderRadius = '50%';
+                    p.style.background = '#22d3ee';
+                    p.style.boxShadow = '0 0 12px #22d3ee';
+                    p.style.opacity = (0.5 + Math.random() * 0.5).toString();
+                    p.style.pointerEvents = 'none';
+                    p.style.zIndex = '10';
+                    p.style.transition = 'transform 1.1s ease-out, opacity 1.1s ease-out';
+                    container.appendChild(p);
+
+                    // animate
+                    requestAnimationFrame(() => {
+                        p.style.transform = `translateY(-${60 + Math.random() * 50}px) scale(${0.2 + Math.random() * 0.3})`;
+                        p.style.opacity = '0';
+                    });
+                    setTimeout(() => p.remove(), 1400);
+                }
+            }
+        };
 
         function navigateTo(section) {
             // Hide all sections
