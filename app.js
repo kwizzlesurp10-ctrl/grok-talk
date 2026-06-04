@@ -1492,6 +1492,51 @@
             return div.innerHTML;
         }
 
+        // === GROK-TALK BATTLE ARENA RIVALS ROSTER (themed opponents from new assets) ===
+        // Inspired by the Fusion Panda cutscene prototype. Named rivals with art, lore snippets, and difficulty.
+        const BATTLE_RIVALS = [
+            {
+                id: 'void-howler',
+                name: 'Void Howler',
+                subtitle: 'Cyber Shadow Wolf • Intro Brute',
+                desc: 'Relentless pack-hunter robot wolf. Exposes its core after the first barrage.',
+                mechanic: 'Aggressive opener. Drops defense after initial lunges.',
+                difficulty: 'INTRO',
+                art: 'assets/arena/fusion-panda-victory-keyframe.jpg',
+                hasCinematic: true
+            },
+            {
+                id: 'chroma-lynx',
+                name: 'Chroma Lynx',
+                subtitle: 'Refractive Data Stalker • Agile',
+                desc: 'Lithe prismatic lynx that bends light and logits. Creates afterimage decoys.',
+                mechanic: 'High mobility + split attacks. Punishes panic fusion.',
+                difficulty: 'MEDIUM',
+                art: 'assets/arena/opponent-chroma-lynx.jpg',
+                hasCinematic: false
+            },
+            {
+                id: 'prompt-colossus',
+                name: 'Prompt Colossus',
+                subtitle: 'Forgotten Weights Golem • Tank',
+                desc: 'Towering construct of deprecated weights and dead training runs.',
+                mechanic: 'Heavy tank. Precision joint shots bypass armor.',
+                difficulty: 'HARD',
+                art: 'assets/arena/opponent-prompt-colossus.jpg',
+                hasCinematic: false
+            },
+            {
+                id: 'entropy-hare',
+                name: 'Entropy Hare',
+                subtitle: 'Probability Gambler • Trickster',
+                desc: 'A blur of white fur and bad RNG. Constantly forces risky rolls.',
+                mechanic: 'Evasive + backlash. Your big moves can backfire.',
+                difficulty: 'HARD',
+                art: 'assets/arena/opponent-entropy-hare.jpg',
+                hasCinematic: false
+            }
+        ];
+
         function __createBattleMatch(selectedChampion = null) {
             const playerLevel = Math.max(0, Number(gameState.level) || 0);
             const champion = selectedChampion || [...userPandas].sort((a, b) => (b.power || 0) - (a.power || 0))[0] || basePandas[0];
@@ -1503,6 +1548,10 @@
             const enemyMax = Math.max(72, Math.floor(playerMax * (playerLevel < 3 ? 0.55 : 0.72)));
             const playerBaseDamage = Math.max(16, Math.floor(championPower * 0.8) + 12 + playerLevel);
             const enemyBaseDamage = Math.max(7, Math.floor(playerBaseDamage * (playerLevel < 3 ? 0.48 : 0.64)));
+
+            // Pick a named rival from the roster (using new Grok-generated arts + lore)
+            const rival = BATTLE_RIVALS[Math.floor(Math.random() * BATTLE_RIVALS.length)];
+
             return {
                 playerCur: playerMax,
                 playerMax,
@@ -1514,9 +1563,14 @@
                 playerEmoji: champion.emoji || "🐼",
                 playerLevel,
                 playerPower: championPower,
-                enemyName: playerLevel < 5 ? "Training Bruiser" : playerLevel < 20 ? "Rift Stalker" : "Doombringer",
-                enemyEmoji: playerLevel < 5 ? "🥋🐼" : playerLevel < 20 ? "🌑🐼" : "👹🐼",
-                enemyArt: playerLevel < 8 ? "assets/arena/opponent-chroma-lynx.jpg" : (playerLevel < 15 ? "assets/arena/opponent-entropy-hare.jpg" : "assets/arena/opponent-prompt-colossus.jpg"), // Grok-generated rival concepts from arena spike
+                enemyId: rival.id,
+                enemyName: rival.name,
+                enemySubtitle: rival.subtitle,
+                enemyDesc: rival.desc,
+                enemyMechanic: rival.mechanic,
+                enemyDifficulty: rival.difficulty,
+                enemyArt: rival.art,
+                enemyHasCinematic: rival.hasCinematic,
                 enemyLevel,
                 enemyPower: Math.max(6, Math.floor(championPower * (playerLevel < 3 ? 0.72 : 0.9))),
                 playerBaseDamage,
@@ -1627,7 +1681,10 @@
                                 `}
                             </div>
                             <div class="font-black text-lg md:text-2xl">${safeEnemyName}</div>
-                            <div class="text-xs sm:text-sm text-red-400/90 mb-3">LVL ${battle.enemyLevel} · ${battle.enemyPower} PWR</div>
+                            ${battle.enemySubtitle ? `<div class="text-[10px] text-red-300/80 -mt-0.5 mb-1">${__escapeBattleText(battle.enemySubtitle)}</div>` : ''}
+                            <div class="text-xs sm:text-sm text-red-400/90 mb-1">LVL ${battle.enemyLevel} · ${battle.enemyPower} PWR</div>
+                            ${battle.enemyDifficulty ? `<div class="inline-block mb-2 px-1.5 py-px text-[9px] font-bold rounded bg-red-500/20 text-red-300">${battle.enemyDifficulty}</div>` : ''}
+                            ${battle.enemyMechanic ? `<div class="text-[10px] text-zinc-400 mb-1.5 leading-tight">${__escapeBattleText(battle.enemyMechanic)}</div>` : ''}
                             <div class="mt-1 h-2.5 bg-gray-800/90 rounded-full overflow-hidden">
                                 <div id="battle-hp-enemy-bar" class="h-2.5 bg-gradient-to-r from-rose-500 to-red-600 rounded-full transition-[width] duration-500 ease-out" style="width:100%"></div>
                             </div>
@@ -1720,7 +1777,7 @@
                 document.getElementById("battle-stage")?.classList.add("battle-stage--victory");
                 __appendBattleLogLine(
                     "text-amber-300 font-bold border-t border-amber-500/20 pt-2 mt-1",
-                    `🏆 VICTORY! ${__escapeBattleText(b.enemyName)} vanished from the arena! +650 XP`,
+                    `🏆 VICTORY! ${__escapeBattleText(b.enemyName)} defeated! ${b.enemySubtitle ? '— ' + __escapeBattleText(b.enemySubtitle) : ''} +650 XP`,
                 );
                 showToast("Battle won! +650 XP earned", "success");
                 bumpLifetimeEarnedXp(650);
@@ -1733,7 +1790,17 @@
                 saveGameState();
                 updateDashboard();
 
-                // New: Grok-powered cinematic victory (from recent arena assets)
+                // Grok-powered cinematic victory (from recent arena assets)
+                // Auto-show + add a replay control to the log for post-battle watching
+                const logEl = document.getElementById('battle-log');
+                if (logEl && typeof window.showVictoryCinematic === 'function') {
+                    const replayBtn = document.createElement('button');
+                    replayBtn.className = 'mt-2 text-xs px-3 py-1 rounded-xl border border-amber-400/60 text-amber-300 hover:bg-amber-500/10';
+                    replayBtn.innerHTML = '<i class="fas fa-play mr-1"></i> REPLAY CINEMATIC';
+                    replayBtn.onclick = () => window.showVictoryCinematic(b);
+                    logEl.appendChild(replayBtn);
+                }
+
                 setTimeout(() => {
                     if (typeof window.showVictoryCinematic === 'function') {
                         window.showVictoryCinematic(b);
@@ -1784,6 +1851,9 @@
         window.showVictoryCinematic = function showVictoryCinematic(battleData) {
             const enemyName = (battleData && battleData.enemyName) || 'Void Howler';
             const playerName = (battleData && battleData.playerName) || 'Fusion Panda';
+            const enemyDiff = battleData && battleData.enemyDifficulty ? battleData.enemyDifficulty : '';
+            const enemyMech = battleData && battleData.enemyMechanic ? battleData.enemyMechanic : '';
+            const safeEnemyMech = typeof __escapeBattleText === 'function' ? __escapeBattleText(enemyMech) : enemyMech;
 
             // Remove any existing cinematic
             const existing = document.getElementById('victory-cinematic-modal');
@@ -1819,7 +1889,8 @@
                                     <i class="fas fa-trophy text-amber-400"></i>
                                     <span class="font-semibold tracking-wider text-sm">${playerName.toUpperCase()} VICTORY</span>
                                 </div>
-                                <div class="text-xs text-zinc-400">${enemyName} defeated</div>
+                                <div class="text-xs text-zinc-400">${enemyName} defeated${enemyDiff ? ' • ' + enemyDiff : ''}</div>
+                                ${enemyMech ? `<div class="text-[10px] text-amber-300/80 mt-0.5 max-w-xs mx-auto">${safeEnemyMech}</div>` : ''}
                             </div>
                         </div>
                     </div>
