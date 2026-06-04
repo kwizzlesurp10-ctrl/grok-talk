@@ -1503,7 +1503,8 @@
                 mechanic: 'Aggressive opener. Drops defense after initial lunges.',
                 difficulty: 'INTRO',
                 art: 'assets/arena/fusion-panda-victory-keyframe.jpg',
-                hasCinematic: true
+                video: 'assets/arena/fusion-panda-victory.mp4',
+                keyart: 'assets/arena/fusion-panda-victory-keyframe.jpg'
             },
             {
                 id: 'chroma-lynx',
@@ -1513,7 +1514,8 @@
                 mechanic: 'High mobility + split attacks. Punishes panic fusion.',
                 difficulty: 'MEDIUM',
                 art: 'assets/arena/opponent-chroma-lynx.jpg',
-                hasCinematic: false
+                video: null,
+                keyart: 'assets/arena/opponent-chroma-lynx.jpg'
             },
             {
                 id: 'prompt-colossus',
@@ -1523,7 +1525,8 @@
                 mechanic: 'Heavy tank. Precision joint shots bypass armor.',
                 difficulty: 'HARD',
                 art: 'assets/arena/opponent-prompt-colossus.jpg',
-                hasCinematic: false
+                video: null,
+                keyart: 'assets/arena/opponent-prompt-colossus.jpg'
             },
             {
                 id: 'entropy-hare',
@@ -1533,7 +1536,8 @@
                 mechanic: 'Evasive + backlash. Your big moves can backfire.',
                 difficulty: 'HARD',
                 art: 'assets/arena/opponent-entropy-hare.jpg',
-                hasCinematic: false
+                video: null,
+                keyart: 'assets/arena/opponent-entropy-hare.jpg'
             }
         ];
 
@@ -1575,7 +1579,8 @@
                 enemyMechanic: rival.mechanic,
                 enemyDifficulty: rival.difficulty,
                 enemyArt: rival.art,
-                enemyHasCinematic: rival.hasCinematic,
+                enemyVideo: rival.video || null,
+                enemyKeyart: rival.keyart || rival.art,
                 enemyLevel,
                 enemyPower: Math.max(6, Math.floor(championPower * (playerLevel < 3 ? 0.72 : 0.9))),
                 playerBaseDamage,
@@ -1654,7 +1659,7 @@
                             <div class="mt-1 text-[10px] inline px-1.5 py-px rounded bg-red-500/20 text-red-300">${r.difficulty}</div>
                             <div class="text-xs text-zinc-400 mt-2 leading-snug">${r.desc}</div>
                             <div class="text-[10px] text-amber-300/80 mt-1">Mechanic: ${r.mechanic}</div>
-                            ${r.hasCinematic ? '<div class="text-[9px] text-cyan-400 mt-1">★ Signature cinematic on defeat</div>' : ''}
+                            ${r.video ? '<div class="text-[9px] text-cyan-400 mt-1">★ Dedicated cinematic on defeat</div>' : '<div class="text-[9px] text-violet-400/80 mt-1">Cutscene pending</div>'}
                         </div>
                     </div>
                 </div>
@@ -1930,9 +1935,54 @@
             const enemyMech = battleData && battleData.enemyMechanic ? battleData.enemyMechanic : '';
             const safeEnemyMech = typeof __escapeBattleText === 'function' ? __escapeBattleText(enemyMech) : enemyMech;
 
+            const hasVideo = !!(battleData && battleData.enemyVideo);
+            const videoSrc = hasVideo ? battleData.enemyVideo : null;
+            const posterSrc = (battleData && battleData.enemyKeyart) || (battleData && battleData.enemyArt) || 'assets/arena/fusion-panda-victory-keyframe.jpg';
+
             // Remove any existing cinematic
             const existing = document.getElementById('victory-cinematic-modal');
             if (existing) existing.remove();
+
+            let modalPlayerHTML = '';
+            if (hasVideo) {
+                modalPlayerHTML = `
+                    <video id="vc-video" class="w-full aspect-video bg-black" playsinline controls poster="${posterSrc}">
+                        <source src="${videoSrc}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+
+                    <div id="vc-overlay" class="hidden absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end justify-center pb-8 pointer-events-none">
+                        <div class="text-center">
+                            <div class="inline-flex items-center gap-x-2 px-6 py-1.5 rounded-full bg-black/70 backdrop-blur border border-white/10 mb-2">
+                                <i class="fas fa-trophy text-amber-400"></i>
+                                <span class="font-semibold tracking-wider text-sm">${playerName.toUpperCase()} VICTORY</span>
+                            </div>
+                            <div class="text-xs text-zinc-400">${enemyName} defeated${enemyDiff ? ' • ' + enemyDiff : ''}</div>
+                            ${enemyMech ? `<div class="text-[10px] text-amber-300/80 mt-0.5 max-w-xs mx-auto">${safeEnemyMech}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            } else {
+                modalPlayerHTML = `
+                    <div class="relative w-full aspect-video bg-black overflow-hidden rounded-3xl" style="box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6);">
+                        <img src="${posterSrc}" alt="${enemyName}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <div class="text-center px-6">
+                                <div class="text-xs tracking-[2px] text-violet-400 mb-1">CUTSCENE PENDING</div>
+                                <div class="font-semibold">No dedicated 10s victory animation yet for ${enemyName}</div>
+                                <div class="text-xs text-zinc-400 mt-2">Ask Grok to generate one (same style as Void Howler)</div>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 text-center">
+                            <div class="inline-flex items-center gap-x-2 px-4 py-1 rounded-full bg-black/70 border border-white/10">
+                                <i class="fas fa-trophy text-amber-400"></i>
+                                <span class="font-semibold tracking-wider text-sm">${playerName.toUpperCase()} VICTORY</span>
+                            </div>
+                            <div class="text-xs text-zinc-300 mt-1">${enemyName} defeated</div>
+                        </div>
+                    </div>
+                `;
+            }
 
             const modal = document.createElement('div');
             modal.id = 'victory-cinematic-modal';
@@ -1953,21 +2003,7 @@
                     </div>
 
                     <div class="relative rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-black arena-glow" style="box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6);">
-                        <video id="vc-video" class="w-full aspect-video bg-black" playsinline controls poster="${(battleData && battleData.enemyArt) || 'assets/arena/fusion-panda-victory-keyframe.jpg'}">
-                            <source src="assets/arena/fusion-panda-victory.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-
-                        <div id="vc-overlay" class="hidden absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end justify-center pb-8 pointer-events-none">
-                            <div class="text-center">
-                                <div class="inline-flex items-center gap-x-2 px-6 py-1.5 rounded-full bg-black/70 backdrop-blur border border-white/10 mb-2">
-                                    <i class="fas fa-trophy text-amber-400"></i>
-                                    <span class="font-semibold tracking-wider text-sm">${playerName.toUpperCase()} VICTORY</span>
-                                </div>
-                                <div class="text-xs text-zinc-400">${enemyName} defeated${enemyDiff ? ' • ' + enemyDiff : ''}</div>
-                                ${enemyMech ? `<div class="text-[10px] text-amber-300/80 mt-0.5 max-w-xs mx-auto">${safeEnemyMech}</div>` : ''}
-                            </div>
-                        </div>
+                        ${modalPlayerHTML}
                     </div>
 
                     <div class="mt-3 text-center text-[10px] text-zinc-500 flex items-center justify-center gap-4">
@@ -1996,9 +2032,32 @@
             closeBtn.onclick = closeModal;
             modal.onclick = (e) => { if (e.target === modal) closeModal(); };
 
-            replayBtn.onclick = () => {
-                if (video) { video.currentTime = 0; video.play().catch(()=>{}); overlay && overlay.classList.add('hidden'); }
-            };
+            if (replayBtn) {
+                if (video) {
+                    replayBtn.onclick = () => {
+                        if (video) { video.currentTime = 0; video.play().catch(()=>{}); overlay && overlay.classList.add('hidden'); }
+                    };
+                } else {
+                    replayBtn.innerHTML = '<i class="fas fa-star"></i> <span>CELEBRATE</span>';
+                    replayBtn.onclick = () => {
+                        // simple celebration particles on the still
+                        const container = modal.querySelector('.relative.rounded-3xl') || modal;
+                        for (let i = 0; i < 8; i++) {
+                            const p = document.createElement('div');
+                            p.style.cssText = 'position:absolute;width:6px;height:6px;border-radius:50%;background:#f59e0b;box-shadow:0 0 8px #f59e0b;pointer-events:none;z-index:20;';
+                            p.style.left = (Math.random() * (container.clientWidth || 300)) + 'px';
+                            p.style.top = ((container.clientHeight || 200) * (0.3 + Math.random() * 0.5)) + 'px';
+                            container.appendChild(p);
+                            setTimeout(() => {
+                                p.style.transition = 'transform 800ms ease-out, opacity 800ms ease-out';
+                                p.style.transform = `translateY(-${40 + Math.random()*30}px) scale(0.3)`;
+                                p.style.opacity = '0';
+                                setTimeout(() => p.remove(), 800);
+                            }, 20);
+                        }
+                    };
+                }
+            }
 
             if (video) {
                 video.onended = () => {
@@ -2008,7 +2067,9 @@
                 // Easter egg particles on click (while playing)
                 video.addEventListener('click', (ev) => {
                     if (video.paused) return;
-                    spawnFusionParticles(video.parentElement, 8);
+                    if (typeof spawnFusionParticles === 'function') {
+                        spawnFusionParticles(video.parentElement, 8);
+                    }
                 });
 
                 // Auto play (may be blocked, user can click)
@@ -2061,6 +2122,51 @@
             const enemyMech = (battleData && battleData.enemyMechanic) || '';
 
             const safeMech = typeof __escapeBattleText === 'function' ? __escapeBattleText(enemyMech) : enemyMech;
+            const hasVideo = !!(battleData && battleData.enemyVideo);
+            const videoSrc = hasVideo ? battleData.enemyVideo : null;
+            const posterSrc = (battleData && battleData.enemyKeyart) || enemyArt;
+
+            let cinematicPlayerHTML = '';
+            if (hasVideo) {
+                cinematicPlayerHTML = `
+                    <video id="in-video" class="w-full aspect-video bg-black" playsinline controls poster="${posterSrc}">
+                        <source src="${videoSrc}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div id="in-overlay" class="hidden absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex items-end justify-center pb-6 pointer-events-none">
+                        <div class="text-center px-4">
+                            <div class="inline-flex items-center gap-x-2 px-5 py-1 rounded-full bg-black/70 backdrop-blur border border-white/10 mb-1">
+                                <i class="fas fa-trophy text-amber-400"></i>
+                                <span class="font-semibold tracking-wider text-sm">${playerName.toUpperCase()} VICTORY</span>
+                            </div>
+                            <div class="text-xs text-zinc-300">${enemyName} defeated</div>
+                            ${safeMech ? `<div class="text-[10px] text-amber-300/80 mt-0.5 max-w-[280px] mx-auto">${safeMech}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            } else {
+                // No dedicated cutscene for this foe - show still + pending message (matching prototype behavior)
+                cinematicPlayerHTML = `
+                    <div class="relative w-full aspect-video bg-black overflow-hidden rounded" style="box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6);">
+                        <img src="${posterSrc}" alt="${enemyName} concept art" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <div class="text-center px-6">
+                                <div class="text-xs tracking-[2px] text-violet-400 mb-1">CUTSCENE PENDING</div>
+                                <div class="font-semibold text-lg">No dedicated 10s victory animation yet for ${enemyName}</div>
+                                <div class="text-xs text-zinc-400 mt-2 max-w-xs mx-auto">Ask Grok to generate one using the same detailed style as Void Howler</div>
+                            </div>
+                        </div>
+                        <!-- Victory banner always visible for no-video case -->
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 text-center">
+                            <div class="inline-flex items-center gap-x-2 px-4 py-1 rounded-full bg-black/70 border border-white/10">
+                                <i class="fas fa-trophy text-amber-400"></i>
+                                <span class="font-semibold tracking-wider text-sm">${playerName.toUpperCase()} VICTORY</span>
+                            </div>
+                            <div class="text-xs text-zinc-300 mt-1">${enemyName} defeated</div>
+                        </div>
+                    </div>
+                `;
+            }
 
             arenaSection.innerHTML = `
                 <div class="max-w-4xl mx-auto py-4">
@@ -2084,21 +2190,7 @@
                     </div>
 
                     <div class="relative rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-black" style="max-width: 100%;">
-                        <video id="in-video" class="w-full aspect-video bg-black" playsinline controls poster="${enemyArt}">
-                            <source src="assets/arena/fusion-panda-victory.mp4" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-
-                        <div id="in-overlay" class="hidden absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex items-end justify-center pb-6 pointer-events-none">
-                            <div class="text-center px-4">
-                                <div class="inline-flex items-center gap-x-2 px-5 py-1 rounded-full bg-black/70 backdrop-blur border border-white/10 mb-1">
-                                    <i class="fas fa-trophy text-amber-400"></i>
-                                    <span class="font-semibold tracking-wider text-sm">${playerName.toUpperCase()} VICTORY</span>
-                                </div>
-                                <div class="text-xs text-zinc-300">${enemyName} defeated</div>
-                                ${safeMech ? `<div class="text-[10px] text-amber-300/80 mt-0.5 max-w-[280px] mx-auto">${safeMech}</div>` : ''}
-                            </div>
-                        </div>
+                        ${cinematicPlayerHTML}
                     </div>
 
                     <div class="mt-3 flex flex-wrap gap-2 justify-center text-xs text-zinc-500">
@@ -2112,13 +2204,35 @@
             const video = arenaSection.querySelector('#in-video');
             const overlay = arenaSection.querySelector('#in-overlay');
             const replayBtn = arenaSection.querySelector('#in-replay');
+            const playerContainer = arenaSection.querySelector('.relative.rounded-3xl') || arenaSection.querySelector('.relative.w-full.aspect-video');
 
-            if (replayBtn && video) {
-                replayBtn.onclick = () => {
-                    video.currentTime = 0;
-                    video.play().catch(() => {});
-                    if (overlay) overlay.classList.add('hidden');
-                };
+            if (replayBtn) {
+                if (video) {
+                    replayBtn.onclick = () => {
+                        video.currentTime = 0;
+                        video.play().catch(() => {});
+                        if (overlay) overlay.classList.add('hidden');
+                    };
+                } else {
+                    replayBtn.innerHTML = '<i class="fas fa-star"></i> <span>CELEBRATE</span>';
+                    replayBtn.onclick = () => {
+                        if (playerContainer) {
+                            for (let i = 0; i < 8; i++) {
+                                const p = document.createElement('div');
+                                p.style.cssText = 'position:absolute;width:6px;height:6px;border-radius:50%;background:#f59e0b;box-shadow:0 0 8px #f59e0b;pointer-events:none;z-index:20;';
+                                p.style.left = (Math.random() * playerContainer.clientWidth) + 'px';
+                                p.style.top = (playerContainer.clientHeight * (0.4 + Math.random() * 0.4)) + 'px';
+                                playerContainer.appendChild(p);
+                                setTimeout(() => {
+                                    p.style.transition = 'transform 800ms ease-out, opacity 800ms ease-out';
+                                    p.style.transform = `translateY(-${40 + Math.random()*30}px) scale(0.3)`;
+                                    p.style.opacity = '0';
+                                    setTimeout(() => p.remove(), 800);
+                                }, 20);
+                            }
+                        }
+                    };
+                }
             }
 
             if (video) {
@@ -2128,11 +2242,9 @@
 
                 video.addEventListener('click', (ev) => {
                     if (video.paused) return;
-                    // reuse the particle spawner if available, else simple
                     if (typeof spawnFusionParticles === 'function') {
                         spawnFusionParticles(video.parentElement, 6);
                     } else {
-                        // inline simple particles
                         const container = video.parentElement;
                         for (let i = 0; i < 6; i++) {
                             const p = document.createElement('div');
@@ -2150,8 +2262,25 @@
                     }
                 });
 
-                // try auto-play
                 setTimeout(() => { video.play().catch(()=>{}); }, 200);
+            } else if (playerContainer) {
+                // For pending still: clicking the image spawns celebration particles
+                playerContainer.style.cursor = 'pointer';
+                playerContainer.addEventListener('click', () => {
+                    for (let i = 0; i < 6; i++) {
+                        const p = document.createElement('div');
+                        p.style.cssText = 'position:absolute;width:5px;height:5px;border-radius:50%;background:#22d3ee;box-shadow:0 0 10px #22d3ee;pointer-events:none;z-index:10;';
+                        p.style.left = (Math.random() * playerContainer.clientWidth) + 'px';
+                        p.style.top = (playerContainer.clientHeight * (0.3 + Math.random()*0.5)) + 'px';
+                        playerContainer.appendChild(p);
+                        setTimeout(() => {
+                            p.style.transition = 'transform 900ms ease-out, opacity 900ms ease-out';
+                            p.style.transform = `translateY(-${50 + Math.random()*40}px) scale(0.2)`;
+                            p.style.opacity = '0';
+                            setTimeout(() => p.remove(), 900);
+                        }, 10);
+                    }
+                }, { once: false });
             }
         };
 
