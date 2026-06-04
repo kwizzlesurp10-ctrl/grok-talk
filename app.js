@@ -1674,7 +1674,7 @@
                         </div>
                         <button onclick="navigateTo('arena')" class="text-xs px-4 py-1.5 border border-gray-700 rounded-2xl hover:bg-[#1a1f2e]">BACK TO ARENA</button>
                     </div>
-                    <p class="text-sm text-gray-400 mb-6 max-w-2xl">These are the signature foes the Fused Panda faces in the demo battles. Each brings unique art, difficulty, and mechanics. Victories against them trigger the Grok-powered cinematic (currently the signature Fusion Panda sequence).</p>
+                    <p class="text-sm text-gray-400 mb-6 max-w-2xl">These are the signature foes the Fused Panda faces in the demo battles. Each brings unique art, difficulty, and mechanics. Victories against them trigger the matching Grok-powered cinematic (specific 10s cutscene showing Fusion Panda defeating that exact rival).</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         ${rivalsHtml}
                     </div>
