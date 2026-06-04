@@ -1707,6 +1707,7 @@
             const selectedChampion = userPandas[championIndex] || userPandas[0] || basePandas[0];
             const battle = __createBattleMatch(selectedChampion, specificRivalId);
             window.__activeBattle = battle;
+            console.log('Started battle vs:', battle.enemyName, 'video will be:', battle.enemyVideo);
             const safePlayerName = __escapeBattleText(battle.playerName);
             const safeEnemyName = __escapeBattleText(battle.enemyName);
             arenaSection.innerHTML = `
@@ -1868,6 +1869,8 @@
                 saveGameState();
                 updateDashboard();
 
+                console.log('Victory for foe from battle:', b.enemyName, 'using video:', b.enemyVideo);
+
                 // Grok-powered cinematic victory — now integrated into the main battle stage (in-arena viewer)
                 // with dynamic rival poster + quick actions. Modal still available via "Fullscreen" button.
                 const logEl = document.getElementById('battle-log');
@@ -1929,6 +1932,7 @@
         // Grok-talk Battle Arena cinematic victory player
         // Uses the high-quality Fusion Panda victory cutscene + concept art generated for the arena.
         window.showVictoryCinematic = function showVictoryCinematic(battleData) {
+            console.log('Victory cinematic (modal) for:', battleData ? battleData.enemyName : 'unknown', 'using video:', battleData ? battleData.enemyVideo : null);
             const enemyName = (battleData && battleData.enemyName) || 'Void Howler';
             const playerName = (battleData && battleData.playerName) || 'Fusion Panda';
             const enemyDiff = battleData && battleData.enemyDifficulty ? battleData.enemyDifficulty : '';
@@ -2112,6 +2116,7 @@
         // Dynamic poster per rival using the enemy's concept art.
         // Provides replay + quick actions while staying inside the Arena section.
         window.showInArenaCinematic = function showInArenaCinematic(battleData) {
+            console.log('Victory cinematic (in-arena) for:', battleData ? battleData.enemyName : 'unknown', 'using video:', battleData ? battleData.enemyVideo : null);
             const arenaSection = document.getElementById("section-arena");
             if (!arenaSection) return;
 
