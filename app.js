@@ -1624,6 +1624,46 @@
             `;
         }
 
+        function renderBattleRivals() {
+            const arenaSection = document.getElementById("section-arena");
+            if (!arenaSection || typeof BATTLE_RIVALS === 'undefined') return;
+
+            const rivalsHtml = BATTLE_RIVALS.map(r => `
+                <div class="cyber-card rounded-3xl p-4 border border-gray-700 text-left">
+                    <div class="flex gap-3">
+                        <img src="${r.art}" alt="${r.name}" class="w-16 h-16 rounded-2xl object-cover border border-white/10 flex-shrink-0">
+                        <div class="min-w-0 flex-1">
+                            <div class="font-black">${r.name}</div>
+                            <div class="text-[10px] text-red-300/80">${r.subtitle}</div>
+                            <div class="mt-1 text-[10px] inline px-1.5 py-px rounded bg-red-500/20 text-red-300">${r.difficulty}</div>
+                            <div class="text-xs text-zinc-400 mt-2 leading-snug">${r.desc}</div>
+                            <div class="text-[10px] text-amber-300/80 mt-1">Mechanic: ${r.mechanic}</div>
+                            ${r.hasCinematic ? '<div class="text-[9px] text-cyan-400 mt-1">★ Signature cinematic on defeat</div>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            arenaSection.innerHTML = `
+                <div class="max-w-5xl mx-auto">
+                    <div class="flex items-end justify-between mb-4">
+                        <div>
+                            <div class="uppercase tracking-[3px] text-xs text-red-400">GROK-TALK BATTLE ARENA</div>
+                            <div class="text-3xl font-black">Rivals Roster</div>
+                        </div>
+                        <button onclick="navigateTo('arena')" class="text-xs px-4 py-1.5 border border-gray-700 rounded-2xl hover:bg-[#1a1f2e]">BACK TO ARENA</button>
+                    </div>
+                    <p class="text-sm text-gray-400 mb-6 max-w-2xl">These are the signature foes the Fused Panda faces in the demo battles. Each brings unique art, difficulty, and mechanics. Victories against them trigger the Grok-powered cinematic (currently the signature Fusion Panda sequence).</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${rivalsHtml}
+                    </div>
+                    <div class="mt-6 text-center">
+                        <button onclick="renderBattleChampionSelect()" class="neon-button px-8 py-2 rounded-2xl text-sm font-bold">CHOOSE CHAMPION &amp; FIGHT</button>
+                    </div>
+                </div>
+            `;
+        }
+
         function startDemoBattle(championIndex = 0) {
             const arenaSection = document.getElementById("section-arena");
             const selectedChampion = userPandas[championIndex] || userPandas[0] || basePandas[0];
