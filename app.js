@@ -1537,7 +1537,7 @@
             }
         ];
 
-        function __createBattleMatch(selectedChampion = null) {
+        function __createBattleMatch(selectedChampion = null, specificRivalId = null) {
             const playerLevel = Math.max(0, Number(gameState.level) || 0);
             const champion = selectedChampion || [...userPandas].sort((a, b) => (b.power || 0) - (a.power || 0))[0] || basePandas[0];
             const championPower = Math.max(1, Number(champion.power) || 1);
@@ -1550,7 +1550,12 @@
             const enemyBaseDamage = Math.max(7, Math.floor(playerBaseDamage * (playerLevel < 3 ? 0.48 : 0.64)));
 
             // Pick a named rival from the roster (using new Grok-generated arts + lore)
-            const rival = BATTLE_RIVALS[Math.floor(Math.random() * BATTLE_RIVALS.length)];
+            let rival;
+            if (specificRivalId) {
+                rival = BATTLE_RIVALS.find(r => r.id === specificRivalId) || BATTLE_RIVALS[0];
+            } else {
+                rival = BATTLE_RIVALS[Math.floor(Math.random() * BATTLE_RIVALS.length)];
+            }
 
             return {
                 playerCur: playerMax,
@@ -1595,6 +1600,17 @@
                         <button type="button" onclick="navigateTo('collection')" class="px-5 py-2 text-xs border border-gray-700 rounded-2xl hover:bg-[#1a1f2e] transition-colors">
                             VIEW COLLECTION
                         </button>
+                    </div>
+
+                    <!-- NEW MATCH like the prototype roster experience -->
+                    <div class="mb-6">
+                        <button onclick="startQuickMatch()" 
+                                class="w-full sm:w-auto mx-auto flex items-center justify-center gap-x-3 px-8 py-3.5 rounded-3xl font-bold text-base border-2 border-red-400 bg-red-500/10 hover:bg-red-500/20 text-red-300 transition-all active:scale-[0.985]">
+                            <i class="fas fa-bolt"></i>
+                            <span>NEW MATCH — Random Champion + Random Rival</span>
+                            <i class="fas fa-swords"></i>
+                        </button>
+                        <p class="text-center text-[10px] text-gray-500 mt-1">Quick themed battle with one of the signature Grok-powered rivals</p>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="battle-champion-grid">
@@ -1664,10 +1680,27 @@
             `;
         }
 
-        function startDemoBattle(championIndex = 0) {
+        function startQuickMatch() {
+            // Pick random champion from collection (or starter)
+            const available = userPandas.length > 0 ? userPandas : [{ ...basePandas[0], id: "starter-preview" }];
+            const champ = available[Math.floor(Math.random() * available.length)];
+            let champIndex = userPandas.indexOf(champ);
+            if (champIndex < 0) {
+                // starter preview case - use 0 which will fallback inside
+                champIndex = 0;
+            }
+
+            // Pick random rival
+            const rival = BATTLE_RIVALS[Math.floor(Math.random() * BATTLE_RIVALS.length)];
+
+            // Start directly with pre-chosen rival (themed like prototype NEW MATCH)
+            startDemoBattle(champIndex, rival.id);
+        }
+
+        function startDemoBattle(championIndex = 0, specificRivalId = null) {
             const arenaSection = document.getElementById("section-arena");
             const selectedChampion = userPandas[championIndex] || userPandas[0] || basePandas[0];
-            const battle = __createBattleMatch(selectedChampion);
+            const battle = __createBattleMatch(selectedChampion, specificRivalId);
             window.__activeBattle = battle;
             const safePlayerName = __escapeBattleText(battle.playerName);
             const safeEnemyName = __escapeBattleText(battle.enemyName);
@@ -1830,22 +1863,24 @@
                 saveGameState();
                 updateDashboard();
 
-                // Grok-powered cinematic victory (from recent arena assets)
-                // Auto-show + add a replay control to the log for post-battle watching
+                // Grok-powered cinematic victory — now integrated into the main battle stage (in-arena viewer)
+                // with dynamic rival poster + quick actions. Modal still available via "Fullscreen" button.
                 const logEl = document.getElementById('battle-log');
-                if (logEl && typeof window.showVictoryCinematic === 'function') {
+                if (logEl && typeof window.showInArenaCinematic === 'function') {
                     const replayBtn = document.createElement('button');
                     replayBtn.className = 'mt-2 text-xs px-3 py-1 rounded-xl border border-amber-400/60 text-amber-300 hover:bg-amber-500/10';
                     replayBtn.innerHTML = '<i class="fas fa-play mr-1"></i> REPLAY CINEMATIC';
-                    replayBtn.onclick = () => window.showVictoryCinematic(b);
+                    replayBtn.onclick = () => window.showInArenaCinematic(b);
                     logEl.appendChild(replayBtn);
                 }
 
                 setTimeout(() => {
-                    if (typeof window.showVictoryCinematic === 'function') {
-                        window.showVictoryCinematic(b);
+                    if (typeof window.showInArenaCinematic === 'function') {
+                        window.showInArenaCinematic(b);
+                    } else if (typeof window.showVictoryCinematic === 'function') {
+                        window.showVictoryCinematic(b); // fallback
                     }
-                }, 900);
+                }, 700);
                 return;
             }
             await __battleWait(380);
@@ -1918,7 +1953,7 @@
                     </div>
 
                     <div class="relative rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-black arena-glow" style="box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6);">
-                        <video id="vc-video" class="w-full aspect-video bg-black" playsinline controls poster="assets/arena/fusion-panda-victory-keyframe.jpg">
+                        <video id="vc-video" class="w-full aspect-video bg-black" playsinline controls poster="${(battleData && battleData.enemyArt) || 'assets/arena/fusion-panda-victory-keyframe.jpg'}">
                             <source src="assets/arena/fusion-panda-victory.mp4" type="video/mp4">
                             Your browser does not support the video tag.
                         </video>
@@ -2009,6 +2044,114 @@
                     });
                     setTimeout(() => p.remove(), 1400);
                 }
+            }
+        };
+
+        // In-arena cinematic viewer (integrated into the battle stage instead of full overlay)
+        // Dynamic poster per rival using the enemy's concept art.
+        // Provides replay + quick actions while staying inside the Arena section.
+        window.showInArenaCinematic = function showInArenaCinematic(battleData) {
+            const arenaSection = document.getElementById("section-arena");
+            if (!arenaSection) return;
+
+            const enemyName = (battleData && battleData.enemyName) || 'Void Howler';
+            const playerName = (battleData && battleData.playerName) || 'Fusion Panda';
+            const enemyArt = (battleData && battleData.enemyArt) || 'assets/arena/fusion-panda-victory-keyframe.jpg';
+            const enemyDiff = (battleData && battleData.enemyDifficulty) || '';
+            const enemyMech = (battleData && battleData.enemyMechanic) || '';
+
+            const safeMech = typeof __escapeBattleText === 'function' ? __escapeBattleText(enemyMech) : enemyMech;
+
+            arenaSection.innerHTML = `
+                <div class="max-w-4xl mx-auto py-4">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <div>
+                            <div class="uppercase tracking-[3px] text-xs text-amber-400">GROK-TALK BATTLE ARENA</div>
+                            <div class="text-2xl font-black tracking-tighter">${playerName} <span class="text-amber-400">WINS</span></div>
+                            <div class="text-xs text-zinc-400">${enemyName} ${enemyDiff ? '• ' + enemyDiff : ''}</div>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button id="in-replay" class="px-4 py-2 text-sm rounded-2xl border border-amber-400/70 hover:bg-amber-500/10 flex items-center gap-2">
+                                <i class="fas fa-redo"></i> <span>REPLAY</span>
+                            </button>
+                            <button onclick="startQuickMatch()" class="px-4 py-2 text-sm rounded-2xl border border-red-400 bg-red-500/10 hover:bg-red-500/20 flex items-center gap-2">
+                                <i class="fas fa-bolt"></i> <span>NEW MATCH</span>
+                            </button>
+                            <button onclick="renderBattleChampionSelect()" class="px-4 py-2 text-sm rounded-2xl border border-gray-700 hover:bg-[#1a1f2e]">
+                                CHOOSE CHAMPION
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="relative rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-black" style="max-width: 100%;">
+                        <video id="in-video" class="w-full aspect-video bg-black" playsinline controls poster="${enemyArt}">
+                            <source src="assets/arena/fusion-panda-victory.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+
+                        <div id="in-overlay" class="hidden absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex items-end justify-center pb-6 pointer-events-none">
+                            <div class="text-center px-4">
+                                <div class="inline-flex items-center gap-x-2 px-5 py-1 rounded-full bg-black/70 backdrop-blur border border-white/10 mb-1">
+                                    <i class="fas fa-trophy text-amber-400"></i>
+                                    <span class="font-semibold tracking-wider text-sm">${playerName.toUpperCase()} VICTORY</span>
+                                </div>
+                                <div class="text-xs text-zinc-300">${enemyName} defeated</div>
+                                ${safeMech ? `<div class="text-[10px] text-amber-300/80 mt-0.5 max-w-[280px] mx-auto">${safeMech}</div>` : ''}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 flex flex-wrap gap-2 justify-center text-xs text-zinc-500">
+                        <span>10s cinematic • 720p • Grok-powered</span>
+                        <button onclick="if(window.__activeBattle &amp;&amp; window.showVictoryCinematic) window.showVictoryCinematic(window.__activeBattle)" class="underline hover:text-amber-400">Fullscreen cinematic</button>
+                        <span class="hidden sm:inline">• Click video for particles</span>
+                    </div>
+                </div>
+            `;
+
+            const video = arenaSection.querySelector('#in-video');
+            const overlay = arenaSection.querySelector('#in-overlay');
+            const replayBtn = arenaSection.querySelector('#in-replay');
+
+            if (replayBtn && video) {
+                replayBtn.onclick = () => {
+                    video.currentTime = 0;
+                    video.play().catch(() => {});
+                    if (overlay) overlay.classList.add('hidden');
+                };
+            }
+
+            if (video) {
+                video.onended = () => {
+                    if (overlay) overlay.classList.remove('hidden');
+                };
+
+                video.addEventListener('click', (ev) => {
+                    if (video.paused) return;
+                    // reuse the particle spawner if available, else simple
+                    if (typeof spawnFusionParticles === 'function') {
+                        spawnFusionParticles(video.parentElement, 6);
+                    } else {
+                        // inline simple particles
+                        const container = video.parentElement;
+                        for (let i = 0; i < 6; i++) {
+                            const p = document.createElement('div');
+                            p.style.cssText = 'position:absolute;width:5px;height:5px;border-radius:50%;background:#22d3ee;box-shadow:0 0 10px #22d3ee;pointer-events:none;z-index:10;';
+                            p.style.left = (Math.random() * container.clientWidth) + 'px';
+                            p.style.top = (container.clientHeight * (0.3 + Math.random()*0.5)) + 'px';
+                            container.appendChild(p);
+                            setTimeout(() => {
+                                p.style.transition = 'transform 900ms ease-out, opacity 900ms ease-out';
+                                p.style.transform = `translateY(-${50 + Math.random()*40}px) scale(0.2)`;
+                                p.style.opacity = '0';
+                                setTimeout(() => p.remove(), 900);
+                            }, 10);
+                        }
+                    }
+                });
+
+                // try auto-play
+                setTimeout(() => { video.play().catch(()=>{}); }, 200);
             }
         };
 
