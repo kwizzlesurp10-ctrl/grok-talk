@@ -10,7 +10,7 @@ Play instantly: [grok-talk.vercel.app](https://grok-talk.vercel.app)
 - **Fusion Lab** — Combine pandas using Basic, Advanced, or Ritual modes. Features elemental synergy bonuses, critical fusion chance, dynamic rarity, and visual feedback.
 - **My Collection** — Manage your growing panda army with powerful search, filtering, power tracking, and card-based UI.
 - **Codex** — Comprehensive bestiary, achievement tracking, unlockable catalysts, and an interactive fusion recipe tree.
-- **Battle Arena** — Demo battles with animated effects, damage numbers, and XP rewards. Choose your champion wisely.
+- **Battle Arena** — Real-time demo battles with HP bars, fusion energy beams, floating damage, and XP rewards. Now features Grok-generated cinematic victory sequences and a roster of themed rivals (Void Howler, Chroma Lynx, Prompt Colossus, Entropy Hare) with unique concept art and mechanics. Choose your champion wisely.
 - **Daily Challenge** — Gated reward system requiring lifetime XP milestones + specific fire-type fusion counts for bonus XP and rare pandas.
 - **Progression & Persistence** — Leveling system, XP tracking (including lifetime earned), schema-safe localStorage saves with migration support.
 - **Konami Code Easter Egg** — Classic cheat code unlocks a powerful secret "Quantum Overlord Panda".
