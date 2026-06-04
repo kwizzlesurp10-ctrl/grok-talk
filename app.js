@@ -1514,7 +1514,7 @@
                 mechanic: 'High mobility + split attacks. Punishes panic fusion.',
                 difficulty: 'MEDIUM',
                 art: 'assets/arena/opponent-chroma-lynx.jpg',
-                video: null,
+                video: 'assets/arena/fusion-panda-victory-chroma-lynx.mp4',
                 keyart: 'assets/arena/opponent-chroma-lynx.jpg'
             },
             {
@@ -1525,7 +1525,7 @@
                 mechanic: 'Heavy tank. Precision joint shots bypass armor.',
                 difficulty: 'HARD',
                 art: 'assets/arena/opponent-prompt-colossus.jpg',
-                video: null,
+                video: 'assets/arena/fusion-panda-victory-prompt-colossus.mp4',
                 keyart: 'assets/arena/opponent-prompt-colossus.jpg'
             },
             {
@@ -1536,7 +1536,7 @@
                 mechanic: 'Evasive + backlash. Your big moves can backfire.',
                 difficulty: 'HARD',
                 art: 'assets/arena/opponent-entropy-hare.jpg',
-                video: null,
+                video: 'assets/arena/fusion-panda-victory-entropy-hare.mp4',
                 keyart: 'assets/arena/opponent-entropy-hare.jpg'
             }
         ];
