@@ -1607,12 +1607,12 @@
                         </button>
                     </div>
 
-                    <!-- NEW MATCH like the prototype roster experience -->
+                    <!-- NEXT BATTLE quick start (random champion + random rival) -->
                     <div class="mb-6">
                         <button onclick="startQuickMatch()" 
                                 class="w-full sm:w-auto mx-auto flex items-center justify-center gap-x-3 px-8 py-3.5 rounded-3xl font-bold text-base border-2 border-red-400 bg-red-500/10 hover:bg-red-500/20 text-red-300 transition-all active:scale-[0.985]">
                             <i class="fas fa-bolt"></i>
-                            <span>NEW MATCH — Random Champion + Random Rival</span>
+                            <span>NEXT BATTLE — Random Champion + Random Rival</span>
                             <i class="fas fa-swords"></i>
                         </button>
                         <p class="text-center text-[10px] text-gray-500 mt-1">Quick themed battle with one of the signature Grok-powered rivals</p>
@@ -1685,6 +1685,49 @@
             `;
         }
 
+        function renderBattleLanding() {
+            const arenaSection = document.getElementById("section-arena");
+            if (!arenaSection) return;
+            arenaSection.innerHTML = `
+                <div class="max-w-2xl mx-auto text-center py-12">
+                    <div class="mx-auto w-24 h-24 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center mb-6 shadow-[0_0_60px_rgba(239,68,68,0.4)]">
+                        <i class="fas fa-swords text-5xl text-white"></i>
+                    </div>
+                    
+                    <h2 class="text-4xl font-black mb-3">Battle Arena</h2>
+                    <p class="text-xl text-gray-400 max-w-md mx-auto">Real-time demo battles with Grok-powered victory cinematics. Defeat rivals like the Void Howler and claim Fusion Panda glory.</p>
+                    
+                    <div class="mt-10 inline-flex items-center gap-x-2 px-6 py-3 bg-[#1a1f2e] rounded-3xl text-sm border border-gray-700">
+                        <div class="flex -space-x-2">
+                            <div class="w-7 h-7 bg-red-400 rounded-full flex items-center justify-center ring-2 ring-[#1a1f2e]"><span class="text-xs">🐼</span></div>
+                            <div class="w-7 h-7 bg-orange-400 rounded-full flex items-center justify-center ring-2 ring-[#1a1f2e]"><span class="text-xs">🔥</span></div>
+                        </div>
+                        <span class="text-gray-400">4 signature rivals • Grok-powered cinematics live</span>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
+                        <button onclick="renderBattleChampionSelect()" 
+                                class="neon-button px-8 py-3.5 rounded-3xl font-bold flex items-center gap-x-3 text-base">
+                            <span>CHOOSE BATTLE PANDA</span>
+                            <i class="fas fa-play"></i>
+                        </button>
+
+                        <button onclick="startQuickMatch()" 
+                                class="px-6 py-3.5 rounded-3xl font-bold flex items-center gap-x-3 text-base border-2 border-red-400 bg-red-500/10 hover:bg-red-500/20 text-red-300 transition-all">
+                            <i class="fas fa-bolt"></i>
+                            <span>NEW MATCH (Random)</span>
+                        </button>
+                    </div>
+
+                    <button onclick="renderBattleRivals()" 
+                            class="mt-3 text-xs px-4 py-2 rounded-2xl border border-gray-700 hover:border-red-400/60 text-red-300 flex items-center gap-x-2 mx-auto">
+                        <i class="fas fa-users"></i>
+                        <span>VIEW RIVALS ROSTER</span>
+                    </button>
+                </div>
+            `;
+        }
+
         function startQuickMatch() {
             // Pick random champion from collection (or starter)
             const available = userPandas.length > 0 ? userPandas : [{ ...basePandas[0], id: "starter-preview" }];
@@ -1717,7 +1760,7 @@
                             <div class="uppercase tracking-[3px] text-xs text-red-400">LIVE ARENA</div>
                             <div class="text-2xl sm:text-4xl font-black">Epic Showdown</div>
                         </div>
-                        <button type="button" onclick="location.reload()" class="w-full sm:w-auto px-5 py-2.5 text-xs border border-gray-700 rounded-2xl flex items-center justify-center gap-x-2 hover:bg-red-950/40 transition-colors">
+                        <button type="button" onclick="renderBattleLanding()" class="w-full sm:w-auto px-5 py-2.5 text-xs border border-gray-700 rounded-2xl flex items-center justify-center gap-x-2 hover:bg-red-950/40 transition-colors">
                             <i class="fas fa-redo" aria-hidden="true"></i> <span>END BATTLE</span>
                         </button>
                     </div>
@@ -2186,7 +2229,10 @@
                                 <i class="fas fa-redo"></i> <span>REPLAY</span>
                             </button>
                             <button onclick="startQuickMatch()" class="px-4 py-2 text-sm rounded-2xl border border-red-400 bg-red-500/10 hover:bg-red-500/20 flex items-center gap-2">
-                                <i class="fas fa-bolt"></i> <span>NEW MATCH</span>
+                                <i class="fas fa-bolt"></i> <span>NEXT BATTLE</span>
+                            </button>
+                            <button onclick="renderBattleLanding()" class="px-4 py-2 text-sm rounded-2xl border border-gray-700 hover:bg-red-950/40 flex items-center gap-2">
+                                <i class="fas fa-times"></i> <span>END BATTLE</span>
                             </button>
                             <button onclick="renderBattleChampionSelect()" class="px-4 py-2 text-sm rounded-2xl border border-gray-700 hover:bg-[#1a1f2e]">
                                 CHOOSE CHAMPION
