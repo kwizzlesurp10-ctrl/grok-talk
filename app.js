@@ -1543,6 +1543,30 @@
                 video: 'assets/arena/fusion-panda-victory-entropy-hare.mp4',
                 keyart: 'assets/arena/opponent-entropy-hare.jpg',
                 failureVideo: 'assets/arena/fusion-panda-defeat-entropy-hare.mp4'
+            },
+            {
+                id: 'fractal-fox',
+                name: 'Fractal Fox',
+                subtitle: 'Illusion Decoy Trickster • Agile',
+                desc: 'Shifting probability fox that spawns fractal decoys and warps RNG. Hard to pin down the real one.',
+                mechanic: 'Decoy swarms + misdirection. Punishes targeting the wrong clone.',
+                difficulty: 'MEDIUM',
+                art: 'assets/arena/opponent-fractal-fox.jpg',
+                video: 'assets/arena/fusion-panda-victory-fractal-fox.mp4',
+                keyart: 'assets/arena/opponent-fractal-fox.jpg',
+                failureVideo: 'assets/arena/fusion-panda-defeat-fractal-fox.mp4'
+            },
+            {
+                id: 'nexus-bear',
+                name: 'Nexus Bear',
+                subtitle: 'Gravity Data Tank • Heavy',
+                desc: 'Massive armored ursine with nexus core that pulls foes in with data tethers and crushes.',
+                mechanic: 'Pull + slam. Resists burst; wears you down with repeated tethers.',
+                difficulty: 'HARD',
+                art: 'assets/arena/opponent-nexus-bear.jpg',
+                video: 'assets/arena/fusion-panda-victory-nexus-bear.mp4',
+                keyart: 'assets/arena/opponent-nexus-bear.jpg',
+                failureVideo: 'assets/arena/fusion-panda-defeat-nexus-bear.mp4'
             }
         ];
 
@@ -1709,7 +1733,7 @@
                             <div class="w-7 h-7 bg-red-400 rounded-full flex items-center justify-center ring-2 ring-[#1a1f2e]"><span class="text-xs">🐼</span></div>
                             <div class="w-7 h-7 bg-orange-400 rounded-full flex items-center justify-center ring-2 ring-[#1a1f2e]"><span class="text-xs">🔥</span></div>
                         </div>
-                        <span class="text-gray-400">4 signature rivals • Grok-powered cinematics live</span>
+                        <span class="text-gray-400">6 signature rivals • Grok-powered cinematics live</span>
                     </div>
                     
                     <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mt-8">
