@@ -1494,6 +1494,7 @@
 
         // === GROK-TALK BATTLE ARENA RIVALS ROSTER (themed opponents from new assets) ===
         // Inspired by the Fusion Panda cutscene prototype. Named rivals with art, lore snippets, and difficulty.
+        // Each has dedicated victory (panda defeats foe) + failure (foe defeats panda) 10s cinematics.
         const BATTLE_RIVALS = [
             {
                 id: 'void-howler',
@@ -1504,7 +1505,8 @@
                 difficulty: 'INTRO',
                 art: 'assets/arena/opponent-void-howler.jpg',
                 video: 'assets/arena/fusion-panda-victory-void-howler.mp4',
-                keyart: 'assets/arena/opponent-void-howler.jpg'
+                keyart: 'assets/arena/opponent-void-howler.jpg',
+                failureVideo: 'assets/arena/fusion-panda-defeat-void-howler.mp4'
             },
             {
                 id: 'chroma-lynx',
@@ -1515,7 +1517,8 @@
                 difficulty: 'MEDIUM',
                 art: 'assets/arena/opponent-chroma-lynx.jpg',
                 video: 'assets/arena/fusion-panda-victory-chroma-lynx.mp4',
-                keyart: 'assets/arena/opponent-chroma-lynx.jpg'
+                keyart: 'assets/arena/opponent-chroma-lynx.jpg',
+                failureVideo: 'assets/arena/fusion-panda-defeat-chroma-lynx.mp4'
             },
             {
                 id: 'prompt-colossus',
@@ -1526,7 +1529,8 @@
                 difficulty: 'HARD',
                 art: 'assets/arena/opponent-prompt-colossus.jpg',
                 video: 'assets/arena/fusion-panda-victory-prompt-colossus.mp4',
-                keyart: 'assets/arena/opponent-prompt-colossus.jpg'
+                keyart: 'assets/arena/opponent-prompt-colossus.jpg',
+                failureVideo: 'assets/arena/fusion-panda-defeat-prompt-colossus.mp4'
             },
             {
                 id: 'entropy-hare',
@@ -1537,7 +1541,8 @@
                 difficulty: 'HARD',
                 art: 'assets/arena/opponent-entropy-hare.jpg',
                 video: 'assets/arena/fusion-panda-victory-entropy-hare.mp4',
-                keyart: 'assets/arena/opponent-entropy-hare.jpg'
+                keyart: 'assets/arena/opponent-entropy-hare.jpg',
+                failureVideo: 'assets/arena/fusion-panda-defeat-entropy-hare.mp4'
             }
         ];
 
@@ -1580,6 +1585,7 @@
                 enemyDifficulty: rival.difficulty,
                 enemyArt: rival.art,
                 enemyVideo: rival.video || null,
+                enemyFailureVideo: rival.failureVideo || null,
                 enemyKeyart: rival.keyart || rival.art,
                 enemyLevel,
                 enemyPower: Math.max(6, Math.floor(championPower * (playerLevel < 3 ? 0.72 : 0.9))),
@@ -1659,7 +1665,7 @@
                             <div class="mt-1 text-[10px] inline px-1.5 py-px rounded bg-red-500/20 text-red-300">${r.difficulty}</div>
                             <div class="text-xs text-zinc-400 mt-2 leading-snug">${r.desc}</div>
                             <div class="text-[10px] text-amber-300/80 mt-1">Mechanic: ${r.mechanic}</div>
-                            ${r.video ? '<div class="text-[9px] text-cyan-400 mt-1">★ Dedicated cinematic on defeat</div>' : '<div class="text-[9px] text-violet-400/80 mt-1">Cutscene pending</div>'}
+                            ${r.video && r.failureVideo ? '<div class="text-[9px] text-cyan-400 mt-1">★ Dedicated victory + defeat cinematics</div>' : (r.video ? '<div class="text-[9px] text-cyan-400 mt-1">★ Dedicated cinematic on defeat</div>' : '<div class="text-[9px] text-violet-400/80 mt-1">Cutscene pending</div>')}
                         </div>
                     </div>
                 </div>
@@ -1674,7 +1680,7 @@
                         </div>
                         <button onclick="navigateTo('arena')" class="text-xs px-4 py-1.5 border border-gray-700 rounded-2xl hover:bg-[#1a1f2e]">BACK TO ARENA</button>
                     </div>
-                    <p class="text-sm text-gray-400 mb-6 max-w-2xl">These are the signature foes the Fused Panda faces in the demo battles. Each brings unique art, difficulty, and mechanics. Victories against them trigger the matching Grok-powered cinematic (specific 10s cutscene showing Fusion Panda defeating that exact rival).</p>
+                    <p class="text-sm text-gray-400 mb-6 max-w-2xl">These are the signature foes the Fused Panda faces in the demo battles. Each brings unique art, difficulty, and mechanics. Victories (or defeats) against them trigger the matching Grok-powered cinematics (specific 10s cutscenes showing Fusion Panda defeating the rival, or the foe defeating Fusion Panda).</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         ${rivalsHtml}
                     </div>
@@ -1696,7 +1702,7 @@
                     </div>
                     
                     <h2 class="text-4xl font-black mb-3">Battle Arena</h2>
-                    <p class="text-xl text-gray-400 max-w-md mx-auto">Real-time demo battles with Grok-powered victory cinematics. Defeat rivals like the Void Howler and claim Fusion Panda glory.</p>
+                    <p class="text-xl text-gray-400 max-w-md mx-auto">Real-time demo battles with Grok-powered victory and defeat cinematics. Defeat rivals like the Void Howler (or get defeated) and claim (or lose) Fusion Panda glory.</p>
                     
                     <div class="mt-10 inline-flex items-center gap-x-2 px-6 py-3 bg-[#1a1f2e] rounded-3xl text-sm border border-gray-700">
                         <div class="flex -space-x-2">
@@ -1751,7 +1757,7 @@
             const selectedChampion = userPandas[championIndex] || userPandas[0] || basePandas[0];
             const battle = __createBattleMatch(selectedChampion, specificRivalId);
             window.__activeBattle = battle;
-            console.log('Started battle vs:', battle.enemyName, 'video will be:', battle.enemyVideo);
+            console.log('Started battle vs:', battle.enemyName, 'video will be:', battle.enemyVideo, 'failureVideo will be:', battle.enemyFailureVideo);
             const safePlayerName = __escapeBattleText(battle.playerName);
             const safeEnemyName = __escapeBattleText(battle.enemyName);
             arenaSection.innerHTML = `
@@ -1913,7 +1919,7 @@
                 saveGameState();
                 updateDashboard();
 
-                console.log('Victory for foe from battle:', b.enemyName, 'using video:', b.enemyVideo);
+                console.log('Victory cinematic for:', b.enemyName, 'using video:', b.enemyVideo);
 
                 // Grok-powered cinematic victory — now integrated into the main battle stage (in-arena viewer)
                 // with dynamic rival poster + quick actions. Modal still available via "Fullscreen" button.
@@ -1963,6 +1969,40 @@
             if (beam) {
                 beam.classList.remove("battle-beam--to-player");
             }
+            if (b.playerCur <= 0) {
+                b.ended = true;
+                b.playerCur = 0;
+                __syncBattleHpBars();
+                if (pCard) {
+                    pCard.classList.add("battle-fighter--defeated");
+                    pCard.setAttribute("aria-hidden", "true");
+                }
+                document.getElementById("battle-stage")?.classList.add("battle-stage--defeat");
+                __appendBattleLogLine(
+                    "text-rose-300 font-bold border-t border-rose-500/20 pt-2 mt-1",
+                    `💀 DEFEAT! ${__escapeBattleText(b.playerName)} was overpowered by ${__escapeBattleText(b.enemyName)}! ${b.enemySubtitle ? '— ' + __escapeBattleText(b.enemySubtitle) : ''}`,
+                );
+                console.log('Defeat by foe from battle:', b.enemyName, 'using failure video:', b.enemyFailureVideo);
+
+                // Grok-powered cinematic defeat (failure path) — in-arena viewer + replay
+                const logEl = document.getElementById('battle-log');
+                if (logEl && typeof window.showInArenaFailureCinematic === 'function') {
+                    const replayBtn = document.createElement('button');
+                    replayBtn.className = 'mt-2 text-xs px-3 py-1 rounded-xl border border-rose-400/60 text-rose-300 hover:bg-rose-500/10';
+                    replayBtn.innerHTML = '<i class="fas fa-play mr-1"></i> REPLAY DEFEAT CINEMATIC';
+                    replayBtn.onclick = () => window.showInArenaFailureCinematic(b);
+                    logEl.appendChild(replayBtn);
+                }
+
+                setTimeout(() => {
+                    if (typeof window.showInArenaFailureCinematic === 'function') {
+                        window.showInArenaFailureCinematic(b);
+                    } else if (typeof window.showFailureCinematic === 'function') {
+                        window.showFailureCinematic(b); // fallback
+                    }
+                }, 700);
+                return;
+            }
             b.round += 1;
             if (roundEl) {
                 roundEl.textContent = String(b.round);
@@ -1976,7 +2016,7 @@
         // Grok-talk Battle Arena cinematic victory player
         // Uses the high-quality Fusion Panda victory cutscene + concept art generated for the arena.
         window.showVictoryCinematic = function showVictoryCinematic(battleData) {
-            console.log('Victory cinematic (modal) for:', battleData ? battleData.enemyName : 'unknown', 'using video:', battleData ? battleData.enemyVideo : null);
+            console.log('Victory cinematic for:', battleData ? battleData.enemyName : 'unknown', 'using video:', battleData ? battleData.enemyVideo : null);
             const enemyName = (battleData && battleData.enemyName) || 'Void Howler';
             const playerName = (battleData && battleData.playerName) || 'Fusion Panda';
             const enemyDiff = battleData && battleData.enemyDifficulty ? battleData.enemyDifficulty : '';
@@ -2160,7 +2200,7 @@
         // Dynamic poster per rival using the enemy's concept art.
         // Provides replay + quick actions while staying inside the Arena section.
         window.showInArenaCinematic = function showInArenaCinematic(battleData) {
-            console.log('Victory cinematic (in-arena) for:', battleData ? battleData.enemyName : 'unknown', 'using video:', battleData ? battleData.enemyVideo : null);
+            console.log('Victory cinematic for:', battleData ? battleData.enemyName : 'unknown', 'using video:', battleData ? battleData.enemyVideo : null);
             const arenaSection = document.getElementById("section-arena");
             if (!arenaSection) return;
 
@@ -2322,6 +2362,352 @@
                     for (let i = 0; i < 6; i++) {
                         const p = document.createElement('div');
                         p.style.cssText = 'position:absolute;width:5px;height:5px;border-radius:50%;background:#22d3ee;box-shadow:0 0 10px #22d3ee;pointer-events:none;z-index:10;';
+                        p.style.left = (Math.random() * playerContainer.clientWidth) + 'px';
+                        p.style.top = (playerContainer.clientHeight * (0.3 + Math.random()*0.5)) + 'px';
+                        playerContainer.appendChild(p);
+                        setTimeout(() => {
+                            p.style.transition = 'transform 900ms ease-out, opacity 900ms ease-out';
+                            p.style.transform = `translateY(-${50 + Math.random()*40}px) scale(0.2)`;
+                            p.style.opacity = '0';
+                            setTimeout(() => p.remove(), 900);
+                        }, 10);
+                    }
+                }, { once: false });
+            }
+        };
+
+        // Grok-talk Battle Arena cinematic DEFEAT (failure / foe victory) player
+        // Uses the high-quality foe-defeats-panda cutscene + concept art. Mirrors victory but with defeat theming.
+        window.showFailureCinematic = function showFailureCinematic(battleData) {
+            console.log('Failure cinematic for:', battleData ? battleData.enemyName : 'unknown', 'using failure video:', battleData ? battleData.enemyFailureVideo : null);
+            const enemyName = (battleData && battleData.enemyName) || 'Void Howler';
+            const playerName = (battleData && battleData.playerName) || 'Fusion Panda';
+            const enemyDiff = battleData && battleData.enemyDifficulty ? battleData.enemyDifficulty : '';
+            const enemyMech = battleData && battleData.enemyMechanic ? battleData.enemyMechanic : '';
+            const safeEnemyMech = typeof __escapeBattleText === 'function' ? __escapeBattleText(enemyMech) : enemyMech;
+
+            const hasVideo = !!(battleData && battleData.enemyFailureVideo);
+            const videoSrc = hasVideo ? battleData.enemyFailureVideo : null;
+            const posterSrc = (battleData && battleData.enemyKeyart) || (battleData && battleData.enemyArt) || 'assets/arena/opponent-chroma-lynx.jpg';
+
+            let modalPlayerHTML = '';
+            if (hasVideo) {
+                modalPlayerHTML = `
+                    <video id="fc-video" class="w-full aspect-video bg-black" playsinline controls poster="${posterSrc}">
+                        <source src="${videoSrc}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+
+                    <div id="fc-overlay" class="hidden absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex items-end justify-center pb-8 pointer-events-none">
+                        <div class="text-center">
+                            <div class="inline-flex items-center gap-x-2 px-6 py-1.5 rounded-full bg-black/70 backdrop-blur border border-white/10 mb-2">
+                                <i class="fas fa-skull text-rose-400"></i>
+                                <span class="font-semibold tracking-wider text-sm">FOE VICTORY</span>
+                            </div>
+                            <div class="text-xs text-zinc-400">${playerName} defeated${enemyDiff ? ' • ' + enemyDiff : ''}</div>
+                            ${enemyMech ? `<div class="text-[10px] text-rose-300/80 mt-0.5 max-w-xs mx-auto">${safeEnemyMech}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            } else {
+                modalPlayerHTML = `
+                    <div class="relative w-full aspect-video bg-black overflow-hidden rounded-3xl" style="box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6);">
+                        <img src="${posterSrc}" alt="${enemyName}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <div class="text-center px-6">
+                                <div class="text-xs tracking-[2px] text-violet-400 mb-1">CUTSCENE PENDING</div>
+                                <div class="font-semibold">No dedicated 10s defeat animation yet for ${enemyName}</div>
+                                <div class="text-xs text-zinc-400 mt-2">Ask Grok to generate one using the same detailed style</div>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 text-center">
+                            <div class="inline-flex items-center gap-x-2 px-4 py-1 rounded-full bg-black/70 border border-white/10">
+                                <i class="fas fa-skull text-rose-400"></i>
+                                <span class="font-semibold tracking-wider text-sm">FOE VICTORY</span>
+                            </div>
+                            <div class="text-xs text-zinc-300 mt-1">${playerName} defeated</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const modal = document.createElement('div');
+            modal.id = 'defeat-cinematic-modal';
+            modal.className = 'fixed inset-0 z-[200] flex items-center justify-center bg-black/90 p-4';
+            modal.innerHTML = `
+                <div class="w-full max-w-[1080px] mx-auto">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <div>
+                            <div class="uppercase tracking-[3px] text-xs text-rose-400">GROK-TALK BATTLE ARENA</div>
+                            <div class="text-2xl font-black tracking-tighter">${playerName} <span class="text-rose-400">DEFEATED</span></div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="fc-replay" class="px-4 py-2 rounded-2xl border border-zinc-700 hover:border-rose-400/70 text-sm font-medium flex items-center gap-2">
+                                <i class="fas fa-redo"></i> <span>REPLAY</span>
+                            </button>
+                            <button id="fc-close" class="px-4 py-2 rounded-2xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-sm font-medium">CLOSE</button>
+                        </div>
+                    </div>
+
+                    <div class="relative rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-black arena-glow" style="box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6);">
+                        ${modalPlayerHTML}
+                    </div>
+
+                    <div class="mt-3 text-center text-[10px] text-zinc-500 flex items-center justify-center gap-4">
+                        <span>10s cinematic • 720p • Grok Imagine + Video</span>
+                        <span class="hidden sm:inline">Click video for defeat particles</span>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            const video = modal.querySelector('#fc-video');
+            const overlay = modal.querySelector('#fc-overlay');
+            const closeBtn = modal.querySelector('#fc-close');
+            const replayBtn = modal.querySelector('#fc-replay');
+
+            function closeModal() {
+                modal.remove();
+                document.removeEventListener('keydown', onKey);
+            }
+
+            function onKey(e) {
+                if (e.key === 'Escape') closeModal();
+                if ((e.key === 'r' || e.key === 'R') && video) { video.currentTime = 0; video.play().catch(()=>{}); }
+            }
+
+            closeBtn.onclick = closeModal;
+            modal.onclick = (e) => { if (e.target === modal) closeModal(); };
+
+            if (replayBtn) {
+                if (video) {
+                    replayBtn.onclick = () => {
+                        if (video) { video.currentTime = 0; video.play().catch(()=>{}); overlay && overlay.classList.add('hidden'); }
+                    };
+                } else {
+                    replayBtn.innerHTML = '<i class="fas fa-star"></i> <span>MOURN</span>';
+                    replayBtn.onclick = () => {
+                        const container = modal.querySelector('.relative.rounded-3xl') || modal;
+                        for (let i = 0; i < 8; i++) {
+                            const p = document.createElement('div');
+                            p.style.cssText = 'position:absolute;width:6px;height:6px;border-radius:50%;background:#f43f5e;box-shadow:0 0 8px #f43f5e;pointer-events:none;z-index:20;';
+                            p.style.left = (Math.random() * (container.clientWidth || 300)) + 'px';
+                            p.style.top = ((container.clientHeight || 200) * (0.3 + Math.random() * 0.5)) + 'px';
+                            container.appendChild(p);
+                            setTimeout(() => {
+                                p.style.transition = 'transform 800ms ease-out, opacity 800ms ease-out';
+                                p.style.transform = `translateY(-${40 + Math.random()*30}px) scale(0.3)`;
+                                p.style.opacity = '0';
+                                setTimeout(() => p.remove(), 800);
+                            }, 20);
+                        }
+                    };
+                }
+            }
+
+            if (video) {
+                video.onended = () => {
+                    if (overlay) overlay.classList.remove('hidden');
+                };
+
+                video.addEventListener('click', (ev) => {
+                    if (video.paused) return;
+                    if (typeof spawnFusionParticles === 'function') {
+                        spawnFusionParticles(video.parentElement, 8);
+                    }
+                });
+
+                setTimeout(() => {
+                    video.play().catch(() => {});
+                }, 150);
+            }
+
+            document.addEventListener('keydown', onKey, { once: false });
+
+            function spawnDefeatParticles(container, count = 6) {
+                const rect = container.getBoundingClientRect();
+                for (let i = 0; i < count; i++) {
+                    const p = document.createElement('div');
+                    p.style.position = 'absolute';
+                    p.style.left = (Math.random() * rect.width) + 'px';
+                    p.style.top = (rect.height * (0.2 + Math.random() * 0.6)) + 'px';
+                    p.style.width = p.style.height = (3 + Math.random() * 5) + 'px';
+                    p.style.borderRadius = '50%';
+                    p.style.background = '#f43f5e';
+                    p.style.boxShadow = '0 0 12px #f43f5e';
+                    p.style.opacity = (0.5 + Math.random() * 0.5).toString();
+                    p.style.pointerEvents = 'none';
+                    p.style.zIndex = '10';
+                    p.style.transition = 'transform 1.1s ease-out, opacity 1.1s ease-out';
+                    container.appendChild(p);
+
+                    requestAnimationFrame(() => {
+                        p.style.transform = `translateY(-${60 + Math.random() * 50}px) scale(${0.2 + Math.random() * 0.3})`;
+                        p.style.opacity = '0';
+                    });
+                    setTimeout(() => p.remove(), 1400);
+                }
+            }
+        };
+
+        // In-arena failure cinematic viewer (integrated into the battle stage)
+        // Dynamic poster per rival. REPLAY + NEXT BATTLE / END BATTLE / CHOOSE CHAMPION all wired (reuse existing fns).
+        window.showInArenaFailureCinematic = function showInArenaFailureCinematic(battleData) {
+            console.log('Failure cinematic for:', battleData ? battleData.enemyName : 'unknown', 'using failure video:', battleData ? battleData.enemyFailureVideo : null);
+            const arenaSection = document.getElementById("section-arena");
+            if (!arenaSection) return;
+
+            const enemyName = (battleData && battleData.enemyName) || 'Void Howler';
+            const playerName = (battleData && battleData.playerName) || 'Fusion Panda';
+            const enemyArt = (battleData && battleData.enemyArt) || 'assets/arena/opponent-chroma-lynx.jpg';
+            const enemyDiff = (battleData && battleData.enemyDifficulty) || '';
+            const enemyMech = (battleData && battleData.enemyMechanic) || '';
+
+            const safeMech = typeof __escapeBattleText === 'function' ? __escapeBattleText(enemyMech) : enemyMech;
+            const hasVideo = !!(battleData && battleData.enemyFailureVideo);
+            const videoSrc = hasVideo ? battleData.enemyFailureVideo : null;
+            const posterSrc = (battleData && battleData.enemyKeyart) || enemyArt;
+
+            let cinematicPlayerHTML = '';
+            if (hasVideo) {
+                cinematicPlayerHTML = `
+                    <video id="in-fail-video" class="w-full aspect-video bg-black" playsinline controls poster="${posterSrc}">
+                        <source src="${videoSrc}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                    <div id="in-fail-overlay" class="hidden absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent flex items-end justify-center pb-6 pointer-events-none">
+                        <div class="text-center px-4">
+                            <div class="inline-flex items-center gap-x-2 px-5 py-1 rounded-full bg-black/70 backdrop-blur border border-white/10 mb-1">
+                                <i class="fas fa-skull text-rose-400"></i>
+                                <span class="font-semibold tracking-wider text-sm">FOE VICTORY</span>
+                            </div>
+                            <div class="text-xs text-zinc-300">${playerName} defeated</div>
+                            ${safeMech ? `<div class="text-[10px] text-rose-300/80 mt-0.5 max-w-[280px] mx-auto">${safeMech}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            } else {
+                cinematicPlayerHTML = `
+                    <div class="relative w-full aspect-video bg-black overflow-hidden rounded" style="box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.6);">
+                        <img src="${posterSrc}" alt="${enemyName} concept art" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <div class="text-center px-6">
+                                <div class="text-xs tracking-[2px] text-violet-400 mb-1">CUTSCENE PENDING</div>
+                                <div class="font-semibold text-lg">No dedicated 10s defeat animation yet for ${enemyName}</div>
+                                <div class="text-xs text-zinc-400 mt-2 max-w-xs mx-auto">Ask Grok to generate one using the same detailed style</div>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 text-center">
+                            <div class="inline-flex items-center gap-x-2 px-4 py-1 rounded-full bg-black/70 border border-white/10">
+                                <i class="fas fa-skull text-rose-400"></i>
+                                <span class="font-semibold tracking-wider text-sm">FOE VICTORY</span>
+                            </div>
+                            <div class="text-xs text-zinc-300 mt-1">${playerName} defeated</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            arenaSection.innerHTML = `
+                <div class="max-w-4xl mx-auto py-4">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <div>
+                            <div class="uppercase tracking-[3px] text-xs text-rose-400">GROK-TALK BATTLE ARENA</div>
+                            <div class="text-2xl font-black tracking-tighter">${playerName} <span class="text-rose-400">DEFEATED</span></div>
+                            <div class="text-xs text-zinc-400">${enemyName} ${enemyDiff ? '• ' + enemyDiff : ''}</div>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button id="in-fail-replay" class="px-4 py-2 text-sm rounded-2xl border border-rose-400/70 hover:bg-rose-500/10 flex items-center gap-2">
+                                <i class="fas fa-redo"></i> <span>REPLAY</span>
+                            </button>
+                            <button onclick="startQuickMatch()" class="px-4 py-2 text-sm rounded-2xl border border-red-400 bg-red-500/10 hover:bg-red-500/20 flex items-center gap-2">
+                                <i class="fas fa-bolt"></i> <span>NEXT BATTLE</span>
+                            </button>
+                            <button onclick="renderBattleLanding()" class="px-4 py-2 text-sm rounded-2xl border border-gray-700 hover:bg-red-950/40 flex items-center gap-2">
+                                <i class="fas fa-times"></i> <span>END BATTLE</span>
+                            </button>
+                            <button onclick="renderBattleChampionSelect()" class="px-4 py-2 text-sm rounded-2xl border border-gray-700 hover:bg-[#1a1f2e]">
+                                CHOOSE CHAMPION
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="relative rounded-3xl overflow-hidden border border-zinc-800 shadow-2xl bg-black" style="max-width: 100%;">
+                        ${cinematicPlayerHTML}
+                    </div>
+
+                    <div class="mt-3 flex flex-wrap gap-2 justify-center text-xs text-zinc-500">
+                        <span>10s cinematic • 720p • Grok-powered</span>
+                        <button onclick="if(window.__activeBattle &amp;&amp; window.showFailureCinematic) window.showFailureCinematic(window.__activeBattle)" class="underline hover:text-rose-400">Fullscreen cinematic</button>
+                        <span class="hidden sm:inline">• Click video for particles</span>
+                    </div>
+                </div>
+            `;
+
+            const video = arenaSection.querySelector('#in-fail-video');
+            const overlay = arenaSection.querySelector('#in-fail-overlay');
+            const replayBtn = arenaSection.querySelector('#in-fail-replay');
+            const playerContainer = arenaSection.querySelector('.relative.rounded-3xl') || arenaSection.querySelector('.relative.w-full.aspect-video');
+
+            if (replayBtn) {
+                if (video) {
+                    replayBtn.onclick = () => {
+                        video.currentTime = 0;
+                        video.play().catch(() => {});
+                        if (overlay) overlay.classList.add('hidden');
+                    };
+                } else {
+                    replayBtn.innerHTML = '<i class="fas fa-star"></i> <span>MOURN</span>';
+                    replayBtn.onclick = () => {
+                        if (playerContainer) {
+                            for (let i = 0; i < 8; i++) {
+                                const p = document.createElement('div');
+                                p.style.cssText = 'position:absolute;width:6px;height:6px;border-radius:50%;background:#f43f5e;box-shadow:0 0 8px #f43f5e;pointer-events:none;z-index:20;';
+                                p.style.left = (Math.random() * playerContainer.clientWidth) + 'px';
+                                p.style.top = (playerContainer.clientHeight * (0.4 + Math.random() * 0.4)) + 'px';
+                                playerContainer.appendChild(p);
+                                setTimeout(() => {
+                                    p.style.transition = 'transform 800ms ease-out, opacity 800ms ease-out';
+                                    p.style.transform = `translateY(-${40 + Math.random()*30}px) scale(0.3)`;
+                                    p.style.opacity = '0';
+                                    setTimeout(() => p.remove(), 800);
+                                }, 20);
+                            }
+                        }
+                    };
+                }
+            }
+
+            if (video) {
+                video.onended = () => {
+                    if (overlay) overlay.classList.remove('hidden');
+                };
+
+                video.addEventListener('click', (ev) => {
+                    if (video.paused) return;
+                    const container = video.parentElement;
+                    for (let i = 0; i < 6; i++) {
+                        const p = document.createElement('div');
+                        p.style.cssText = 'position:absolute;width:5px;height:5px;border-radius:50%;background:#f43f5e;box-shadow:0 0 10px #f43f5e;pointer-events:none;z-index:10;';
+                        p.style.left = (Math.random() * container.clientWidth) + 'px';
+                        p.style.top = (container.clientHeight * (0.3 + Math.random()*0.5)) + 'px';
+                        container.appendChild(p);
+                        setTimeout(() => {
+                            p.style.transition = 'transform 900ms ease-out, opacity 900ms ease-out';
+                            p.style.transform = `translateY(-${50 + Math.random()*40}px) scale(0.2)`;
+                            p.style.opacity = '0';
+                            setTimeout(() => p.remove(), 900);
+                        }, 10);
+                    }
+                });
+
+                setTimeout(() => { video.play().catch(()=>{}); }, 200);
+            } else if (playerContainer) {
+                playerContainer.style.cursor = 'pointer';
+                playerContainer.addEventListener('click', () => {
+                    for (let i = 0; i < 6; i++) {
+                        const p = document.createElement('div');
+                        p.style.cssText = 'position:absolute;width:5px;height:5px;border-radius:50%;background:#f43f5e;box-shadow:0 0 10px #f43f5e;pointer-events:none;z-index:10;';
                         p.style.left = (Math.random() * playerContainer.clientWidth) + 'px';
                         p.style.top = (playerContainer.clientHeight * (0.3 + Math.random()*0.5)) + 'px';
                         playerContainer.appendChild(p);
