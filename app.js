@@ -1688,6 +1688,7 @@
         function renderBattleLanding() {
             const arenaSection = document.getElementById("section-arena");
             if (!arenaSection) return;
+            if (window.__activeBattle) window.__activeBattle = null;
             arenaSection.innerHTML = `
                 <div class="max-w-2xl mx-auto text-center py-12">
                     <div class="mx-auto w-24 h-24 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center mb-6 shadow-[0_0_60px_rgba(239,68,68,0.4)]">
