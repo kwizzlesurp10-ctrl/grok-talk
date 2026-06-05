@@ -2081,7 +2081,7 @@
                         <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
                             <div class="text-center px-6">
                                 <div class="text-xs tracking-[2px] text-violet-400 mb-1">CUTSCENE PENDING</div>
-                                <div class="font-semibold">No dedicated 10s victory animation yet for ${enemyName}</div>
+                                <div class="font-semibold">No dedicated 10s victory cinematic yet for ${enemyName}</div>
                                 <div class="text-xs text-zinc-400 mt-2">Ask Grok to generate one using the same detailed style</div>
                             </div>
                         </div>
@@ -2265,7 +2265,7 @@
                         <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
                             <div class="text-center px-6">
                                 <div class="text-xs tracking-[2px] text-violet-400 mb-1">CUTSCENE PENDING</div>
-                                <div class="font-semibold text-lg">No dedicated 10s victory animation yet for ${enemyName}</div>
+                                <div class="font-semibold text-lg">No dedicated 10s victory cinematic yet for ${enemyName}</div>
                                 <div class="text-xs text-zinc-400 mt-2 max-w-xs mx-auto">Ask Grok to generate one using the same detailed style</div>
                             </div>
                         </div>
@@ -2440,7 +2440,7 @@
                         <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
                             <div class="text-center px-6">
                                 <div class="text-xs tracking-[2px] text-violet-400 mb-1">CUTSCENE PENDING</div>
-                                <div class="font-semibold">No dedicated 10s defeat animation yet for ${enemyName}</div>
+                                <div class="font-semibold">No dedicated 10s defeat cinematic yet for ${enemyName}</div>
                                 <div class="text-xs text-zinc-400 mt-2">Ask Grok to generate one using the same detailed style</div>
                             </div>
                         </div>
@@ -2617,7 +2617,7 @@
                         <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
                             <div class="text-center px-6">
                                 <div class="text-xs tracking-[2px] text-violet-400 mb-1">CUTSCENE PENDING</div>
-                                <div class="font-semibold text-lg">No dedicated 10s defeat animation yet for ${enemyName}</div>
+                                <div class="font-semibold text-lg">No dedicated 10s defeat cinematic yet for ${enemyName}</div>
                                 <div class="text-xs text-zinc-400 mt-2 max-w-xs mx-auto">Ask Grok to generate one using the same detailed style</div>
                             </div>
                         </div>
