@@ -1503,7 +1503,9 @@
                 mechanic: 'Aggressive opener. Drops defense after initial lunges.',
                 difficulty: 'INTRO',
                 art: 'assets/arena/fusion-panda-victory-keyframe.jpg',
-                video: 'assets/arena/fusion-panda-victory.mp4',
+                // Original generic victory video removed (deprecated). This foe now uses the pending still + keyframe
+                // until a specific "panda defeating Void Howler" cutscene is generated in the new style.
+                video: null,
                 keyart: 'assets/arena/fusion-panda-victory-keyframe.jpg'
             },
             {
@@ -1674,7 +1676,7 @@
                         </div>
                         <button onclick="navigateTo('arena')" class="text-xs px-4 py-1.5 border border-gray-700 rounded-2xl hover:bg-[#1a1f2e]">BACK TO ARENA</button>
                     </div>
-                    <p class="text-sm text-gray-400 mb-6 max-w-2xl">These are the signature foes the Fused Panda faces in the demo battles. Each brings unique art, difficulty, and mechanics. Victories against them trigger the matching Grok-powered cinematic (specific 10s cutscene showing Fusion Panda defeating that exact rival).</p>
+                    <p class="text-sm text-gray-400 mb-6 max-w-2xl">These are the signature foes the Fused Panda faces in the demo battles. Each brings unique art, difficulty, and mechanics. Victories against most trigger the matching Grok-powered cinematic (specific 10s cutscene showing Fusion Panda defeating that exact rival). The original generic intro cutscene has been removed in favor of per-foe defeat animations.</p>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         ${rivalsHtml}
                     </div>
