@@ -1987,7 +1987,7 @@
 
             const hasVideo = !!(battleData && battleData.enemyVideo);
             const videoSrc = hasVideo ? battleData.enemyVideo : null;
-            const posterSrc = (battleData && battleData.enemyKeyart) || (battleData && battleData.enemyArt) || 'assets/arena/fusion-panda-victory-keyframe.jpg';
+            const posterSrc = (battleData && battleData.enemyKeyart) || (battleData && battleData.enemyArt) || 'assets/arena/opponent-chroma-lynx.jpg';
 
             // Remove any existing cinematic
             const existing = document.getElementById('victory-cinematic-modal');
@@ -2020,7 +2020,7 @@
                             <div class="text-center px-6">
                                 <div class="text-xs tracking-[2px] text-violet-400 mb-1">CUTSCENE PENDING</div>
                                 <div class="font-semibold">No dedicated 10s victory animation yet for ${enemyName}</div>
-                                <div class="text-xs text-zinc-400 mt-2">Ask Grok to generate one (same style as Void Howler)</div>
+                                <div class="text-xs text-zinc-400 mt-2">Ask Grok to generate one using the same detailed style</div>
                             </div>
                         </div>
                         <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 text-center">
@@ -2168,7 +2168,7 @@
 
             const enemyName = (battleData && battleData.enemyName) || 'Void Howler';
             const playerName = (battleData && battleData.playerName) || 'Fusion Panda';
-            const enemyArt = (battleData && battleData.enemyArt) || 'assets/arena/fusion-panda-victory-keyframe.jpg';
+            const enemyArt = (battleData && battleData.enemyArt) || 'assets/arena/opponent-chroma-lynx.jpg';
             const enemyDiff = (battleData && battleData.enemyDifficulty) || '';
             const enemyMech = (battleData && battleData.enemyMechanic) || '';
 
@@ -2204,7 +2204,7 @@
                             <div class="text-center px-6">
                                 <div class="text-xs tracking-[2px] text-violet-400 mb-1">CUTSCENE PENDING</div>
                                 <div class="font-semibold text-lg">No dedicated 10s victory animation yet for ${enemyName}</div>
-                                <div class="text-xs text-zinc-400 mt-2 max-w-xs mx-auto">Ask Grok to generate one using the same detailed style as Void Howler</div>
+                                <div class="text-xs text-zinc-400 mt-2 max-w-xs mx-auto">Ask Grok to generate one using the same detailed style</div>
                             </div>
                         </div>
                         <!-- Victory banner always visible for no-video case -->
