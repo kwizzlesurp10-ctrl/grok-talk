@@ -36,7 +36,7 @@
             recentFusions: []
         };
 
-        // Base Pandas Data
+        // Base Pandas Data (Expanded with new production content)
         const basePandas = [
             { id: 1, name: "Classic Panda", emoji: "🐼", type: "Balanced", power: 12, rarity: "common", color: "#64748b", desc: "The original bamboo-loving legend. Reliable and steady in every fusion." },
             { id: 2, name: "Inferno Panda", emoji: "🔥🐼", type: "Fire", power: 18, rarity: "rare", color: "#f97316", desc: "Born in volcanic craters. Brings explosive energy to any fusion." },
@@ -45,7 +45,16 @@
             { id: 5, name: "Thunder Panda", emoji: "⚡🐼", type: "Electric", power: 19, rarity: "rare", color: "#eab308", desc: "Channeling the power of storms. Fast and shocking." },
             { id: 6, name: "Golden Fortune", emoji: "✨🐼", type: "Light", power: 27, rarity: "legendary", color: "#fbbf24", desc: "Extremely rare. Brings incredible luck and prosperity." },
             { id: 7, name: "Mystic Panda", emoji: "🔮🐼", type: "Arcane", power: 24, rarity: "epic", color: "#c026ff", desc: "Wielder of ancient panda magic. Unpredictable and wise." },
-            { id: 8, name: "Crystal Panda", emoji: "💎🐼", type: "Crystal", power: 16, rarity: "rare", color: "#67e8f9", desc: "Crystalline armor protects it from harm. Beautiful but deadly." }
+            { id: 8, name: "Crystal Panda", emoji: "💎🐼", type: "Crystal", power: 16, rarity: "rare", color: "#67e8f9", desc: "Crystalline armor protects it from harm. Beautiful but deadly." },
+
+            // New production content integration (from expanded roster)
+            { id: 9, name: "Ember Cub", emoji: "🔥🐼", type: "Fire", power: 85, rarity: "common", color: "#f97316", desc: "Newly discovered fire-type starter." },
+            { id: 10, name: "Inferno Guardian", emoji: "🔥🛡️", type: "Fire", power: 145, rarity: "rare", color: "#f97316", desc: "Elite fire guardian from the new roster." },
+            { id: 11, name: "Blazing Phoenix Panda", emoji: "🔥🦅", type: "Fire", power: 210, rarity: "epic", color: "#f97316", desc: "Mythic-level fire evolution." },
+            { id: 12, name: "Cyclone Striker", emoji: "🌪️🐼", type: "Wind", power: 138, rarity: "rare", color: "#22c55e", desc: "New wind-type from expanded content." },
+            { id: 13, name: "Storm Dragon Panda", emoji: "🐉💨", type: "Wind", power: 205, rarity: "epic", color: "#22c55e", desc: "High-tier wind evolution." },
+            { id: 14, name: "Quantum Overlord Panda", emoji: "🌌🐼", type: "Lightning", power: 450, rarity: "mythic", color: "#a855f7", desc: "Mythic pinnacle — extremely rare." },
+            { id: 15, name: "Eternal Flame Sovereign", emoji: "🔥👑", type: "Fire", power: 440, rarity: "mythic", color: "#f97316", desc: "The ultimate fire evolution." },
         ];
 
         // User's unlocked pandas (new users start with one fair starter)
@@ -228,7 +237,7 @@
                 const isUnlocked = userPandas.some(up => up.name === panda.name || (up.type === panda.type && up.rarity === panda.rarity));
                 
                 const card = document.createElement('div');
-                card.className = `panda-card cyber-card rounded-2xl p-3 border border-gray-700 cursor-pointer flex flex-col items-center text-center ${!isUnlocked ? 'opacity-60' : ''}`;
+                card.className = `panda-card cyber-card rounded-2xl p-3 border border-gray-700 cursor-pointer ${panda.rarity === "mythic" ? "ring-2 ring-purple-400/70 shadow-\[0_0_20px_rgba(168,85,247,0.3)\]" : ""} flex flex-col items-center text-center ${!isUnlocked ? 'opacity-60' : ''}`;
                 
                 card.innerHTML = `
                     <div class="text-5xl mb-2 transition-transform">${panda.emoji}</div>
@@ -286,7 +295,7 @@
             
             pandasToShow.forEach((panda, index) => {
                 const card = document.createElement('div');
-                card.className = `panda-card cyber-card rounded-3xl p-4 border border-gray-700 cursor-pointer group`;
+                card.className = `panda-card cyber-card rounded-3xl p-4 border border-gray-700 cursor-pointer ${panda.rarity === "mythic" ? "ring-2 ring-purple-400/70 shadow-\[0_0_20px_rgba(168,85,247,0.3)\]" : ""} group`;
                 
                 const rarityColor = getRarityColor(panda.rarity);
                 
@@ -551,7 +560,7 @@
                 const isUnlocked = userPandas.some(p => p.name === entry.name || (p.type === entry.type && p.rarity === entry.rarity));
                 
                 const card = document.createElement('div');
-                card.className = `panda-card cyber-card rounded-3xl p-5 border border-gray-700 cursor-pointer group ${!isUnlocked ? 'opacity-75 grayscale-[0.3]' : ''}`;
+                card.className = `panda-card cyber-card rounded-3xl p-5 border border-gray-700 cursor-pointer ${panda.rarity === "mythic" ? "ring-2 ring-purple-400/70 shadow-\[0_0_20px_rgba(168,85,247,0.3)\]" : ""} group ${!isUnlocked ? 'opacity-75 grayscale-[0.3]' : ''}`;
                 
                 const rarityColor = getRarityColor(entry.rarity);
                 
@@ -775,7 +784,7 @@
             
             userPandas.forEach((panda, idx) => {
                 const card = document.createElement('div');
-                card.className = `panda-card cyber-card rounded-2xl p-4 border border-gray-700 cursor-pointer hover:border-emerald-400 flex flex-col`;
+                card.className = `panda-card cyber-card rounded-2xl p-4 border border-gray-700 cursor-pointer ${panda.rarity === "mythic" ? "ring-2 ring-purple-400/70 shadow-\[0_0_20px_rgba(168,85,247,0.3)\]" : ""} hover:border-emerald-400 flex flex-col`;
                 
                 const rarityColor = getRarityColor(panda.rarity);
                 
@@ -881,44 +890,48 @@
         function setFusionMode(mode) {
             currentFusionMode = mode;
 
-            const basic = document.getElementById("mode-basic");
-            const advanced = document.getElementById("mode-advanced");
-            const ritual = document.getElementById("mode-ritual");
-            const resetInactive = (el, borderClass) => {
-                if (!el) return;
-                el.classList.remove(
-                    "bg-emerald-500",
-                    "bg-fuchsia-500",
-                    "bg-amber-500",
-                    "text-black",
-                    "active-mode",
-                );
-                el.classList.add("bg-[#1a1f2e]", "border", borderClass);
-            };
+            // Use rAF to avoid blocking the main thread (fixes INP 200ms issue on mode buttons)
+            requestAnimationFrame(() => {
+                const basic = document.getElementById("mode-basic");
+                const advanced = document.getElementById("mode-advanced");
+                const ritual = document.getElementById("mode-ritual");
 
-            resetInactive(basic, "border-emerald-400/40");
-            resetInactive(advanced, "border-fuchsia-400/50");
-            resetInactive(ritual, "border-amber-400/50");
+                const resetInactive = (el, borderClass) => {
+                    if (!el) return;
+                    el.classList.remove(
+                        "bg-emerald-500",
+                        "bg-fuchsia-500",
+                        "bg-amber-500",
+                        "text-black",
+                        "active-mode",
+                    );
+                    el.classList.add("bg-[#1a1f2e]", "border", borderClass);
+                };
 
-            const active = document.getElementById(`mode-${mode}`);
-            if (active) {
-                active.classList.remove(
-                    "bg-[#1a1f2e]",
-                    "border",
-                    "border-emerald-400/40",
-                    "border-fuchsia-400/50",
-                    "border-amber-400/50",
-                );
-                if (mode === "basic") {
-                    active.classList.add("bg-emerald-500", "text-black");
-                } else if (mode === "advanced") {
-                    active.classList.add("bg-fuchsia-500", "text-black");
-                } else if (mode === "ritual") {
-                    active.classList.add("bg-amber-500", "text-black");
+                resetInactive(basic, "border-emerald-400/40");
+                resetInactive(advanced, "border-fuchsia-400/50");
+                resetInactive(ritual, "border-amber-400/50");
+
+                const active = document.getElementById(`mode-${mode}`);
+                if (active) {
+                    active.classList.remove(
+                        "bg-[#1a1f2e]",
+                        "border",
+                        "border-emerald-400/40",
+                        "border-fuchsia-400/50",
+                        "border-amber-400/50",
+                    );
+                    if (mode === "basic") {
+                        active.classList.add("bg-emerald-500", "text-black");
+                    } else if (mode === "advanced") {
+                        active.classList.add("bg-fuchsia-500", "text-black");
+                    } else if (mode === "ritual") {
+                        active.classList.add("bg-amber-500", "text-black");
+                    }
                 }
-            }
+            });
 
-            updateEnergyCost();
+            requestAnimationFrame(() => updateEnergyCost());
         }
 
         function updateEnergyCost() {
@@ -1067,7 +1080,7 @@
             
             // Mode-based rarity chances
             if (mode === 'ritual') {
-                if (rand > 0.72) rarity = 'mythic';
+                if (rand > 0.68) rarity = 'mythic';
                 else if (rand > 0.38) rarity = 'legendary';
                 else rarity = 'epic';
             } else if (mode === 'advanced') {
@@ -1397,7 +1410,7 @@
             // Reward panda
             const rewardPanda = {
                 id: 'daily-' + Date.now(),
-                name: "Blaze Guardian",
+                name: ["Blaze Guardian", "Tempest Warden", "Quantum Overlord Panda", "Eternal Flame Sovereign"][Math.floor(Math.random()*4)],
                 emoji: "🦍🔥",
                 type: "Fire",
                 power: 29,
