@@ -33,7 +33,18 @@
             collectionCount: 1,
             totalPower: 12,
             collection: [],
-            recentFusions: []
+            recentFusions: [],
+            ep: 500,
+            upgrades: {
+                efficiency: 0,
+                stability: 0,
+                training: 0
+            },
+            boosters: {
+                blazing: false,
+                cryo: false,
+                lightning: false
+            }
         };
 
         // Base Pandas Data
@@ -45,12 +56,13 @@
             { id: 5, name: "Thunder Panda", emoji: "⚡🐼", type: "Electric", power: 19, rarity: "rare", color: "#eab308", desc: "Channeling the power of storms. Fast and shocking." },
             { id: 6, name: "Golden Fortune", emoji: "✨🐼", type: "Light", power: 27, rarity: "legendary", color: "#fbbf24", desc: "Extremely rare. Brings incredible luck and prosperity." },
             { id: 7, name: "Mystic Panda", emoji: "🔮🐼", type: "Arcane", power: 24, rarity: "epic", color: "#c026ff", desc: "Wielder of ancient panda magic. Unpredictable and wise." },
-            { id: 8, name: "Crystal Panda", emoji: "💎🐼", type: "Crystal", power: 16, rarity: "rare", color: "#67e8f9", desc: "Crystalline armor protects it from harm. Beautiful but deadly." }
+            { id: 8, name: "Crystal Panda", emoji: "💎🐼", type: "Crystal", power: 16, rarity: "rare", color: "#67e8f9", desc: "Crystalline armor protects it from harm. Beautiful but deadly." },
+            { id: 9, name: "Red Panda", emoji: "🔴🐼", type: "Balanced", power: 25, rarity: "epic", color: "#ef4444", desc: "A charming, chestnut-colored climber with a ringed tail and playful spirit. Unlocks special elemental resonance." }
         ];
 
         // User's unlocked pandas (new users start with one fair starter)
         let userPandas = [
-            { ...basePandas[0], id: 'u1', acquired: new Date().toISOString().split('T')[0] }
+            { ...basePandas[0], id: 'u1', level: 1, acquired: new Date().toISOString().split('T')[0] }
         ];
 
         // Current selected for fusion
@@ -59,6 +71,7 @@
         let currentFusionMode = 'basic'; // basic | advanced | ritual
 
         function saveGameState() {
+            recalculateTotalPower();
             localStorage.setItem('fusionPandaMaster', JSON.stringify({
                 ...gameState,
                 collection: userPandas,
@@ -95,6 +108,24 @@
                     gameState.fireChallengeFusions = approxFire;
                     gameState.saveSchemaVersion = 2;
                 }
+                if (!gameState.upgrades) {
+                    gameState.upgrades = { efficiency: 0, stability: 0, training: 0 };
+                } else {
+                    if (gameState.upgrades.efficiency === undefined) gameState.upgrades.efficiency = 0;
+                    if (gameState.upgrades.stability === undefined) gameState.upgrades.stability = 0;
+                    if (gameState.upgrades.training === undefined) gameState.upgrades.training = 0;
+                }
+                if (!gameState.boosters) {
+                    gameState.boosters = { blazing: false, cryo: false, lightning: false };
+                }
+                if (typeof gameState.ep !== "number" || gameState.ep < 0) {
+                    gameState.ep = 500;
+                }
+                // Migrate collection and set level default
+                userPandas.forEach(p => {
+                    if (p.level === undefined) p.level = 1;
+                });
+                recalculateTotalPower();
             } else {
                 gameState.recentFusions = [];
                 saveGameState();
@@ -161,6 +192,11 @@
             document.getElementById('dash-fusions').innerText = gameState.fusions.toLocaleString();
             document.getElementById('dash-collection').innerText = userPandas.length;
             document.getElementById('dash-power').innerText = (gameState.totalPower / 1000).toFixed(1) + 'k';
+            
+            const epEl = document.getElementById('dash-ep');
+            if (epEl) epEl.innerText = gameState.ep.toLocaleString();
+            const balanceEl = document.getElementById('upgrades-ep-balance');
+            if (balanceEl) balanceEl.innerText = gameState.ep.toLocaleString();
             
             // XP bar
             const xpPercent = Math.min((gameState.xp / 10000) * 100, 100);
@@ -293,8 +329,11 @@
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div class="text-6xl mb-3 transition-all group-hover:scale-110">${panda.emoji}</div>
-                        <div class="px-2.5 py-0.5 text-xs font-bold rounded-full self-start" style="background: ${rarityColor}30; color: ${rarityColor}">
-                            ${panda.rarity.toUpperCase()}
+                        <div class="flex flex-col items-end gap-y-1">
+                            <div class="px-2.5 py-0.5 text-xs font-bold rounded-full" style="background: ${rarityColor}30; color: ${rarityColor}">
+                                ${panda.rarity.toUpperCase()}
+                            </div>
+                            <div class="text-[10px] text-gray-400 font-bold">LVL ${panda.level || 1}</div>
                         </div>
                     </div>
                     
@@ -332,6 +371,94 @@
                 case 'mythic': return '#f43f5e';
                 default: return '#64748b';
             }
+        }
+
+        function getTrainingCost(rarity, currentLevel) {
+            let baseCost = 100;
+            switch (rarity) {
+                case 'common': baseCost = 100; break;
+                case 'rare': baseCost = 150; break;
+                case 'epic': baseCost = 250; break;
+                case 'legendary': baseCost = 400; break;
+                case 'mythic': baseCost = 600; break;
+            }
+            return Math.floor(baseCost * Math.pow(1.5, currentLevel - 1));
+        }
+
+        function getPowerGainPerLevel(rarity) {
+            switch (rarity) {
+                case 'common': return 3;
+                case 'rare': return 5;
+                case 'epic': return 8;
+                case 'legendary': return 12;
+                case 'mythic': return 18;
+                default: return 3;
+            }
+        }
+
+        function recalculateTotalPower() {
+            gameState.totalPower = userPandas.reduce((sum, p) => sum + (p.power || 0), 0);
+        }
+
+        function trainPanda(index) {
+            const panda = userPandas[index];
+            if (!panda) return;
+            
+            const currentLevel = panda.level || 1;
+            if (currentLevel >= 10) {
+                showToast("This panda has reached max level!", "error");
+                return;
+            }
+            
+            const cost = getTrainingCost(panda.rarity, currentLevel);
+            if (gameState.ep < cost) {
+                showToast("Insufficient EP to train this panda!", "error");
+                return;
+            }
+            
+            // Deduct EP and mutate stats
+            gameState.ep -= cost;
+            panda.level = currentLevel + 1;
+            const powerGain = getPowerGainPerLevel(panda.rarity);
+            panda.power += powerGain;
+            
+            // Update and save state
+            recalculateTotalPower();
+            saveGameState();
+            updateDashboard();
+            renderCollection();
+            
+            // Update details modal elements inline
+            const levelEl = document.getElementById('detail-panda-level');
+            const costEl = document.getElementById('detail-panda-cost');
+            const btnEl = document.getElementById('train-panda-btn');
+            const powerValEl = document.getElementById('detail-panda-power-val');
+            
+            if (levelEl) levelEl.innerText = `LVL ${panda.level} / 10`;
+            if (powerValEl) powerValEl.innerText = panda.power;
+            
+            if (costEl) {
+                costEl.innerText = panda.level >= 10 ? 'MAXED' : getTrainingCost(panda.rarity, panda.level) + ' EP';
+            }
+            
+            if (btnEl) {
+                if (panda.level >= 10) {
+                    btnEl.innerText = 'MAX LEVEL REACHED';
+                    btnEl.disabled = true;
+                    btnEl.className = 'w-full py-2.5 rounded-xl font-bold text-xs bg-gray-800 text-gray-500 cursor-not-allowed transition-all flex items-center justify-center gap-2';
+                } else {
+                    const nextCost = getTrainingCost(panda.rarity, panda.level);
+                    btnEl.innerHTML = `<i class="fas fa-dumbbell"></i> <span>TRAIN PANDA</span>`;
+                    btnEl.disabled = gameState.ep < nextCost;
+                    if (gameState.ep >= nextCost) {
+                        btnEl.className = 'w-full py-2.5 rounded-xl font-bold text-xs bg-amber-400 text-black hover:bg-amber-300 transition-all flex items-center justify-center gap-2';
+                    } else {
+                        btnEl.className = 'w-full py-2.5 rounded-xl font-bold text-xs bg-amber-400/10 text-amber-400 opacity-60 cursor-not-allowed transition-all flex items-center justify-center gap-2';
+                    }
+                }
+            }
+            
+            showToast(`${panda.name} trained to LVL ${panda.level}! (+${powerGain} PWR)`, "success");
         }
 
         function filterCollection() {
@@ -372,7 +499,7 @@
         ];
 
         const FUSION_TREE_RECIPES = [
-            { a: "Classic Panda", b: "Inferno Panda", result: "Steam Panda", mode: "basic", extra: "Fire + Balanced" },
+            { a: "Classic Panda", b: "Inferno Panda", result: "Red Panda", mode: "basic", extra: "Fire + Balanced" },
             { a: "Shadow Panda", b: "Mystic Panda", result: "Void Walker", mode: "basic", extra: "Dark + Arcane" },
             { a: "Golden Fortune", b: "Thunder Panda", result: "Solar Flare", mode: "ritual", extra: "Light + Electric" },
             { a: "Inferno Panda", b: "Mystic Panda", result: "Inferno Mystic", mode: "ritual", extra: "Fire + Arcane" },
@@ -708,12 +835,38 @@
                             <div class="mt-8 grid grid-cols-2 gap-4">
                                 <div class="bg-[#1a1f2e] rounded-2xl p-4 text-center">
                                     <div class="text-xs text-gray-400">ATTACK POWER</div>
-                                    <div class="text-5xl font-black text-emerald-400 mt-1">${panda.power}</div>
+                                    <div class="text-5xl font-black text-emerald-400 mt-1" id="detail-panda-power-val">${panda.power}</div>
                                 </div>
                                 <div class="bg-[#1a1f2e] rounded-2xl p-4 text-center">
                                     <div class="text-xs text-gray-400">SPECIAL</div>
                                     <div class="text-3xl mt-2 font-bold">${panda.type}</div>
                                     <div class="text-xs mt-1 text-gray-400">TRAIT</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Training Section -->
+                            <div class="mt-6 border-t border-b border-gray-800 py-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="text-xs text-gray-400">PANDA LEVEL</div>
+                                        <div class="text-lg font-bold text-white" id="detail-panda-level">LVL ${panda.level || 1} / 10</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-xs text-gray-400">TRAINING COST</div>
+                                        <div class="text-lg font-mono font-bold text-amber-400" id="detail-panda-cost">
+                                            ${(panda.level || 1) >= 10 ? 'MAXED' : getTrainingCost(panda.rarity, panda.level || 1) + ' EP'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button id="train-panda-btn" onclick="trainPanda(${index})" 
+                                            class="w-full py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 
+                                            ${(panda.level || 1) >= 10 ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 
+                                              (gameState.ep >= getTrainingCost(panda.rarity, panda.level || 1) ? 'bg-amber-400 text-black hover:bg-amber-300' : 'bg-amber-400/10 text-amber-400 opacity-60 cursor-not-allowed')}"
+                                            ${(panda.level || 1) >= 10 || gameState.ep < getTrainingCost(panda.rarity, panda.level || 1) ? 'disabled' : ''}>
+                                        <i class="fas fa-dumbbell"></i>
+                                        <span>${(panda.level || 1) >= 10 ? 'MAX LEVEL REACHED' : 'TRAIN PANDA'}</span>
+                                    </button>
                                 </div>
                             </div>
                             
@@ -782,10 +935,11 @@
                 card.innerHTML = `
                     <div class="flex justify-between">
                         <div class="text-5xl mb-2">${panda.emoji}</div>
-                        <div>
+                        <div class="flex flex-col items-end gap-y-1">
                             <div class="px-2 py-0.5 text-xs font-bold rounded-full text-center" style="background: ${rarityColor}30; color: ${rarityColor}">
                                 ${panda.rarity}
                             </div>
+                            <div class="text-[10px] text-gray-400 font-bold">LVL ${panda.level || 1}</div>
                         </div>
                     </div>
                     <div class="font-bold">${panda.name}</div>
@@ -935,7 +1089,12 @@
             if (currentFusionMode === 'ritual') baseCost = Math.floor(baseCost * 2.8);
             
             // Scale with power
-            const finalCost = Math.floor(baseCost + (powerAvg * 1.8));
+            let finalCost = Math.floor(baseCost + (powerAvg * 1.8));
+            
+            // Apply fusion efficiency upgrade reduction
+            const efficiencyLvl = (gameState.upgrades && gameState.upgrades.efficiency) || 0;
+            finalCost = Math.max(10, Math.floor(finalCost * (1 - efficiencyLvl * 0.02)));
+
             costEl.innerText = `${finalCost} EP`;
             costEl.style.color = currentFusionMode === 'ritual' ? '#fbbf24' : '#10b981';
         }
@@ -973,6 +1132,25 @@
                 let xpGain = Math.floor(Math.random() * 120) + 85;
                 if (currentFusionMode === 'advanced') xpGain = Math.floor(xpGain * 1.4);
                 if (currentFusionMode === 'ritual') xpGain = Math.floor(xpGain * 2.1);
+                
+                let epGain = 50;
+                if (currentFusionMode === 'advanced') epGain = 100;
+                if (currentFusionMode === 'ritual') epGain = 250;
+                if (newPanda.isCritical) {
+                    epGain += 100;
+                    xpGain += 50;
+                }
+
+                // Apply Fusion Efficiency upgrade (+3% XP per level)
+                const efficiencyLvl = (gameState.upgrades && gameState.upgrades.efficiency) || 0;
+                xpGain = Math.floor(xpGain * (1 + efficiencyLvl * 0.03));
+                
+                // Apply Lightning Core booster (+12% XP)
+                if (gameState.boosters && gameState.boosters.lightning) {
+                    xpGain = Math.floor(xpGain * 1.12);
+                }
+
+                gameState.ep = (Number(gameState.ep) || 0) + epGain;
                 bumpLifetimeEarnedXp(xpGain);
                 gameState.xp += xpGain;
                 
@@ -1043,7 +1221,7 @@
                 hybridName = prefixes[Math.floor(Math.random() * prefixes.length)];
             }
             
-            const fullName = `${hybridName} ${pandaA.name.split(' ').pop() || 'Panda'}`;
+            let fullName = `${hybridName} ${pandaA.name.split(' ').pop() || 'Panda'}`;
             
             // === POWER CALCULATION (Advanced Mechanics) ===
             let basePower = Math.floor((pandaA.power + pandaB.power) / 2);
@@ -1065,25 +1243,30 @@
             let rarity = 'epic';
             let rand = Math.random();
             
+            const stabilityLvl = (gameState.upgrades && gameState.upgrades.stability) || 0;
+            const rarityShift = stabilityLvl * 0.015;
+            
             // Mode-based rarity chances
             if (mode === 'ritual') {
-                if (rand > 0.72) rarity = 'mythic';
-                else if (rand > 0.38) rarity = 'legendary';
+                if (rand > 0.72 - rarityShift) rarity = 'mythic';
+                else if (rand > 0.38 - rarityShift) rarity = 'legendary';
                 else rarity = 'epic';
             } else if (mode === 'advanced') {
-                if (rand > 0.91) rarity = 'mythic';
-                else if (rand > 0.58) rarity = 'legendary';
-                else if (rand > 0.22) rarity = 'epic';
+                if (rand > 0.91 - rarityShift) rarity = 'mythic';
+                else if (rand > 0.58 - rarityShift) rarity = 'legendary';
+                else if (rand > 0.22 - rarityShift) rarity = 'epic';
                 else rarity = 'rare';
             } else {
-                if (rand > 0.88) rarity = 'mythic';
-                else if (rand > 0.65) rarity = 'legendary';
-                else if (rand > 0.35) rarity = 'epic';
+                if (rand > 0.88 - rarityShift) rarity = 'mythic';
+                else if (rand > 0.65 - rarityShift) rarity = 'legendary';
+                else if (rand > 0.35 - rarityShift) rarity = 'epic';
                 else rarity = 'rare';
             }
             
             // Critical Fusion chance (extra visual + power)
-            if (Math.random() < 0.18 || (mode === 'ritual' && Math.random() < 0.35)) {
+            const critChance = 0.18 + stabilityLvl * 0.02;
+            const ritualCritChance = 0.35 + stabilityLvl * 0.02;
+            if (Math.random() < critChance || (mode === 'ritual' && Math.random() < ritualCritChance)) {
                 isCritical = true;
                 rarity = (rarity === 'rare') ? 'epic' : (rarity === 'epic' ? 'legendary' : 'mythic');
             }
@@ -1101,6 +1284,25 @@
             if (synergyName) newType = synergyName;
             else if (types[0] !== types[1]) newType = `${types[0]}-${types[1]}`;
             
+            // Intercept Classic + Inferno combo for Red Panda
+            const isRedPandaCombo = (pandaA.name === "Classic Panda" && pandaB.name === "Inferno Panda") ||
+                                    (pandaA.name === "Inferno Panda" && pandaB.name === "Classic Panda");
+            if (isRedPandaCombo) {
+                fullName = "Red Panda";
+                emoji = "🔴🐼";
+                newType = "Balanced";
+                rarity = "epic";
+            }
+            
+            // Apply Blazing Catalyst (+22% Fire power)
+            if (gameState.boosters && gameState.boosters.blazing && (emoji.includes('🔥') || emoji === '🌋' || newType.toLowerCase().includes('fire'))) {
+                finalPower = Math.floor(finalPower * 1.22);
+            }
+            // Apply Cryo Stabilizer (+18% Ice power)
+            if (gameState.boosters && gameState.boosters.cryo && (emoji.includes('❄️') || emoji === '🌨️' || newType.toLowerCase().includes('ice'))) {
+                finalPower = Math.floor(finalPower * 1.18);
+            }
+            
             // Final panda object
             const newPanda = {
                 id: 'f' + Date.now(),
@@ -1111,6 +1313,7 @@
                 rarity: rarity,
                 color: getRarityColor(rarity),
                 desc: `Advanced ${mode} fusion of ${pandaA.name} and ${pandaB.name}. ${synergyName ? 'Powerful ' + synergyName + ' synergy detected!' : ''} ${isCritical ? 'CRITICAL FUSION!' : ''}`,
+                level: 1,
                 acquired: new Date().toISOString().split('T')[0],
                 isCritical: isCritical,
                 fusionMode: mode
@@ -1235,9 +1438,10 @@
             
             showToast("Panda added to your collection! 🐼", "success");
             
-            // Bonus: small XP
+            // Bonus: small XP & EP
             bumpLifetimeEarnedXp(35);
             gameState.xp += 35;
+            gameState.ep = (Number(gameState.ep) || 0) + 15;
             if (gameState.xp >= 10000) {
                 gameState.level++;
                 gameState.xp -= 10000;
@@ -1384,10 +1588,11 @@
                 return;
             }
 
-            showToast("Daily Challenge Completed! +280 XP & 1 Rare Panda", "success");
+            showToast("Daily Challenge Completed! +280 XP, +500 EP & 1 Rare Panda", "success");
 
             bumpLifetimeEarnedXp(280);
             gameState.xp += 280;
+            gameState.ep = (Number(gameState.ep) || 0) + 500;
             if (gameState.xp >= 10000) {
                 gameState.level++;
                 gameState.xp -= 10000;
@@ -1403,6 +1608,7 @@
                 power: 29,
                 rarity: "rare",
                 color: "#f97316",
+                level: 1,
                 desc: "Rewarded for completing today's Inferno Fusion challenge. A loyal guardian of the flame.",
                 acquired: new Date().toISOString().split('T')[0]
             };
@@ -1579,7 +1785,9 @@
             const enemyLevel = enemyLevelFloor + Math.floor(Math.random() * (enemyLevelCeil - enemyLevelFloor + 1));
             const playerMax = 120 + Math.floor(championPower * 2.2) + playerLevel * 9;
             const enemyMax = Math.max(72, Math.floor(playerMax * (playerLevel < 3 ? 0.55 : 0.72)));
-            const playerBaseDamage = Math.max(16, Math.floor(championPower * 0.8) + 12 + playerLevel);
+            let playerBaseDamage = Math.max(16, Math.floor(championPower * 0.8) + 12 + playerLevel);
+            const trainingLvl = (gameState.upgrades && gameState.upgrades.training) || 0;
+            playerBaseDamage = Math.floor(playerBaseDamage * (1 + trainingLvl * 0.05));
             const enemyBaseDamage = Math.max(7, Math.floor(playerBaseDamage * (playerLevel < 3 ? 0.48 : 0.64)));
 
             // Pick a named rival from the roster (using new Grok-generated arts + lore)
@@ -1930,11 +2138,12 @@
                 document.getElementById("battle-stage")?.classList.add("battle-stage--victory");
                 __appendBattleLogLine(
                     "text-amber-300 font-bold border-t border-amber-500/20 pt-2 mt-1",
-                    `🏆 VICTORY! ${__escapeBattleText(b.enemyName)} defeated! ${b.enemySubtitle ? '— ' + __escapeBattleText(b.enemySubtitle) : ''} +650 XP`,
+                    `🏆 VICTORY! ${__escapeBattleText(b.enemyName)} defeated! ${b.enemySubtitle ? '— ' + __escapeBattleText(b.enemySubtitle) : ''} +650 XP & +350 EP`,
                 );
-                showToast("Battle won! +650 XP earned", "success");
+                showToast("Battle won! +650 XP & +350 EP earned", "success");
                 bumpLifetimeEarnedXp(650);
                 gameState.xp += 650;
+                gameState.ep = (Number(gameState.ep) || 0) + 350;
                 if (gameState.xp >= 10000) {
                     gameState.level++;
                     gameState.xp = gameState.xp % 10000;
@@ -2746,6 +2955,213 @@
             }
         };
 
+        function renderUpgrades() {
+            const balanceEl = document.getElementById('upgrades-ep-balance');
+            if (balanceEl) balanceEl.innerText = gameState.ep.toLocaleString();
+            
+            // 1. Fusion Efficiency
+            const effLvl = (gameState.upgrades && gameState.upgrades.efficiency) || 0;
+            const effLvlEl = document.getElementById('upgrade-efficiency-level');
+            const effValEl = document.getElementById('upgrade-efficiency-value');
+            const effBarEl = document.getElementById('upgrade-efficiency-bar');
+            const effBtn = document.getElementById('upgrade-efficiency-btn');
+            const effSub = document.getElementById('upgrade-efficiency-sub');
+            
+            if (effLvlEl) effLvlEl.innerText = `LVL ${effLvl} / 25`;
+            if (effValEl) effValEl.innerText = `+${effLvl * 3}% XP`;
+            if (effBarEl) effBarEl.style.width = `${(effLvl / 25) * 100}%`;
+            
+            if (effLvl >= 25) {
+                if (effBtn) {
+                    effBtn.innerText = 'MAX LEVEL';
+                    effBtn.disabled = true;
+                    effBtn.className = 'px-4 py-2 text-xs rounded-xl bg-gray-800 text-gray-500 font-medium w-full xs:w-auto cursor-not-allowed';
+                }
+                if (effSub) effSub.innerText = 'Fully optimized.';
+            } else {
+                const nextCost = 250 + effLvl * 150;
+                if (effBtn) {
+                    effBtn.innerText = `UPGRADE • ${nextCost} EP`;
+                    effBtn.disabled = gameState.ep < nextCost;
+                    effBtn.className = `px-4 py-2 text-xs rounded-xl font-medium w-full xs:w-auto ${gameState.ep >= nextCost ? 'bg-emerald-500 text-black hover:bg-emerald-400' : 'bg-emerald-500/10 text-emerald-400 opacity-60 cursor-not-allowed'}`;
+                }
+                if (effSub) effSub.innerText = `Next: +3% XP & -2% EP cost`;
+            }
+            
+            // 2. Genetic Stability
+            const stabLvl = (gameState.upgrades && gameState.upgrades.stability) || 0;
+            const stabLvlEl = document.getElementById('upgrade-stability-level');
+            const stabValEl = document.getElementById('upgrade-stability-value');
+            const stabBarEl = document.getElementById('upgrade-stability-bar');
+            const stabBtn = document.getElementById('upgrade-stability-btn');
+            const stabSub = document.getElementById('upgrade-stability-sub');
+            
+            if (stabLvlEl) stabLvlEl.innerText = `LVL ${stabLvl} / 15`;
+            if (stabValEl) stabValEl.innerText = `+${stabLvl * 2}% Crit`;
+            if (stabBarEl) stabBarEl.style.width = `${(stabLvl / 15) * 100}%`;
+            
+            if (stabLvl >= 15) {
+                if (stabBtn) {
+                    stabBtn.innerText = 'MAX LEVEL';
+                    stabBtn.disabled = true;
+                    stabBtn.className = 'px-4 py-2 text-xs rounded-xl bg-gray-800 text-gray-500 font-medium w-full xs:w-auto cursor-not-allowed';
+                }
+                if (stabSub) stabSub.innerText = 'Genetic sequence finalized.';
+            } else {
+                const nextCost = 400 + stabLvl * 250;
+                if (stabBtn) {
+                    stabBtn.innerText = `UPGRADE • ${nextCost} EP`;
+                    stabBtn.disabled = gameState.ep < nextCost;
+                    stabBtn.className = `px-4 py-2 text-xs rounded-xl font-medium w-full xs:w-auto ${gameState.ep >= nextCost ? 'bg-fuchsia-500 text-black hover:bg-fuchsia-400' : 'bg-fuchsia-500/10 text-fuchsia-400 opacity-60 cursor-not-allowed'}`;
+                }
+                if (stabSub) stabSub.innerText = `Next: +2% crit & rarity roll +1.5%`;
+            }
+            
+            // 3. Battle Training
+            const trainLvl = (gameState.upgrades && gameState.upgrades.training) || 0;
+            const trainLvlEl = document.getElementById('upgrade-training-level');
+            const trainValEl = document.getElementById('upgrade-training-value');
+            const trainBarEl = document.getElementById('upgrade-training-bar');
+            const trainBtn = document.getElementById('upgrade-training-btn');
+            const trainSub = document.getElementById('upgrade-training-sub');
+            
+            if (trainLvlEl) trainLvlEl.innerText = `LVL ${trainLvl} / 15`;
+            if (trainValEl) trainValEl.innerText = `+${trainLvl * 5}% DMG`;
+            if (trainBarEl) trainBarEl.style.width = `${(trainLvl / 15) * 100}%`;
+            
+            if (trainLvl >= 15) {
+                if (trainBtn) {
+                    trainBtn.innerText = 'MAX LEVEL';
+                    trainBtn.disabled = true;
+                    trainBtn.className = 'px-4 py-2 text-xs rounded-xl bg-gray-800 text-gray-500 font-medium w-full xs:w-auto cursor-not-allowed';
+                }
+                if (trainSub) trainSub.innerText = 'Combat training complete.';
+            } else {
+                const nextCost = 300 + trainLvl * 200;
+                if (trainBtn) {
+                    trainBtn.innerText = `UPGRADE • ${nextCost} EP`;
+                    trainBtn.disabled = gameState.ep < nextCost;
+                    trainBtn.className = `px-4 py-2 text-xs rounded-xl font-medium w-full xs:w-auto ${gameState.ep >= nextCost ? 'bg-red-500 text-black hover:bg-red-400' : 'bg-red-500/10 text-red-400 opacity-60 cursor-not-allowed'}`;
+                }
+                if (trainSub) trainSub.innerText = `Next: +5% Player damage in arena`;
+            }
+            
+            // 4. Boosters
+            const b = gameState.boosters || { blazing: false, cryo: false, lightning: false };
+            
+            const blazingBtn = document.getElementById('booster-blazing-btn');
+            if (blazingBtn) {
+                if (b.blazing) {
+                    blazingBtn.innerText = 'ACTIVE';
+                    blazingBtn.disabled = true;
+                    blazingBtn.className = 'text-xs px-3 py-2 bg-gray-850 text-gray-500 font-bold rounded-xl w-full text-center cursor-not-allowed';
+                } else {
+                    blazingBtn.innerText = 'BUY • 450 EP';
+                    blazingBtn.disabled = gameState.ep < 450;
+                    blazingBtn.className = `text-xs px-3 py-2 font-bold rounded-xl w-full text-center ${gameState.ep >= 450 ? 'bg-amber-400 text-black hover:bg-amber-300' : 'bg-amber-400/20 text-amber-300 opacity-60 cursor-not-allowed'}`;
+                }
+            }
+            
+            const cryoBtn = document.getElementById('booster-cryo-btn');
+            if (cryoBtn) {
+                if (b.cryo) {
+                    cryoBtn.innerText = 'ACTIVE';
+                    cryoBtn.disabled = true;
+                    cryoBtn.className = 'text-xs px-3 py-2 bg-gray-850 text-gray-500 font-bold rounded-xl w-full text-center cursor-not-allowed';
+                } else {
+                    cryoBtn.innerText = 'BUY • 320 EP';
+                    cryoBtn.disabled = gameState.ep < 320;
+                    cryoBtn.className = `text-xs px-3 py-2 font-bold rounded-xl w-full text-center ${gameState.ep >= 320 ? 'bg-cyan-400 text-black hover:bg-cyan-300' : 'bg-cyan-400/20 text-cyan-300 opacity-60 cursor-not-allowed'}`;
+                }
+            }
+            
+            const lightningBtn = document.getElementById('booster-lightning-btn');
+            if (lightningBtn) {
+                if (b.lightning) {
+                    lightningBtn.innerText = 'ACTIVE';
+                    lightningBtn.disabled = true;
+                    lightningBtn.className = 'text-xs px-3 py-2 bg-gray-850 text-gray-500 font-bold rounded-xl w-full text-center cursor-not-allowed';
+                } else {
+                    lightningBtn.innerText = 'BUY • 890 EP';
+                    lightningBtn.disabled = gameState.ep < 890;
+                    lightningBtn.className = `text-xs px-3 py-2 font-bold rounded-xl w-full text-center ${gameState.ep >= 890 ? 'bg-purple-400 text-black hover:bg-purple-300' : 'bg-purple-400/20 text-purple-300 opacity-60 cursor-not-allowed'}`;
+                }
+            }
+        }
+
+        function buyUpgrade(type) {
+            if (!gameState.upgrades) {
+                gameState.upgrades = { efficiency: 0, stability: 0, training: 0 };
+            }
+            const currentLvl = gameState.upgrades[type] || 0;
+            let cost = 0;
+            let maxLvl = 0;
+            
+            if (type === 'efficiency') {
+                cost = 250 + currentLvl * 150;
+                maxLvl = 25;
+            } else if (type === 'stability') {
+                cost = 400 + currentLvl * 250;
+                maxLvl = 15;
+            } else if (type === 'training') {
+                cost = 300 + currentLvl * 200;
+                maxLvl = 15;
+            }
+            
+            if (currentLvl >= maxLvl) {
+                showToast("Upgrade already at max level!", "error");
+                return;
+            }
+            
+            if (gameState.ep < cost) {
+                showToast("Insufficient Energy Points (EP)!", "error");
+                return;
+            }
+            
+            gameState.ep -= cost;
+            gameState.upgrades[type]++;
+            
+            saveGameState();
+            const upgradeNames = {
+                efficiency: 'Fusion Efficiency',
+                stability: 'Genetic Stability',
+                training: 'Battle Training'
+            };
+            const upgradeName = upgradeNames[type] || type;
+            showToast(`Upgrade purchased successfully! ${upgradeName} is now level ${gameState.upgrades[type]}.`, "success");
+            updateDashboard();
+            renderUpgrades();
+        }
+
+        function buyBooster(type) {
+            if (!gameState.boosters) {
+                gameState.boosters = { blazing: false, cryo: false, lightning: false };
+            }
+            
+            if (gameState.boosters[type]) {
+                showToast("Booster already purchased and active!", "error");
+                return;
+            }
+            
+            let cost = 0;
+            if (type === 'blazing') cost = 450;
+            else if (type === 'cryo') cost = 320;
+            else if (type === 'lightning') cost = 890;
+            
+            if (gameState.ep < cost) {
+                showToast("Insufficient Energy Points (EP)!", "error");
+                return;
+            }
+            
+            gameState.ep -= cost;
+            gameState.boosters[type] = true;
+            
+            saveGameState();
+            showToast(`Booster ${type === 'blazing' ? 'Blazing Catalyst' : type === 'cryo' ? 'Cryo Stabilizer' : 'Lightning Core'} is now active!`, "success");
+            updateDashboard();
+            renderUpgrades();
+        }
+
         function navigateTo(section) {
             // Hide all sections
             document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
@@ -2768,6 +3184,9 @@
             // Special actions per section
             if (section === 'collection') {
                 renderCollection();
+            }
+            if (section === 'upgrades') {
+                renderUpgrades();
             }
             if (section === "codex") {
                 switchCodexTab("bestiary");
@@ -2968,6 +3387,7 @@
                         power: 88,
                         rarity: "mythic",
                         color: "#f43f5e",
+                        level: 1,
                         desc: "The ultimate panda. Achieved only by true masters of the fusion arts.",
                         acquired: new Date().toISOString().split('T')[0]
                     };
@@ -3048,7 +3468,7 @@
         // Expose some functions for console debugging (fun)
         window.FusionPanda = {
             addPanda: (name) => {
-                const newP = {...basePandas[0], name: name || "Debug Panda", id: 'debug-' + Date.now(), rarity: 'legendary', power: 55};
+                const newP = {...basePandas[0], name: name || "Debug Panda", id: 'debug-' + Date.now(), rarity: 'legendary', power: 55, level: 1};
                 userPandas.push(newP);
                 renderCollection();
                 console.log('%c[Panda added]', 'color:#00ff9d', newP);

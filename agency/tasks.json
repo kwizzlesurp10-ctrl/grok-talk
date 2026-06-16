@@ -1,0 +1,57 @@
+[
+    {
+        "id": "task_001",
+        "title": "Wire Up upgrades section & EP currency",
+        "description": "Connect static upgrades elements to dynamic game states, add Energy Points (EP) balance stat, and create purchase actions.",
+        "status": "completed",
+        "assignedTo": "developer",
+        "plan": "agency/plans/task_001.md",
+        "createdAt": "2026-06-16T00:30:00Z",
+        "completedAt": "2026-06-16T05:37:00Z",
+        "notes": "EP balance is now stored in gameState.ep, and upgrades are fully interactive. Test suite updated and verified."
+    },
+    {
+        "id": "task_002",
+        "title": "Add Combat Training Upgrade",
+        "description": "Create a shop card for Battle Training that boosts player damage in the arena",
+        "status": "completed",
+        "assignedTo": "tester",
+        "plan": "agency/plans/task_002.md",
+        "createdAt": "2026-06-16T05:50:54.948Z",
+        "completedAt": "2026-06-16T05:55:35.575Z",
+        "notes": "Successfully designed, developed, and verified through agency test engine."
+    },
+    {
+        "id": "task_003",
+        "title": "Verification Test of ACP Engine",
+        "description": "Verify that the new state machine, plan reviews, code checks, and test runner execute without exceptions",
+        "status": "completed",
+        "assignedTo": "orchestrator",
+        "plan": null,
+        "createdAt": "2026-06-16T06:10:43.664Z",
+        "completedAt": "2026-06-16T06:10:48.240Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_003.json."
+    },
+    {
+        "id": "task_004",
+        "title": "Panda Training Mechanics",
+        "description": "Implement EP-based training in My Collection to level up individual pandas and boost their battle power",
+        "status": "completed",
+        "assignedTo": "orchestrator",
+        "plan": null,
+        "createdAt": "2026-06-16T06:13:02.262Z",
+        "completedAt": "2026-06-16T06:18:30.115Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_004.json."
+    },
+    {
+        "id": "task_005",
+        "title": "Red Panda Integration",
+        "description": "Add Red Panda to basePandas, update fusion recipes to make it obtainable by combining Classic Panda and Inferno Panda, and update codex listings.",
+        "status": "completed",
+        "assignedTo": "orchestrator",
+        "plan": null,
+        "createdAt": "2026-06-16T06:23:16.116Z",
+        "completedAt": "2026-06-16T06:26:46.885Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_005.json."
+    }
+]
