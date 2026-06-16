@@ -689,7 +689,12 @@
                 { id: 'leg12', name: "Celestial Harmony", emoji: "✨🌈", type: "Hybrid", power: 49, rarity: "legendary", color: "#fbbf24", desc: "The ultimate Light + Electric + Arcane fusion. It sings the song of creation and can calm even the most unstable Ritual fusions." }
             ];
             
-            const entriesToShow = filteredEntries || codexData;
+            const entriesToShow = (filteredEntries || codexData).map(entry => {
+                if (!entry.image) {
+                    entry.image = generateProceduralPandaImage(entry.emoji, entry.type, entry.color || getRarityColor(entry.rarity), entry.rarity);
+                }
+                return entry;
+            });
             document.getElementById('codex-count').innerText = entriesToShow.length;
             
             entriesToShow.forEach((entry, index) => {
@@ -699,10 +704,13 @@
                 card.className = `panda-card cyber-card rounded-3xl p-5 border border-gray-700 cursor-pointer group ${!isUnlocked ? 'opacity-75 grayscale-[0.3]' : ''}`;
                 
                 const rarityColor = getRarityColor(entry.rarity);
+                const visualHtml = entry.image 
+                    ? `<img src="${entry.image}" alt="${entry.name}" class="w-16 h-16 rounded-2xl object-cover border border-white/10 transition-all group-hover:scale-110 shadow-md">`
+                    : `<div class="text-6xl transition-transform group-hover:scale-110">${entry.emoji}</div>`;
                 
                 card.innerHTML = `
                     <div class="flex justify-between items-start mb-3">
-                        <div class="text-6xl transition-transform group-hover:scale-110">${entry.emoji}</div>
+                        ${visualHtml}
                         <div class="px-3 py-1 text-xs font-bold rounded-full text-center" style="background: ${rarityColor}25; color: ${rarityColor}">
                             ${entry.rarity.toUpperCase()}
                         </div>
@@ -782,7 +790,10 @@
                             <button onclick="event.target.closest('.fixed').remove()" class="absolute top-6 right-6 text-gray-400 hover:text-white text-2xl">×</button>
                             
                             <div class="flex justify-center mb-4">
-                                <div class="text-[140px]">${entry.emoji}</div>
+                                ${entry.image 
+                                    ? `<img src="${entry.image}" alt="${entry.name}" class="w-32 h-32 rounded-3xl object-cover border border-white/10 shadow-2xl transition-transform">`
+                                    : `<div class="text-[140px]">${entry.emoji}</div>`
+                                }
                             </div>
                             
                             <div class="text-center">
@@ -1007,7 +1018,10 @@
             // Update slot UI
             slotEl.innerHTML = `
                 <div class="p-5 w-full flex flex-col items-center justify-center text-center">
-                    <div class="text-7xl mb-3 transition-all">${panda.emoji}</div>
+                    ${panda.image 
+                        ? `<img src="${panda.image}" alt="${panda.name}" class="w-20 h-20 rounded-2xl object-cover mb-3 border border-white/10 shadow-md">`
+                        : `<div class="text-7xl mb-3 transition-all">${panda.emoji}</div>`
+                    }
                     <div class="font-black text-xl">${panda.name}</div>
                     <div class="flex items-center gap-x-2 mt-1">
                         <span class="px-3 py-px text-xs rounded-full" style="background: ${panda.color}25; color: ${panda.color}">${panda.type}</span>
@@ -1444,7 +1458,11 @@
         function showFusionResult(newPanda) {
             const modal = document.getElementById('fusion-result-modal');
             
-            document.getElementById('fusion-result-emoji').innerHTML = newPanda.emoji;
+            if (newPanda.image) {
+                document.getElementById('fusion-result-emoji').innerHTML = `<img src="${newPanda.image}" alt="${newPanda.name}" class="w-32 h-32 rounded-3xl object-cover border border-white/10 shadow-2xl mx-auto">`;
+            } else {
+                document.getElementById('fusion-result-emoji').innerHTML = newPanda.emoji;
+            }
             document.getElementById('fusion-result-name').innerText = newPanda.name;
             document.getElementById('fusion-result-type').innerText = newPanda.type.toUpperCase();
             document.getElementById('fusion-result-power').innerText = newPanda.power;
@@ -1590,10 +1608,17 @@
             current.desc = 'Evolved form of the original fusion. Even more powerful!';
             current.emoji = current.emoji + '✨';
             
+            // Regenerate evolved procedural image card art
+            current.image = generateProceduralPandaImage(current.emoji, current.type, getRarityColor(current.rarity), current.rarity);
+            
             // Update modal live
             document.getElementById('fusion-result-name').innerText = current.name;
             document.getElementById('fusion-result-power').innerText = current.power;
-            document.getElementById('fusion-result-emoji').innerHTML = current.emoji;
+            if (current.image) {
+                document.getElementById('fusion-result-emoji').innerHTML = `<img src="${current.image}" alt="${current.name}" class="w-32 h-32 rounded-3xl object-cover border border-white/10 shadow-2xl mx-auto">`;
+            } else {
+                document.getElementById('fusion-result-emoji').innerHTML = current.emoji;
+            }
             
             const rarityColor = getRarityColor(current.rarity);
             document.getElementById('fusion-result-rarity').innerText = current.rarity.toUpperCase();

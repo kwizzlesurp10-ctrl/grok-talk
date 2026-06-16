@@ -582,6 +582,73 @@ async function runTests() {
         sandbox.document.createElement = originalCreateElement;
     }
 
+    // -------------------- TEST 12: Codex and Fusion Lab Visual Integrations --------------------
+    {
+        const { read, sandbox } = runAppWithGameState();
+        const renderCodex = read("renderCodex");
+        const selectPandaForSlot = read("selectPandaForSlot");
+        const evolveFusionResult = read("evolveFusionResult");
+
+        // 1. Test Codex rendering and dynamic image generation for entries
+        let mockCanvasCalledCount = 0;
+        const originalCreateElement = sandbox.document.createElement;
+        sandbox.document.createElement = function(tag) {
+            if (tag === 'canvas') {
+                mockCanvasCalledCount++;
+                return {
+                    getContext: () => ({
+                        createRadialGradient: () => ({ addColorStop() {} }),
+                        fillRect() {},
+                        strokeRect() {},
+                        beginPath() {},
+                        moveTo() {},
+                        lineTo() {},
+                        stroke() {},
+                        arc() {},
+                        fillText() {}
+                    }),
+                    toDataURL: () => `data:image/jpeg;base64,mockdata_${mockCanvasCalledCount}`
+                };
+            }
+            return originalCreateElement.call(sandbox.document, tag);
+        };
+
+        // Render codex
+        renderCodex();
+        
+        const container = sandbox.document.getElementById('codex-grid');
+        assert.ok(container, "Codex container should exist");
+        assert.ok(container.children.length > 0, "Codex cards should be rendered");
+        
+        // 2. Test Selection Slot UI updates with images
+        const testPanda = { id: 'slot-p1', name: "Neon Spark", emoji: "⚡", type: "Electric", power: 30, rarity: "rare", color: "#eab308", image: "assets/pandas/thunder_panda.jpg" };
+        selectPandaForSlot('alpha', testPanda);
+        const slotEl = sandbox.document.getElementById('slot-alpha');
+        assert.ok(slotEl.innerHTML.includes('<img src="assets/pandas/thunder_panda.jpg"'), "Slot should contain the selected panda's image");
+
+        // 3. Test Evolve Result updates and image regeneration
+        const originalFusion = {
+            id: 'ev-1',
+            name: "Steam Hybrid",
+            emoji: "🌋",
+            type: "Steam",
+            power: 40,
+            rarity: "rare",
+            image: "data:image/jpeg;base64,old-fusion-art"
+        };
+        sandbox.window.currentFusionResult = originalFusion;
+        
+        evolveFusionResult();
+        
+        const evolvedPanda = sandbox.window.currentFusionResult;
+        assert.equal(evolvedPanda.name, "Evolved Steam Hybrid");
+        assert.equal(evolvedPanda.rarity, "epic");
+        assert.ok(evolvedPanda.image.startsWith("data:image/jpeg;base64,mockdata_"), "Evolved fusion should have regenerated card art");
+
+        // Clean up mock
+        sandbox.document.createElement = originalCreateElement;
+    }
+
     process.stdout.write("mechanics ok\n");
 }
 
