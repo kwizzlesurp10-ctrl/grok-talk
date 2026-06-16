@@ -495,6 +495,22 @@ async function runTests() {
         assert.equal(result.type, "Balanced");
     }
 
+    // -------------------- TEST 10: Base Pandas Image Property --------------------
+    {
+        const { read } = runAppWithGameState();
+        const basePandas = read("basePandas");
+        
+        assert.ok(Array.isArray(basePandas), "basePandas should be an array");
+        assert.equal(basePandas.length, 9, "There should be exactly 9 base pandas");
+        
+        basePandas.forEach(p => {
+            assert.ok(p.image, `Base panda ${p.name} is missing the image property`);
+            assert.ok(typeof p.image === "string", `Base panda ${p.name} image should be a string`);
+            assert.ok(p.image.startsWith("assets/pandas/"), `Base panda ${p.name} image path should start with assets/pandas/`);
+            assert.ok(p.image.endsWith(".jpg"), `Base panda ${p.name} image should be a .jpg file`);
+        });
+    }
+
     process.stdout.write("mechanics ok\n");
 }
 

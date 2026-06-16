@@ -49,15 +49,15 @@
 
         // Base Pandas Data
         const basePandas = [
-            { id: 1, name: "Classic Panda", emoji: "🐼", type: "Balanced", power: 12, rarity: "common", color: "#64748b", desc: "The original bamboo-loving legend. Reliable and steady in every fusion." },
-            { id: 2, name: "Inferno Panda", emoji: "🔥🐼", type: "Fire", power: 18, rarity: "rare", color: "#f97316", desc: "Born in volcanic craters. Brings explosive energy to any fusion." },
-            { id: 3, name: "Frostbite Panda", emoji: "❄️🐼", type: "Ice", power: 15, rarity: "rare", color: "#67e8f9", desc: "From the eternal glaciers of the north. Slows enemies with icy aura." },
-            { id: 4, name: "Shadow Panda", emoji: "🌑🐼", type: "Dark", power: 22, rarity: "epic", color: "#6366f1", desc: "Master of stealth and illusion. Vanishes in plain sight." },
-            { id: 5, name: "Thunder Panda", emoji: "⚡🐼", type: "Electric", power: 19, rarity: "rare", color: "#eab308", desc: "Channeling the power of storms. Fast and shocking." },
-            { id: 6, name: "Golden Fortune", emoji: "✨🐼", type: "Light", power: 27, rarity: "legendary", color: "#fbbf24", desc: "Extremely rare. Brings incredible luck and prosperity." },
-            { id: 7, name: "Mystic Panda", emoji: "🔮🐼", type: "Arcane", power: 24, rarity: "epic", color: "#c026ff", desc: "Wielder of ancient panda magic. Unpredictable and wise." },
-            { id: 8, name: "Crystal Panda", emoji: "💎🐼", type: "Crystal", power: 16, rarity: "rare", color: "#67e8f9", desc: "Crystalline armor protects it from harm. Beautiful but deadly." },
-            { id: 9, name: "Red Panda", emoji: "🔴🐼", type: "Balanced", power: 25, rarity: "epic", color: "#ef4444", desc: "A charming, chestnut-colored climber with a ringed tail and playful spirit. Unlocks special elemental resonance." }
+            { id: 1, name: "Classic Panda", emoji: "🐼", type: "Balanced", power: 12, rarity: "common", color: "#64748b", desc: "The original bamboo-loving legend. Reliable and steady in every fusion.", image: "assets/pandas/classic_panda.jpg" },
+            { id: 2, name: "Inferno Panda", emoji: "🔥🐼", type: "Fire", power: 18, rarity: "rare", color: "#f97316", desc: "Born in volcanic craters. Brings explosive energy to any fusion.", image: "assets/pandas/inferno_panda.jpg" },
+            { id: 3, name: "Frostbite Panda", emoji: "❄️🐼", type: "Ice", power: 15, rarity: "rare", color: "#67e8f9", desc: "From the eternal glaciers of the north. Slows enemies with icy aura.", image: "assets/pandas/frostbite_panda.jpg" },
+            { id: 4, name: "Shadow Panda", emoji: "🌑🐼", type: "Dark", power: 22, rarity: "epic", color: "#6366f1", desc: "Master of stealth and illusion. Vanishes in plain sight.", image: "assets/pandas/shadow_panda.jpg" },
+            { id: 5, name: "Thunder Panda", emoji: "⚡🐼", type: "Electric", power: 19, rarity: "rare", color: "#eab308", desc: "Channeling the power of storms. Fast and shocking.", image: "assets/pandas/thunder_panda.jpg" },
+            { id: 6, name: "Golden Fortune", emoji: "✨🐼", type: "Light", power: 27, rarity: "legendary", color: "#fbbf24", desc: "Extremely rare. Brings incredible luck and prosperity.", image: "assets/pandas/golden_fortune.jpg" },
+            { id: 7, name: "Mystic Panda", emoji: "🔮🐼", type: "Arcane", power: 24, rarity: "epic", color: "#c026ff", desc: "Wielder of ancient panda magic. Unpredictable and wise.", image: "assets/pandas/mystic_panda.jpg" },
+            { id: 8, name: "Crystal Panda", emoji: "💎🐼", type: "Crystal", power: 16, rarity: "rare", color: "#67e8f9", desc: "Crystalline armor protects it from harm. Beautiful but deadly.", image: "assets/pandas/crystal_panda.jpg" },
+            { id: 9, name: "Red Panda", emoji: "🔴🐼", type: "Balanced", power: 25, rarity: "epic", color: "#ef4444", desc: "A charming, chestnut-colored climber with a ringed tail and playful spirit. Unlocks special elemental resonance.", image: "assets/pandas/red_panda.jpg" }
         ];
 
         // User's unlocked pandas (new users start with one fair starter)
@@ -258,6 +258,7 @@
 
         function renderBasePandas() {
             const container = document.getElementById('base-pandas-grid');
+            if (!container) return;
             container.innerHTML = '';
             
             basePandas.forEach(panda => {
@@ -266,8 +267,12 @@
                 const card = document.createElement('div');
                 card.className = `panda-card cyber-card rounded-2xl p-3 border border-gray-700 cursor-pointer flex flex-col items-center text-center ${!isUnlocked ? 'opacity-60' : ''}`;
                 
+                const visualHtml = panda.image 
+                    ? `<img src="${panda.image}" alt="${panda.name}" class="w-12 h-12 rounded-xl object-cover mb-2 border border-white/10 transition-transform">`
+                    : `<div class="text-5xl mb-2 transition-transform">${panda.emoji}</div>`;
+                
                 card.innerHTML = `
-                    <div class="text-5xl mb-2 transition-transform">${panda.emoji}</div>
+                    ${visualHtml}
                     <div class="font-bold text-sm">${panda.name}</div>
                     <div class="text-[10px] mt-0.5 px-2.5 py-px rounded-full" style="background: ${panda.color}30; color: ${panda.color}">
                         ${panda.type}
@@ -311,6 +316,7 @@
 
         function renderCollection(filteredPandas = null) {
             const container = document.getElementById('collection-grid');
+            if (!container) return;
             container.innerHTML = '';
             
             const pandasToShow = filteredPandas || userPandas;
@@ -325,13 +331,16 @@
                 card.className = `panda-card cyber-card rounded-3xl p-4 border border-gray-700 cursor-pointer group`;
                 
                 const rarityColor = getRarityColor(panda.rarity);
+                const visualHtml = panda.image 
+                    ? `<img src="${panda.image}" alt="${panda.name}" class="w-16 h-16 rounded-2xl object-cover mb-3 border border-white/10 transition-all group-hover:scale-110">`
+                    : `<div class="text-6xl mb-3 transition-all group-hover:scale-110">${panda.emoji}</div>`;
                 
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
-                        <div class="text-6xl mb-3 transition-all group-hover:scale-110">${panda.emoji}</div>
+                        ${visualHtml}
                         <div class="flex flex-col items-end gap-y-1">
                             <div class="px-2.5 py-0.5 text-xs font-bold rounded-full" style="background: ${rarityColor}30; color: ${rarityColor}">
-                                ${panda.rarity.toUpperCase()}
+                                ${rarityColor.toUpperCase()}
                             </div>
                             <div class="text-[10px] text-gray-400 font-bold">LVL ${panda.level || 1}</div>
                         </div>
@@ -819,7 +828,10 @@
                             </button>
                             
                             <div class="flex justify-center">
-                                <div class="text-[130px] transition-all">${panda.emoji}</div>
+                                ${panda.image 
+                                    ? `<img src="${panda.image}" alt="${panda.name}" class="w-32 h-32 rounded-3xl object-cover border border-white/10 transition-all">`
+                                    : `<div class="text-[130px] transition-all">${panda.emoji}</div>`
+                                }
                             </div>
                             
                             <div class="text-center mt-1">
@@ -924,6 +936,7 @@
         function openPandaSelector(slot) {
             const modal = document.getElementById('panda-selector-modal');
             const grid = document.getElementById('selector-grid');
+            if (!grid) return;
             grid.innerHTML = '';
             
             userPandas.forEach((panda, idx) => {
@@ -931,10 +944,13 @@
                 card.className = `panda-card cyber-card rounded-2xl p-4 border border-gray-700 cursor-pointer hover:border-emerald-400 flex flex-col`;
                 
                 const rarityColor = getRarityColor(panda.rarity);
+                const visualHtml = panda.image 
+                    ? `<img src="${panda.image}" alt="${panda.name}" class="w-12 h-12 rounded-xl object-cover mb-2 border border-white/10">`
+                    : `<div class="text-5xl mb-2">${panda.emoji}</div>`;
                 
                 card.innerHTML = `
                     <div class="flex justify-between">
-                        <div class="text-5xl mb-2">${panda.emoji}</div>
+                        ${visualHtml}
                         <div class="flex flex-col items-end gap-y-1">
                             <div class="px-2 py-0.5 text-xs font-bold rounded-full text-center" style="background: ${rarityColor}30; color: ${rarityColor}">
                                 ${panda.rarity}
@@ -959,14 +975,18 @@
                 grid.appendChild(card);
             });
             
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
         }
 
         function closePandaSelector() {
             const modal = document.getElementById('panda-selector-modal');
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');
+            if (modal) {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }
         }
 
         function selectPandaForSlot(slot, panda) {
@@ -1308,6 +1328,7 @@
                 id: 'f' + Date.now(),
                 name: fullName,
                 emoji: emoji,
+                image: null,
                 type: newType,
                 power: finalPower,
                 rarity: rarity,
@@ -1807,6 +1828,7 @@
                 ended: false,
                 playerName: champion.name || "Classic Panda",
                 playerEmoji: champion.emoji || "🐼",
+                playerImage: champion.image || null,
                 playerLevel,
                 playerPower: championPower,
                 enemyId: rival.id,
@@ -1986,6 +2008,7 @@
 
         function startDemoBattle(championIndex = 0, specificRivalId = null) {
             const arenaSection = document.getElementById("section-arena");
+            if (!arenaSection) return;
             const selectedChampion = userPandas[championIndex] || userPandas[0] || basePandas[0];
             const battle = __createBattleMatch(selectedChampion, specificRivalId);
             window.__activeBattle = battle;
@@ -2009,8 +2032,12 @@
                         <div id="battle-fighter-player" class="battle-fighter md:col-span-3 cyber-card rounded-3xl p-4 md:p-6 text-center border border-emerald-500/50">
                             <div class="battle-anim-flash battle-anim-flash--emerald pointer-events-none" id="battle-flash-player" aria-hidden="true"></div>
                             <div class="text-xs mb-1 text-emerald-400">YOUR CHAMPION</div>
-                            <div class="text-6xl sm:text-8xl mb-2 min-h-[5rem] flex items-center justify-center" aria-hidden="true">
-                                <span class="battle-fighter__emoji" id="battle-emoji-player">${battle.playerEmoji}</span>
+                            <div class="mb-2 min-h-[5rem] flex items-center justify-center relative" aria-hidden="true" style="background: radial-gradient(circle at 50% 40%, rgba(0,0,0,0.1), transparent);">
+                                ${battle.playerImage ? `
+                                    <img src="${battle.playerImage}" alt="${safePlayerName}" class="max-h-28 md:max-h-32 w-auto rounded-2xl object-cover shadow-lg border border-white/10" style="max-width: 70%;" id="battle-image-player"/>
+                                ` : `
+                                    <span class="battle-fighter__emoji text-6xl sm:text-8xl" id="battle-emoji-player">${battle.playerEmoji}</span>
+                                `}
                             </div>
                             <div class="font-black text-lg md:text-2xl">${safePlayerName}</div>
                             <div class="text-xs sm:text-sm text-emerald-400/90 mb-3">LVL ${battle.playerLevel} · ${battle.playerPower} PWR</div>
