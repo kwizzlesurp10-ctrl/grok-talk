@@ -108,5 +108,16 @@
         "createdAt": "2026-06-16T19:35:00Z",
         "completedAt": "2026-06-16T19:40:31.355Z",
         "notes": "Completed after 0 fix retries. Trace recorded in traces/task_010.json."
+    },
+    {
+        "id": "task_011",
+        "title": "Arena Fractal Moves Menu",
+        "description": "Design a sci-fi fractal dispersing pop-out menu for Attack and Special buttons in the Arena, generating dynamic champion-specific move names based on name, type, and style, and incorporating them into combat logs.",
+        "status": "completed",
+        "assignedTo": "developer",
+        "plan": "agency/plans/task_011.md",
+        "createdAt": "2026-06-16T19:50:00Z",
+        "completedAt": "2026-06-16T19:57:49.596Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_011.json."
     }
 ]

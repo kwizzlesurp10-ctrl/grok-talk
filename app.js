@@ -1892,6 +1892,8 @@
                 playerImage: champion.image || null,
                 playerLevel,
                 playerPower: championPower,
+                playerType: champion.type || "Balanced",
+                playerRarity: champion.rarity || "common",
                 enemyId: rival.id,
                 enemyName: rival.name,
                 enemySubtitle: rival.subtitle,
@@ -1908,6 +1910,115 @@
                 enemyBaseDamage,
             };
         }
+
+        function getChampionMoves(champion) {
+            const t = String(champion.type || "").toLowerCase();
+            const name = String(champion.name || "");
+            
+            let attacks = [];
+            let specials = [];
+            
+            if (t.includes('steam')) {
+                attacks = ["Scald Jet", "Pressure Slam", "Vapor Punch"];
+                specials = ["Superheat Geyser", "Scalding Tempest", "Steam Core Eruption"];
+            } else if (t.includes('eclipse')) {
+                attacks = ["Twilight Cut", "Lunar Eclipse", "Corona Strike"];
+                specials = ["Umbral Judgement", "Celestial Alignment", "Eclipse Oblivion"];
+            } else if (t.includes('plasma')) {
+                attacks = ["Plasma Spark", "Ion Strike", "Volt Claw"];
+                specials = ["Plasma Vaporizer", "Lightning Storm", "Supercharge Eruption"];
+            } else if (t.includes('inferno mystic') || t.includes('fire') || name.toLowerCase().includes('blaze')) {
+                attacks = ["Flame Strike", "Ember Claw", "Volcanic Dash"];
+                specials = ["Supernova Burst", "Hellfire Devastation", "Pyroclastic Surge"];
+            } else if (t.includes('ice') || t.includes('frost')) {
+                attacks = ["Frost Jab", "Icicle Pierce", "Glacial Sweep"];
+                specials = ["Blizzard Storm", "Absolute Zero Blast", "Cryogenic Stasis"];
+            } else if (t.includes('dark') || t.includes('void')) {
+                attacks = ["Void Slash", "Shadow Strike", "Umbral Dagger"];
+                specials = ["Abyssal Devour", "Black Hole Collapse", "Nightmare Nexus"];
+            } else if (t.includes('light') || t.includes('solar')) {
+                attacks = ["Sun Burst", "Radiant Lance", "Solar Blade"];
+                specials = ["Supernova Radiance", "Daybreak Judgement", "Corona Overdrive"];
+            } else if (t.includes('electric') || t.includes('thunder')) {
+                attacks = ["Volt Spark", "Lightning Claw", "Tesla Strike"];
+                specials = ["Thunderbolt Storm", "Plasma Burst", "Overcharge Discharge"];
+            } else if (t.includes('arcane') || t.includes('chaos')) {
+                attacks = ["Aether Bolt", "Mana Slash", "Chaos Shift"];
+                specials = ["Runic Ruin", "Cosmic Singularity", "Chaotic Cataclysm"];
+            } else if (t.includes('crystal') || t.includes('nebula')) {
+                attacks = ["Quartz Spike", "Prism Shard", "Nebula Strike"];
+                specials = ["Crystal Refraction", "Supernova Shatter", "Galactic Prism"];
+            } else if (t.includes('hybrid') || t.includes('celestial')) {
+                attacks = ["Cosmic Claw", "Stellar Strike", "Nebula Bash"];
+                specials = ["Dimensional Rift", "Astral Convergence", "Celestial Fusion Beam"];
+            } else if (t.includes('balanced') || t.includes('bamboo')) {
+                attacks = ["Bamboo Slam", "Paw Strike", "Swift Kick"];
+                specials = ["Panda Fury", "Nature Resonance", "Zen Focus Blast"];
+            } else {
+                attacks = ["Quick Attack", "Heavy Hit", "Struggle Strike"];
+                specials = ["Ultimate Move", "Elemental Surge", "Signature Overload"];
+            }
+            
+            // Customize the first move with the champion's name prefix for character identity
+            const namePrefix = name.split(' ')[0] || "Panda";
+            attacks[0] = `${namePrefix} ${attacks[0]}`;
+            specials[0] = `${namePrefix} ${specials[0]}`;
+            
+            return { attacks, specials };
+        }
+
+        function toggleFractalMenu(type) {
+            const b = window.__activeBattle;
+            if (!b || b.ended) return;
+            
+            const triggerBtn = document.getElementById(type === 'attack' ? "battle-attack-btn" : "battle-special-btn");
+            if (triggerBtn && triggerBtn.disabled) return;
+
+            const atkBranches = document.getElementById("attack-branches");
+            const spBranches = document.getElementById("special-branches");
+            if (!atkBranches || !spBranches) return;
+            
+            if (type === 'attack') {
+                atkBranches.classList.toggle("hidden");
+                atkBranches.classList.toggle("flex");
+                spBranches.classList.add("hidden");
+                spBranches.classList.remove("flex");
+            } else {
+                spBranches.classList.toggle("hidden");
+                spBranches.classList.toggle("flex");
+                atkBranches.classList.add("hidden");
+                atkBranches.classList.remove("flex");
+            }
+        }
+
+        function triggerFractalMove(btn, isSpecial, moveIndex) {
+            const b = window.__activeBattle;
+            if (!b || b.ended) return;
+            
+            const moves = getChampionMoves({
+                name: b.playerName,
+                type: b.playerType,
+                rarity: b.playerRarity
+            });
+            const moveName = isSpecial ? moves.specials[moveIndex] : moves.attacks[moveIndex];
+            
+            simulateBattleAttack(btn, isSpecial, moveName);
+            
+            const atkBranches = document.getElementById("attack-branches");
+            const spBranches = document.getElementById("special-branches");
+            if (atkBranches) {
+                atkBranches.classList.add("hidden");
+                atkBranches.classList.remove("flex");
+            }
+            if (spBranches) {
+                spBranches.classList.add("hidden");
+                spBranches.classList.remove("flex");
+            }
+        }
+
+        window.getChampionMoves = getChampionMoves;
+        window.toggleFractalMenu = toggleFractalMenu;
+        window.triggerFractalMove = triggerFractalMove;
 
         function renderBattleChampionSelect() {
             const arenaSection = document.getElementById("section-arena");
@@ -2073,6 +2184,7 @@
             const selectedChampion = userPandas[championIndex] || userPandas[0] || basePandas[0];
             const battle = __createBattleMatch(selectedChampion, specificRivalId);
             window.__activeBattle = battle;
+            const moves = getChampionMoves(selectedChampion);
             console.log('Started battle vs:', battle.enemyName, 'video will be:', battle.enemyVideo, 'failureVideo will be:', battle.enemyFailureVideo);
             const safePlayerName = __escapeBattleText(battle.playerName);
             const safeEnemyName = __escapeBattleText(battle.enemyName);
@@ -2144,20 +2256,61 @@
                         </div>
                     </div>
                     
-                    <div class="flex flex-col sm:flex-row flex-wrap justify-center gap-2 sm:gap-3 mt-6">
-                        <button type="button" id="battle-attack-btn" onclick="void simulateBattleAttack(this, false)" class="w-full sm:w-auto min-w-[10rem] px-6 sm:px-8 py-3 text-sm bg-red-600 hover:bg-red-500 transition-colors rounded-2xl font-bold flex items-center justify-center gap-x-2">
-                            <span>ATTACK</span> <i class="fas fa-fist-raised" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" id="battle-special-btn" onclick="void simulateBattleAttack(this, true)" class="w-full sm:w-auto min-w-[10rem] px-6 sm:px-8 py-3 text-sm border border-fuchsia-400 text-fuchsia-300 hover:bg-fuchsia-500/20 transition-all rounded-2xl font-bold flex items-center justify-center gap-x-2">
-                            <span>SPECIAL</span> <i class="fas fa-magic" aria-hidden="true"></i>
-                        </button>
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10 relative select-none">
+                        <!-- Attack Branching Container -->
+                        <div class="fractal-menu-container relative text-red-500/50" id="attack-menu-container">
+                            <button type="button" id="battle-attack-btn" onclick="toggleFractalMenu('attack')" class="parent-action-btn w-full sm:w-auto min-w-[11rem] px-6 py-3.5 text-sm bg-red-600 hover:bg-red-500 transition-all rounded-2xl font-bold flex items-center justify-center gap-x-2 relative z-20 shadow-lg border border-red-500/30">
+                                <span>ATTACK</span> <i class="fas fa-fist-raised" aria-hidden="true"></i>
+                            </button>
+                            
+                            <!-- Branching Nodes -->
+                            <div class="fractal-branches hidden z-10 absolute left-1/2 -translate-x-1/2 bottom-0 w-max" id="attack-branches">
+                                <div class="fractal-line fractal-line--left"></div>
+                                <div class="fractal-line fractal-line--center"></div>
+                                <div class="fractal-line fractal-line--right"></div>
+                                
+                                <button type="button" onclick="void triggerFractalMove(this, false, 0)" class="fractal-node fractal-node--left px-4 py-2 text-xs bg-slate-900/95 hover:bg-red-950/80 text-red-200 border border-red-500/50 rounded-xl font-bold transition-all shadow-md backdrop-blur-md">
+                                    ${moves.attacks[0]}
+                                </button>
+                                <button type="button" onclick="void triggerFractalMove(this, false, 1)" class="fractal-node fractal-node--center px-4 py-2 text-xs bg-slate-900/95 hover:bg-red-950/80 text-red-200 border border-red-500/50 rounded-xl font-bold transition-all shadow-md backdrop-blur-md">
+                                    ${moves.attacks[1]}
+                                </button>
+                                <button type="button" onclick="void triggerFractalMove(this, false, 2)" class="fractal-node fractal-node--right px-4 py-2 text-xs bg-slate-900/95 hover:bg-red-950/80 text-red-200 border border-red-500/50 rounded-xl font-bold transition-all shadow-md backdrop-blur-md">
+                                    ${moves.attacks[2]}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Special Branching Container -->
+                        <div class="fractal-menu-container relative text-fuchsia-500/50" id="special-menu-container">
+                            <button type="button" id="battle-special-btn" onclick="toggleFractalMenu('special')" class="parent-action-btn w-full sm:w-auto min-w-[11rem] px-6 py-3.5 text-sm border border-fuchsia-400 text-fuchsia-300 hover:bg-fuchsia-500/10 transition-all rounded-2xl font-bold flex items-center justify-center gap-x-2 relative z-20 shadow-lg backdrop-blur-md">
+                                <span>SPECIAL</span> <i class="fas fa-magic" aria-hidden="true"></i>
+                            </button>
+                            
+                            <!-- Branching Nodes -->
+                            <div class="fractal-branches hidden z-10 absolute left-1/2 -translate-x-1/2 bottom-0 w-max" id="special-branches">
+                                <div class="fractal-line fractal-line--left"></div>
+                                <div class="fractal-line fractal-line--center"></div>
+                                <div class="fractal-line fractal-line--right"></div>
+                                
+                                <button type="button" onclick="void triggerFractalMove(this, true, 0)" class="fractal-node fractal-node--left px-4 py-2 text-xs bg-slate-900/95 hover:bg-fuchsia-950/80 text-fuchsia-200 border border-fuchsia-500/50 rounded-xl font-bold transition-all shadow-md backdrop-blur-md">
+                                    ${moves.specials[0]}
+                                </button>
+                                <button type="button" onclick="void triggerFractalMove(this, true, 1)" class="fractal-node fractal-node--center px-4 py-2 text-xs bg-slate-900/95 hover:bg-fuchsia-950/80 text-fuchsia-200 border border-fuchsia-500/50 rounded-xl font-bold transition-all shadow-md backdrop-blur-md">
+                                    ${moves.specials[1]}
+                                </button>
+                                <button type="button" onclick="void triggerFractalMove(this, true, 2)" class="fractal-node fractal-node--right px-4 py-2 text-xs bg-slate-900/95 hover:bg-fuchsia-950/80 text-fuchsia-200 border border-fuchsia-500/50 rounded-xl font-bold transition-all shadow-md backdrop-blur-md">
+                                    ${moves.specials[2]}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
             __syncBattleHpBars();
         }
 
-        async function simulateBattleAttack(element, isSpecial = false) {
+        async function simulateBattleAttack(element, isSpecial = false, customMoveName = null) {
             const b = window.__activeBattle;
             const log = document.getElementById("battle-log");
             if (!log || !b || b.ended) return;
@@ -2172,10 +2325,9 @@
             if (element && element.disabled) return;
             if (atkBtn) atkBtn.disabled = true;
             if (spBtn) spBtn.disabled = true;
-            const attacks = isSpecial
-                ? ["CRITICAL FUSION BEAM", "DIMENSION RIFT", "PANDAS UNITE"]
-                : ["BAMBOO SLAM", "PAW STRIKE", "ROAR OF FURY"];
-            const attackName = attacks[Math.floor(Math.random() * attacks.length)];
+            const attackName = customMoveName || (isSpecial
+                ? "SPECIAL SURGE"
+                : "BASIC STRIKE");
             const dmg = isSpecial
                 ? Math.floor(Math.random() * 14) + b.playerBaseDamage + 12
                 : Math.floor(Math.random() * 10) + b.playerBaseDamage;

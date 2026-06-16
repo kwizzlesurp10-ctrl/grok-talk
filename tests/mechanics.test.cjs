@@ -677,6 +677,45 @@ async function runTests() {
         assert.ok(finalBattle.ended, "Battle state should mark the combat as ended");
     }
 
+    // -------------------- TEST 14: Fractal Moves Menu & Champion Themed Attacks --------------------
+    {
+        const { read, write, sandbox } = runAppWithGameState();
+        const getChampionMoves = read("getChampionMoves");
+        
+        // 1. Assert moves generation for different types
+        const fireMoves = getChampionMoves({ name: "Inferno Guardian", type: "Fire" });
+        assert.ok(fireMoves.attacks.length === 3);
+        assert.ok(fireMoves.specials.length === 3);
+        assert.ok(fireMoves.attacks[0].startsWith("Inferno"), "Attack move name should prefix with champion first name");
+        
+        const iceMoves = getChampionMoves({ name: "Frostbite Golem", type: "Ice" });
+        assert.ok(iceMoves.attacks[0].startsWith("Frostbite"));
+
+        // 2. Battle Simulation with custom move
+        const __createBattleMatch = read("__createBattleMatch");
+        const weakChamp = { name: "Thunder Spark", power: 10, level: 1, type: "Electric", rarity: "rare" };
+        const battle = __createBattleMatch(weakChamp, "void-howler");
+        battle.playerCur = 100;
+        battle.enemyCur = 100;
+        battle.playerBaseDamage = 10;
+        
+        write("__activeBattle", battle);
+        
+        const simulateBattleAttack = read("simulateBattleAttack");
+        
+        // Run a custom attack
+        const customMove = "Thunder Volt Strike";
+        await simulateBattleAttack(null, false, customMove);
+        
+        const finalBattle = read("__activeBattle");
+        assert.ok(finalBattle.enemyCur < 100, "Enemy HP should be reduced after custom attack");
+        
+        // Inspect battle log children in DOM stub
+        const logContainer = sandbox.document.getElementById("battle-log");
+        const loggedLine = logContainer.children.find(child => child.innerHTML.includes("Thunder Volt Strike"));
+        assert.ok(loggedLine, "Combat log should contain the custom attack move name");
+    }
+
     process.stdout.write("mechanics ok\n");
 }
 
