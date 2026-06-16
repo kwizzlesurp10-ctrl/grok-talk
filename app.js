@@ -2525,57 +2525,25 @@
                 }
             }
 
-            const shapes = [
-                {
-                    name: 'hexagon',
-                    clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
-                    width: '150px',
-                    height: '130px',
-                    left: '8%',
-                    top: '12%',
-                    panClass: 'action-pan-1',
-                    rotate: '-6deg'
-                },
-                {
-                    name: 'rhombus',
-                    clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
-                    width: '130px',
-                    height: '130px',
-                    left: '70%',
-                    top: '10%',
-                    panClass: 'action-pan-2',
-                    rotate: '8deg'
-                },
-                {
-                    name: 'octagon',
-                    clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
-                    width: '160px',
-                    height: '160px',
-                    left: '38%',
-                    top: '25%',
-                    panClass: 'action-pan-3',
-                    rotate: '2deg'
-                },
-                {
-                    name: 'trapezoid',
-                    clipPath: 'polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)',
-                    width: '140px',
-                    height: '110px',
-                    left: '6%',
-                    top: '52%',
-                    panClass: 'action-pan-4',
-                    rotate: '-10deg'
-                },
-                {
-                    name: 'triangle',
-                    clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
-                    width: '130px',
-                    height: '130px',
-                    left: '72%',
-                    top: '48%',
-                    panClass: 'action-pan-5',
-                    rotate: '12deg'
+            function getSeed(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    hash = str.charCodeAt(i) + ((hash << 5) - hash);
                 }
+                return Math.abs(hash);
+            }
+
+            const seed = getSeed(attackName + (battle.playerName || ""));
+            const numPanels = 1 + (seed % 5);
+            
+            const shapePool = [
+                { name: 'hexagon', clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)' },
+                { name: 'rhombus', clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' },
+                { name: 'octagon', clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)' },
+                { name: 'trapezoid', clipPath: 'polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)' },
+                { name: 'triangle', clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' },
+                { name: 'parallelogram', clipPath: 'polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%)' },
+                { name: 'bevel', clipPath: 'polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)' }
             ];
 
             const championColor = battle.playerRarity ? getRarityColor(battle.playerRarity) : '#d946ef';
@@ -2583,19 +2551,36 @@
             const actionIcon = getComicActionIcon(battle.playerType);
             const actionBg = getComicActionBg(battle.playerType, championColor);
 
-            shapes.forEach((shape, index) => {
+            const impactIndex = numPanels >= 3 ? 2 : (numPanels - 1);
+
+            for (let index = 0; index < numPanels; index++) {
+                const pSeed = seed + index * 37;
+                const shape = shapePool[pSeed % shapePool.length];
+                
+                const width = (110 + (pSeed % 51)) + 'px';
+                const height = (100 + ((pSeed >> 2) % 51)) + 'px';
+                
+                const colWidth = 70 / numPanels;
+                const baseLeft = 5 + (index * colWidth);
+                const offsetLeft = (pSeed >> 4) % Math.max(5, Math.floor(colWidth - 5));
+                const left = (baseLeft + offsetLeft) + '%';
+                
+                const top = (10 + ((pSeed >> 6) % 46)) + '%';
+                const rotate = (-12 + ((pSeed >> 8) % 25)) + 'deg';
+                const panClass = 'action-pan-' + (1 + ((pSeed >> 10) % 5));
+
                 setTimeout(() => {
                     const popup = document.createElement('div');
                     popup.className = 'special-clip-popup absolute pointer-events-none comic-border bg-halftone';
                     popup.setAttribute('data-testid', 'special-popup');
-                    popup.style.width = shape.width;
-                    popup.style.height = shape.height;
-                    popup.style.left = shape.left;
-                    popup.style.top = shape.top;
+                    popup.style.width = width;
+                    popup.style.height = height;
+                    popup.style.left = left;
+                    popup.style.top = top;
                     popup.style.clipPath = shape.clipPath;
                     popup.style.setProperty('--champion-color', championColor);
                     popup.style.boxShadow = `0 0 25px ${championColor}A0`;
-                    popup.style.transform = `scale(0) rotate(${shape.rotate})`;
+                    popup.style.transform = `scale(0) rotate(${rotate})`;
                     popup.style.transition = 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease';
                     popup.style.zIndex = '100';
                     popup.style.opacity = '0';
@@ -2605,7 +2590,7 @@
                     let panelHTML = '';
                     const actionWord = getComicActionText(battle.playerType, index);
                     
-                    if (index === 2) {
+                    if (index === impactIndex) {
                         panelHTML = `
                             <div class="relative w-full h-full flex items-center justify-center" style="background: ${actionBg}">
                                 <div class="absolute inset-0 bg-halftone"></div>
@@ -2613,7 +2598,7 @@
                                     <div class="font-comic text-2xl md:text-3xl font-black text-white tracking-wider transform -rotate-12">${actionWord}</div>
                                 </div>
                                 <div class="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[6px] font-mono tracking-widest text-yellow-400 bg-black border border-yellow-400/30">
-                                    PANEL 3: IMPACT
+                                    PANEL ${index + 1}: IMPACT
                                 </div>
                             </div>
                         `;
@@ -2628,7 +2613,7 @@
                                     <div class="absolute inset-0 bg-halftone opacity-45 pointer-events-none"></div>
                                     <!-- Rotating energy ring -->
                                     <div class="w-16 h-16 rounded-full border-4 border-dashed border-white/20 animate-spin absolute" style="animation-duration: 4s;"></div>
-                                    <i class="${actionIcon} text-5xl animate-pulse filter drop-shadow-[0_0_15px_currentColor] z-10 ${shape.panClass}"></i>
+                                    <i class="${actionIcon} text-5xl animate-pulse filter drop-shadow-[0_0_15px_currentColor] z-10 ${panClass}"></i>
                                     <!-- Champion inset portrait -->
                                     <div class="absolute top-2 right-2 w-8 h-8 rounded-full border border-black/50 overflow-hidden z-20 shadow-md">
                                         <img src="${championImage}" class="w-full h-full object-cover">
@@ -2644,27 +2629,27 @@
                                     <!-- Motion trails -->
                                     <i class="${actionIcon} text-3xl opacity-30 transform -translate-x-8 translate-y-1 scale-75 skew-x-12 absolute z-5"></i>
                                     <i class="${actionIcon} text-4xl opacity-60 transform -translate-x-4 scale-90 skew-x-12 absolute z-10"></i>
-                                    <i class="${actionIcon} text-5xl transform translate-x-4 scale-100 skew-x-12 absolute z-20 filter drop-shadow-[0_0_10px_currentColor] ${shape.panClass}"></i>
+                                    <i class="${actionIcon} text-5xl transform translate-x-4 scale-100 skew-x-12 absolute z-20 filter drop-shadow-[0_0_10px_currentColor] ${panClass}"></i>
                                 </div>
                             `;
-                        } else if (index === 3) {
-                            panelTitle = 'PANEL 4: BURST';
+                        } else if (index === 3 || (index > impactIndex && index < numPanels - 1)) {
+                            panelTitle = `PANEL ${index + 1}: BURST`;
                             panelContent = `
                                 <div class="relative w-full h-full flex items-center justify-center" style="background: ${actionBg}">
                                     <div class="absolute inset-0 bg-halftone opacity-45 pointer-events-none"></div>
                                     <!-- Concentric shockwaves -->
                                     <div class="w-20 h-20 rounded-full border border-white/20 absolute animate-ping" style="animation-duration: 1.5s;"></div>
                                     <i class="fa-solid fa-burst text-7xl text-orange-500 absolute opacity-50 z-5"></i>
-                                    <i class="fa-solid fa-burst text-8xl text-red-600 absolute z-10 ${shape.panClass}"></i>
+                                    <i class="fa-solid fa-burst text-8xl text-red-600 absolute z-10 ${panClass}"></i>
                                     <i class="${actionIcon} text-3xl text-white absolute z-20 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.9)]"></i>
                                 </div>
                             `;
                         } else {
-                            panelTitle = 'PANEL 5: RESOLVE';
+                            panelTitle = `PANEL ${index + 1}: RESOLVE`;
                             panelContent = `
                                 <div class="relative w-full h-full flex items-center justify-center flex-col" style="background: ${actionBg}">
                                     <div class="absolute inset-0 bg-halftone opacity-60 pointer-events-none"></div>
-                                    <i class="${actionIcon} text-4xl opacity-50 transform rotate-12 z-10 ${shape.panClass}"></i>
+                                    <i class="${actionIcon} text-4xl opacity-50 transform rotate-12 z-10 ${panClass}"></i>
                                     <div class="mt-2 bg-emerald-500 text-black border border-black font-comic text-[8px] font-black px-1.5 py-0.5 rotate-3 z-20">
                                         STRIKE COMPLETE!
                                     </div>
@@ -2695,12 +2680,12 @@
                     stage.appendChild(popup);
 
                     void popup.offsetWidth;
-                    popup.style.transform = `scale(1) rotate(${shape.rotate})`;
+                    popup.style.transform = `scale(1) rotate(${rotate})`;
                     popup.style.opacity = '1';
 
                     setTimeout(() => {
                         if (popup && popup.parentElement) {
-                            popup.style.transform = `scale(0) rotate(${shape.rotate})`;
+                            popup.style.transform = `scale(0) rotate(${rotate})`;
                             popup.style.opacity = '0';
                             setTimeout(() => {
                                 if (popup && popup.parentElement) popup.remove();
@@ -2709,7 +2694,7 @@
                     }, 850);
 
                 }, index * 80);
-            });
+            }
         }
 
         async function simulateBattleAttack(element, isSpecial = false, customMoveName = null) {

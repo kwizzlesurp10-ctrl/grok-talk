@@ -839,7 +839,7 @@ async function runTests() {
         sandbox.setTimeout = originalSetTimeout;
         
         const popups = stage.children.filter(c => c.tag === 'div' && c.className.includes('special-clip-popup'));
-        assert.equal(popups.length, 5, "Exactly 5 special action popups should be spawned in the battle stage");
+        assert.ok(popups.length >= 1 && popups.length <= 5, "Special action popups length should be in range 1-5");
         
         const firstPopup = popups[0];
         assert.ok(firstPopup.style.clipPath.includes("polygon"), "Popup should have a clip-path polygon defined");
@@ -874,14 +874,52 @@ async function runTests() {
         sandbox.setTimeout = originalSetTimeout;
         
         const popups = stage.children.filter(c => c.tag === 'div' && c.className.includes('special-clip-popup'));
-        assert.equal(popups.length, 5, "Exactly 5 special action popups should be spawned in the battle stage");
+        assert.ok(popups.length >= 1 && popups.length <= 5, "Special action popups length should be in range 1-5");
         
-        const panel3 = popups[2];
-        assert.ok(panel3.innerHTML.includes("spiked-burst-clip"), "Panel 3 should contain spiked burst graphic element");
-        assert.ok(panel3.innerHTML.includes("BOOM!"), "Panel 3 onomatopoeia should match Fire type step 2 (BOOM!)");
+        const impactPanel = popups.find(p => p.innerHTML.includes("IMPACT"));
+        assert.ok(impactPanel, "Should find an IMPACT panel in the popup list");
+        assert.ok(impactPanel.innerHTML.includes("spiked-burst-clip"), "IMPACT panel should contain spiked burst graphic element");
+        assert.ok(impactPanel.innerHTML.includes("BOOM!") || impactPanel.innerHTML.includes("IGNITE!"), "IMPACT panel onomatopoeia should match Fire type step");
+    }
+
+    // -------------------- TEST 19: Uniqueness of Special Move Popups --------------------
+    {
+        const { read, write, sandbox } = runAppWithGameState();
+        const __createBattleMatch = read("__createBattleMatch");
+        const simulateBattleAttack = read("simulateBattleAttack");
         
-        const panel1 = popups[0];
-        assert.ok(panel1.innerHTML.includes("FWOOSH!"), "Panel 1 onomatopoeia should match Fire type step 0 (FWOOSH!)");
+        // Setup battle 1
+        const champ1 = { name: "Thunder Spark", power: 10, level: 1, type: "Electric", rarity: "rare", image: "assets/pandas/thunder_panda.jpg" };
+        const battle1 = __createBattleMatch(champ1, "void-howler");
+        write("__activeBattle", battle1);
+        
+        const originalSetTimeout = sandbox.setTimeout;
+        sandbox.setTimeout = (fn, delay) => { fn(); return 1; };
+        
+        const stage = sandbox.document.getElementById('battle-stage');
+        stage.children = [];
+        simulateBattleAttack(null, true, "Thunder Volt Strike");
+        const popups1 = stage.children.filter(c => c.tag === 'div' && c.className.includes('special-clip-popup'));
+        
+        // Setup battle 2
+        const champ2 = { name: "Inferno Spark", power: 10, level: 1, type: "Fire", rarity: "rare", image: "assets/pandas/inferno_panda.jpg" };
+        const battle2 = __createBattleMatch(champ2, "void-howler");
+        write("__activeBattle", battle2);
+        
+        stage.children = [];
+        simulateBattleAttack(null, true, "Supernova Burst");
+        const popups2 = stage.children.filter(c => c.tag === 'div' && c.className.includes('special-clip-popup'));
+        
+        sandbox.setTimeout = originalSetTimeout;
+        
+        // Assert that different special moves generate unique counts
+        assert.notEqual(popups1.length, popups2.length, "Different special moves should generate different dynamic panel counts");
+        
+        // Assert that sizes/positions are unique
+        const popup1 = popups1[0];
+        const popup2 = popups2[0];
+        assert.notEqual(popup1.style.width, popup2.style.width, "Popups from different moves should have unique widths");
+        assert.notEqual(popup1.style.left, popup2.style.left, "Popups from different moves should have unique positioning coordinates");
     }
 
     process.stdout.write("mechanics ok\n");
