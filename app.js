@@ -121,9 +121,18 @@
                 if (typeof gameState.ep !== "number" || gameState.ep < 0) {
                     gameState.ep = 500;
                 }
-                // Migrate collection and set level default
+                // Migrate collection, set level default, restore static paths, and generate fusion art
                 userPandas.forEach(p => {
                     if (p.level === undefined) p.level = 1;
+                    
+                    const baseMatch = basePandas.find(bp => bp.name === p.name);
+                    if (baseMatch) {
+                        p.image = baseMatch.image;
+                    } else {
+                        if (!p.image || p.image === 'null') {
+                            p.image = generateProceduralPandaImage(p.emoji, p.type, p.color || getRarityColor(p.rarity), p.rarity);
+                        }
+                    }
                 });
                 recalculateTotalPower();
             } else {
@@ -1203,6 +1212,85 @@
             }, delay);
         }
 
+        function generateProceduralPandaImage(emoji, type, color, rarity) {
+            if (typeof document === 'undefined' || typeof document.createElement !== 'function') {
+                return null;
+            }
+            try {
+                const canvas = document.createElement('canvas');
+                if (!canvas || typeof canvas.getContext !== 'function') {
+                    return null;
+                }
+                canvas.width = 256;
+                canvas.height = 256;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return null;
+                
+                // Draw background radial gradient
+                const grad = ctx.createRadialGradient(128, 128, 20, 128, 128, 150);
+                grad.addColorStop(0, '#1a1d24');
+                grad.addColorStop(1, '#0b0c10');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 256, 256);
+                
+                // Draw background grid lines (cyber style)
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+                ctx.lineWidth = 1;
+                for (let i = 16; i < 256; i += 16) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, 256);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(256, i);
+                    ctx.stroke();
+                }
+
+                // Glow border using rarity/type color
+                const themeColor = color || '#64748b';
+                ctx.strokeStyle = themeColor + '55';
+                ctx.lineWidth = 8;
+                ctx.strokeRect(10, 10, 236, 236);
+                
+                // Solid border
+                ctx.strokeStyle = themeColor;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(14, 14, 228, 228);
+
+                // Cyber-decors (circles)
+                ctx.strokeStyle = themeColor + '33';
+                ctx.beginPath();
+                ctx.arc(128, 128, 80, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(128, 128, 90, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Draw Type text at the top
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(type ? type.toUpperCase() : 'HYBRID', 128, 32);
+
+                // Draw Rarity text at the bottom
+                ctx.fillStyle = themeColor;
+                ctx.font = 'bold 11px sans-serif';
+                ctx.fillText(rarity ? rarity.toUpperCase() : 'UNKNOWN', 128, 230);
+
+                // Draw Central Emoji
+                ctx.font = '80px sans-serif';
+                ctx.textBaseline = 'middle';
+                ctx.textAlign = 'center';
+                ctx.fillText(emoji || '🐼', 128, 128);
+
+                return canvas.toDataURL('image/jpeg', 0.85);
+            } catch (e) {
+                return null;
+            }
+        }
+
         function createFusionResult(pandaA, pandaB, mode = 'basic') {
             const types = [pandaA.type, pandaB.type];
             let hybridName = '';
@@ -1328,7 +1416,7 @@
                 id: 'f' + Date.now(),
                 name: fullName,
                 emoji: emoji,
-                image: null,
+                image: generateProceduralPandaImage(emoji, newType, getRarityColor(rarity), rarity),
                 type: newType,
                 power: finalPower,
                 rarity: rarity,

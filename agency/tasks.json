@@ -64,5 +64,16 @@
         "createdAt": "2026-06-16T06:48:28.927Z",
         "completedAt": "2026-06-16T06:50:27.854Z",
         "notes": "Completed after 0 fix retries. Trace recorded in traces/task_006.json."
+    },
+    {
+        "id": "task_007",
+        "title": "Procedural Fusion Card Art",
+        "description": "Implement canvas-based procedural image generation for fused hybrids to replace null image fields, and migrate existing saved fusions on load.",
+        "status": "completed",
+        "assignedTo": "orchestrator",
+        "plan": null,
+        "createdAt": "2026-06-16T06:55:05.431Z",
+        "completedAt": "2026-06-16T06:59:49.140Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_007.json."
     }
 ]
