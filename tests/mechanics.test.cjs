@@ -16,7 +16,12 @@ function makeDomStub() {
             remove() {}, 
             contains() { return false; } 
         },
-        style: {},
+        style: {
+            position: "",
+            borderColor: "",
+            boxShadow: "",
+            setProperty() {},
+        },
         innerHTML: "",
         innerText: "",
         textContent: "",
@@ -35,12 +40,21 @@ function makeDomStub() {
         closest() {
             return null;
         },
+        querySelector() {
+            return null;
+        },
+        querySelectorAll() {
+            return [];
+        },
         onclick: null,
         value: "",
     });
 
     const byId = new Map();
     const stubIds = [
+        "detail-panda-card",
+        "detail-panda-image-container",
+        "fusion-flow-svg",
         "section-dashboard",
         "nav-dashboard",
         "collection-grid",
@@ -146,6 +160,9 @@ function makeDomStub() {
         },
         querySelectorAll() {
             return [];
+        },
+        querySelector() {
+            return null;
         },
         addEventListener() {},
         createElement(t) {
@@ -714,6 +731,81 @@ async function runTests() {
         const logContainer = sandbox.document.getElementById("battle-log");
         const loggedLine = logContainer.children.find(child => child.innerHTML.includes("Thunder Volt Strike"));
         assert.ok(loggedLine, "Combat log should contain the custom attack move name");
+    }
+
+    // -------------------- TEST 15: Holographic UI & Fusion Flows --------------------
+    {
+        const { read, write, sandbox, gameState } = runAppWithGameState();
+        
+        // 1. Setup Document / Element mocks
+        sandbox.document.createElementNS = (ns, tag) => {
+            return sandbox.document.createElement(tag);
+        };
+        
+        const mockCore = sandbox.document.createElement('div');
+        mockCore.parentElement = sandbox.document.createElement('div');
+        sandbox.document.querySelector = (selector) => {
+            if (selector.includes('animate-spin-slow')) {
+                return mockCore;
+            }
+            return null;
+        };
+        
+        const svg = sandbox.document.getElementById('fusion-flow-svg');
+        const slotAlpha = sandbox.document.getElementById('slot-alpha');
+        const slotBeta = sandbox.document.getElementById('slot-beta');
+        
+        svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+        slotAlpha.getBoundingClientRect = () => ({ left: 100, top: 100, width: 200, height: 200 });
+        slotBeta.getBoundingClientRect = () => ({ left: 500, top: 100, width: 200, height: 200 });
+        mockCore.parentElement.getBoundingClientRect = () => ({ left: 380, top: 180, width: 40, height: 40 });
+        
+        // 2. Perform selection and assert SVG flow paths
+        const selectPandaForSlot = read("selectPandaForSlot");
+        const pandaA = { name: "Classic Panda", type: "Balanced", color: "#10b981", power: 12, rarity: "common", image: "assets/pandas/classic_panda.jpg" };
+        const pandaB = { name: "Inferno Panda", type: "Fire", color: "#ef4444", power: 18, rarity: "rare", image: "assets/pandas/inferno_panda.jpg" };
+        
+        selectPandaForSlot('alpha', pandaA);
+        selectPandaForSlot('beta', pandaB);
+        
+        assert.equal(svg.children.length, 4, "SVG overlay should contain exactly 4 connector paths (2 per slot)");
+        
+        // 3. Test training floating animation triggers
+        const trainPanda = read("trainPanda");
+        const userPandas = read("userPandas");
+        
+        gameState.ep = 1000;
+        userPandas[0] = { name: "Classic Panda", rarity: "common", level: 1, power: 12, color: "#10b981", image: "assets/pandas/classic_panda.jpg" };
+        
+        const powerVal = sandbox.document.getElementById('detail-panda-power-val');
+        powerVal.parentElement = sandbox.document.createElement('div');
+        powerVal.innerText = "12";
+        const detailCard = sandbox.document.getElementById('detail-panda-card');
+        const imgContainer = sandbox.document.getElementById('detail-panda-image-container');
+        
+        trainPanda(0);
+        
+        const floatPwr = powerVal.parentElement.children.find(c => c.className.includes('float-up-stat'));
+        assert.ok(floatPwr, "Floating power stat element should be appended to power container");
+        assert.ok(floatPwr.innerText.includes("+3 PWR"), "Floating power stat should match common panda training gain (+3 PWR)");
+        
+        const floatLvl = imgContainer.children.find(c => c.className.includes('float-up-stat'));
+        assert.ok(floatLvl, "Floating level up element should be appended to image container");
+        assert.equal(floatLvl.innerText, "LVL UP!", "Floating level element text should be 'LVL UP!'");
+    }
+
+    // -------------------- TEST 16: Visual Emoji Elimination --------------------
+    {
+        const sourceHtmlPath = path.join(root, "source.html");
+        const appJsPath = path.join(root, "app.js");
+        
+        const sourceHtml = fs.readFileSync(sourceHtmlPath, "utf8");
+        const appJs = fs.readFileSync(appJsPath, "utf8");
+        
+        assert.ok(!sourceHtml.includes('<div class="text-6xl mb-3">🌋</div>'), "🌋 emoji should be eliminated from Today's Challenge in source.html");
+        assert.ok(!appJs.includes('<span class="text-6xl">🏆</span>'), "🏆 emoji should be eliminated from level up modal in app.js");
+        assert.ok(!appJs.includes('<span class="text-xs">🐼</span>'), "🐼 emoji badge should be eliminated from battle arena landing in app.js");
+        assert.ok(!appJs.includes('<span class="text-xs">🔥</span>'), "🔥 emoji badge should be eliminated from battle arena landing in app.js");
     }
 
     process.stdout.write("mechanics ok\n");

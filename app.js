@@ -336,6 +336,9 @@
             pandasToShow.forEach((panda, index) => {
                 const card = document.createElement('div');
                 card.className = `panda-card cyber-card rounded-3xl p-4 border border-gray-700 cursor-pointer group`;
+                if (card.style && typeof card.style.setProperty === 'function') {
+                    card.style.setProperty('--champion-color', panda.color || getRarityColor(panda.rarity));
+                }
                 
                 const rarityColor = getRarityColor(panda.rarity);
                 const visualHtml = `<img src="${panda.image}" alt="${panda.name}" class="w-16 h-16 rounded-2xl object-cover mb-3 border border-white/10 transition-all group-hover:scale-110">`;
@@ -469,6 +472,56 @@
                     } else {
                         btnEl.className = 'w-full py-2.5 rounded-xl font-bold text-xs bg-amber-400/10 text-amber-400 opacity-60 cursor-not-allowed transition-all flex items-center justify-center gap-2';
                     }
+                }
+            }
+
+            // Holographic training animations and floating indicators
+            if (typeof document !== 'undefined' && typeof document.createElement === 'function') {
+                // Holographic card flash
+                const detailCard = document.getElementById('detail-panda-card');
+                if (detailCard) {
+                    detailCard.classList.remove('holographic-flash');
+                    void detailCard.offsetWidth; // trigger reflow
+                    detailCard.classList.add('holographic-flash');
+                    setTimeout(() => {
+                        if (detailCard) detailCard.classList.remove('holographic-flash');
+                    }, 800);
+                }
+
+                // Floating indicator: +PWR
+                if (powerValEl && powerValEl.parentElement) {
+                    const parent = powerValEl.parentElement;
+                    const originalPosition = parent.style.position;
+                    parent.style.position = 'relative';
+                    
+                    const floatPwr = document.createElement('div');
+                    floatPwr.className = 'float-up-stat text-amber-400 font-black text-2xl pointer-events-none';
+                    floatPwr.style.left = '50%';
+                    floatPwr.style.top = '40%';
+                    floatPwr.innerText = `+${powerGain} PWR`;
+                    parent.appendChild(floatPwr);
+                    
+                    setTimeout(() => {
+                        if (floatPwr) floatPwr.remove();
+                        if (parent && !parent.querySelector('.float-up-stat')) {
+                            parent.style.position = originalPosition;
+                        }
+                    }, 1200);
+                }
+
+                // Floating indicator: LVL UP!
+                const imgContainer = document.getElementById('detail-panda-image-container');
+                if (imgContainer) {
+                    const floatLvl = document.createElement('div');
+                    floatLvl.className = 'float-up-stat text-emerald-400 font-extrabold text-3xl tracking-widest pointer-events-none drop-shadow-[0_4px_12px_rgba(16,185,129,0.6)]';
+                    floatLvl.style.left = '50%';
+                    floatLvl.style.top = '50%';
+                    floatLvl.innerText = 'LVL UP!';
+                    imgContainer.appendChild(floatLvl);
+                    
+                    setTimeout(() => {
+                        if (floatLvl) floatLvl.remove();
+                    }, 1200);
                 }
             }
             
@@ -698,6 +751,9 @@
                 
                 const card = document.createElement('div');
                 card.className = `panda-card cyber-card rounded-3xl p-5 border border-gray-700 cursor-pointer group ${!isUnlocked ? 'opacity-75 grayscale-[0.3]' : ''}`;
+                if (card.style && typeof card.style.setProperty === 'function') {
+                    card.style.setProperty('--champion-color', entry.color || getRarityColor(entry.rarity));
+                }
                 
                 const rarityColor = getRarityColor(entry.rarity);
                 const visualHtml = entry.image 
@@ -781,7 +837,7 @@
         function showCodexDetail(index, entry) {
             const modalHTML = `
                 <div onclick="this.remove()" class="fixed inset-0 bg-black/90 z-[130] flex items-center justify-center p-4">
-                    <div onclick="event.stopImmediatePropagation()" class="cyber-card w-full max-w-2xl rounded-3xl overflow-hidden border border-purple-400/50">
+                    <div onclick="event.stopImmediatePropagation()" class="cyber-card w-full max-w-2xl rounded-3xl overflow-hidden border" style="border-color: ${entry.color || getRarityColor(entry.rarity)}80">
                         <div class="px-8 pt-8 pb-6 relative bg-gradient-to-b from-[#0f1117] to-transparent">
                             <button onclick="event.target.closest('.fixed').remove()" class="absolute top-6 right-6 text-gray-400 hover:text-white text-2xl">×</button>
                             
@@ -834,13 +890,13 @@
             const panda = userPandas[index];
             const modalHTML = `
                 <div onclick="this.remove()" class="fixed inset-0 bg-black/80 z-[120] flex items-center justify-center p-4">
-                    <div onclick="event.stopImmediatePropagation()" class="cyber-card w-full max-w-lg rounded-3xl overflow-hidden border border-gray-700">
+                    <div id="detail-panda-card" style="--champion-color: ${panda.color || getRarityColor(panda.rarity)}" onclick="event.stopImmediatePropagation()" class="cyber-card w-full max-w-lg rounded-3xl overflow-hidden border border-gray-700">
                         <div class="px-8 pt-8 pb-6 relative">
                             <button onclick="event.target.closest('.fixed').remove()" class="absolute top-6 right-6 text-gray-400 hover:text-white">
                                 <i class="fas fa-times text-2xl"></i>
                             </button>
                             
-                            <div class="flex justify-center">
+                            <div id="detail-panda-image-container" class="flex justify-center relative">
                                 <img src="${panda.image}" alt="${panda.name}" class="w-32 h-32 rounded-3xl object-cover border border-white/10 transition-all">
                             </div>
                             
@@ -1022,10 +1078,12 @@
             
             slotEl.classList.add('active', 'border-solid');
             slotEl.style.borderColor = panda.color;
+            slotEl.style.boxShadow = `0 0 25px ${panda.color}40, inset 0 0 15px ${panda.color}20`;
             
             // Enable fuse button if both selected
             updateFuseButton();
             updateEnergyCost();
+            updateFusionFlowPaths();
         }
 
         function clearSlot(slot) {
@@ -1044,9 +1102,95 @@
             
             slotEl.classList.remove('active');
             slotEl.style.borderColor = '';
+            slotEl.style.boxShadow = '';
             
             updateFuseButton();
             updateEnergyCost();
+            updateFusionFlowPaths();
+        }
+
+        function updateFusionFlowPaths() {
+            if (typeof document === 'undefined' || typeof document.createElementNS !== 'function') {
+                return;
+            }
+            const svg = document.getElementById('fusion-flow-svg');
+            if (!svg) return;
+            svg.innerHTML = '';
+            if (Array.isArray(svg.children)) {
+                svg.children.length = 0;
+            }
+            
+            const slotAlpha = document.getElementById('slot-alpha');
+            const slotBeta = document.getElementById('slot-beta');
+            const core = document.querySelector('#section-fusion-lab .animate-spin-slow')?.parentElement;
+            
+            if (!slotAlpha || !slotBeta || !core) return;
+            if (typeof slotAlpha.getBoundingClientRect !== 'function') return;
+            
+            const svgRect = svg.getBoundingClientRect();
+            if (svgRect.width === 0 || svgRect.height === 0) return;
+            
+            const getCenter = (el) => {
+                const rect = el.getBoundingClientRect();
+                return {
+                    x: rect.left - svgRect.left + rect.width / 2,
+                    y: rect.top - svgRect.top + rect.height / 2
+                };
+            };
+            
+            const coreCenter = getCenter(core);
+            
+            if (selectedAlpha) {
+                const alphaCenter = getCenter(slotAlpha);
+                drawPath(alphaCenter, coreCenter, selectedAlpha.color || '#10b981');
+            }
+            
+            if (selectedBeta) {
+                const betaCenter = getCenter(slotBeta);
+                drawPath(betaCenter, coreCenter, selectedBeta.color || '#c026ff');
+            }
+            
+            function drawPath(start, end, color) {
+                const dx = end.x - start.x;
+                const dy = end.y - start.y;
+                
+                let pathD;
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    // Horizontal layout (desktop)
+                    const cp1x = start.x + dx * 0.5;
+                    const cp1y = start.y;
+                    const cp2x = start.x + dx * 0.5;
+                    const cp2y = end.y;
+                    pathD = `M ${start.x} ${start.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${end.x} ${end.y}`;
+                } else {
+                    // Vertical layout (mobile)
+                    const cp1x = start.x;
+                    const cp1y = start.y + dy * 0.5;
+                    const cp2x = end.x;
+                    const cp2y = start.y + dy * 0.5;
+                    pathD = `M ${start.x} ${start.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${end.x} ${end.y}`;
+                }
+                
+                const baseLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                baseLine.setAttribute('d', pathD);
+                baseLine.setAttribute('stroke', color);
+                baseLine.setAttribute('stroke-width', '4');
+                baseLine.setAttribute('fill', 'none');
+                baseLine.setAttribute('opacity', '0.25');
+                baseLine.setAttribute('stroke-linecap', 'round');
+                
+                const activeLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                activeLine.setAttribute('d', pathD);
+                activeLine.setAttribute('stroke', color);
+                activeLine.setAttribute('stroke-width', '4');
+                activeLine.setAttribute('fill', 'none');
+                activeLine.setAttribute('stroke-linecap', 'round');
+                activeLine.setAttribute('class', 'pulse-flow-line');
+                activeLine.setAttribute('style', `filter: drop-shadow(0 0 6px ${color});`);
+                
+                svg.appendChild(baseLine);
+                svg.appendChild(activeLine);
+            }
         }
 
         function updateFuseButton() {
@@ -1589,7 +1733,7 @@
                 <div class="fixed inset-0 bg-black/90 z-[130] flex items-center justify-center" onclick="this.remove()">
                     <div class="text-center max-w-xs px-6" onclick="event.stopImmediatePropagation()">
                         <div class="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-amber-300 to-yellow-400 flex items-center justify-center mb-6 shadow-[0_0_80px_#fbbf24]">
-                            <span class="text-6xl">🏆</span>
+                            <i class="fas fa-trophy text-4xl text-black"></i>
                         </div>
                         
                         <div class="text-5xl font-black mb-1">LEVEL UP!</div>
@@ -2132,8 +2276,8 @@
                     
                     <div class="mt-10 inline-flex items-center gap-x-2 px-6 py-3 bg-[#1a1f2e] rounded-3xl text-sm border border-gray-700">
                         <div class="flex -space-x-2">
-                            <div class="w-7 h-7 bg-red-400 rounded-full flex items-center justify-center ring-2 ring-[#1a1f2e]"><span class="text-xs">🐼</span></div>
-                            <div class="w-7 h-7 bg-orange-400 rounded-full flex items-center justify-center ring-2 ring-[#1a1f2e]"><span class="text-xs">🔥</span></div>
+                            <div class="w-7 h-7 bg-red-400 rounded-full flex items-center justify-center ring-2 ring-[#1a1f2e]"><i class="fas fa-paw text-xs text-black"></i></div>
+                            <div class="w-7 h-7 bg-orange-400 rounded-full flex items-center justify-center ring-2 ring-[#1a1f2e]"><i class="fas fa-fire-alt text-xs text-black"></i></div>
                         </div>
                         <span class="text-gray-400">6 signature rivals • Grok-powered cinematics live</span>
                     </div>
@@ -3414,6 +3558,9 @@
             });
             
             // Special actions per section
+            if (section === 'fusion-lab') {
+                setTimeout(updateFusionFlowPaths, 50);
+            }
             if (section === 'collection') {
                 renderCollection();
             }
@@ -3664,6 +3811,9 @@
             
             wireNavLinkAccessibility();
             initKeyboardShortcuts();
+            if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+                window.addEventListener('resize', updateFusionFlowPaths);
+            }
             
             // Make sure fuse button starts disabled
             document.getElementById('fuse-btn').disabled = true;

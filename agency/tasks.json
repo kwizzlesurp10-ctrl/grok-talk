@@ -119,5 +119,27 @@
         "createdAt": "2026-06-16T19:50:00Z",
         "completedAt": "2026-06-16T19:59:59.324Z",
         "notes": "Completed after 0 fix retries. Trace recorded in traces/task_011.json."
+    },
+    {
+        "id": "task_012",
+        "title": "UI Holographic Enhancements",
+        "description": "Enhance Fusion Lab, Panda Training, and Codex views with pulsing energy lines, floating training stats, holographic card flashes, and dynamic type-color glow accents.",
+        "status": "completed",
+        "assignedTo": "developer",
+        "plan": "agency/plans/task_012.md",
+        "createdAt": "2026-06-16T20:10:00Z",
+        "completedAt": "2026-06-16T20:11:36.521Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_012.json."
+    },
+    {
+        "id": "task_013",
+        "title": "Visual Emoji Elimination Catch-Up",
+        "description": "Eliminate residual raw emojis from the visual interface (including dashboard challenge card, level up modals, and landing badge icons) and replace them with premium FontAwesome icons.",
+        "status": "completed",
+        "assignedTo": "developer",
+        "plan": "agency/plans/task_013.md",
+        "createdAt": "2026-06-16T20:13:00Z",
+        "completedAt": "2026-06-16T20:12:55.829Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_013.json."
     }
 ]

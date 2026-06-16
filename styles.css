@@ -619,6 +619,77 @@
             }
         }
 
+        /* Pulsing fusion path flow animation */
+        .pulse-flow-line {
+            stroke-dasharray: 12 24;
+            animation: flowDash 1.2s linear infinite;
+        }
+
+        @keyframes flowDash {
+            to {
+                stroke-dashoffset: -36;
+            }
+        }
+
+        /* Floating statistics indicators */
+        .float-up-stat {
+            animation: floatUp 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            opacity: 0;
+            position: absolute;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) translateY(10px) scale(0.7);
+            }
+            20% {
+                opacity: 1;
+                transform: translate(-50%, -50%) translateY(-10px) scale(1.2);
+            }
+            40% {
+                transform: translate(-50%, -50%) translateY(-15px) scale(1);
+            }
+            80% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) translateY(-35px) scale(0.95);
+            }
+        }
+
+        /* Holographic training flash card effect */
+        .holographic-flash {
+            animation: holoFlash 0.8s ease-out;
+        }
+
+        @keyframes holoFlash {
+            0% {
+                box-shadow: 0 0 0px transparent;
+                filter: brightness(1);
+            }
+            25% {
+                box-shadow: 0 0 30px var(--champion-color, #00f0ff), inset 0 0 20px var(--champion-color, #00f0ff);
+                filter: brightness(1.4) contrast(1.1);
+            }
+            100% {
+                box-shadow: 0 0 0px transparent;
+                filter: brightness(1);
+            }
+        }
+
+        /* Dynamic type-color hover glow overrides */
+        @media (hover: hover) and (pointer: fine) {
+            .panda-card:hover {
+                transform: scale(1.05) rotate(1deg);
+                box-shadow: 0 0 35px var(--champion-color, rgba(0, 255, 157, 0.3));
+                border-color: var(--champion-color, #00ff9d) !important;
+            }
+        }
+
         @media (prefers-reduced-motion: reduce) {
             *,
             *::before,
