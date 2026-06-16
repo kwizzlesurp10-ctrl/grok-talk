@@ -111,7 +111,22 @@ function makeDomStub() {
         "detail-panda-power-val",
         "detail-panda-level",
         "detail-panda-cost",
-        "train-panda-btn"
+        "train-panda-btn",
+        "section-arena",
+        "battle-log",
+        "battle-fighter-player",
+        "battle-fighter-enemy",
+        "battle-flash-player",
+        "battle-flash-enemy",
+        "battle-beam",
+        "battle-attack-btn",
+        "battle-special-btn",
+        "battle-hp-player-bar",
+        "battle-hp-player-text",
+        "battle-hp-enemy-bar",
+        "battle-hp-enemy-text",
+        "battle-round",
+        "battle-stage"
     ];
     for (const id of stubIds) {
         byId.set(id, el("div"));
@@ -592,6 +607,74 @@ async function runTests() {
         assert.equal(evolvedPanda.name, "Evolved Steam Hybrid");
         assert.equal(evolvedPanda.rarity, "epic");
         assert.equal(evolvedPanda.image, "assets/pandas/fusion_steam_evolved.jpg", "Evolved fusion should have evolved static image path");
+    }
+
+    // -------------------- TEST 13: Gameplay Points, Today's Challenge, and Arena Defeat Probability --------------------
+    {
+        const { read, write, gameState, userPandas } = runAppWithGameState({
+            level: 1,
+            xp: 9900,
+            ep: 100,
+            lifetimeEarnedXp: 500,
+            fireChallengeFusions: 3
+        });
+
+        // 1. Claim Daily Challenge rewards
+        const claimDailyChallenge = read("claimDailyChallenge");
+        claimDailyChallenge();
+
+        assert.equal(gameState.ep, 600, "Daily challenge should award +500 EP");
+        // XP went from 9900 + 280 = 10180. Level up triggers: level becomes 2, XP becomes 180.
+        assert.equal(gameState.level, 2, "Daily challenge XP reward should trigger account level up");
+        assert.equal(gameState.xp, 180, "XP remainder after level up should be 180");
+        assert.equal(gameState.lifetimeEarnedXp, 780, "Lifetime XP should be correctly incremented by 280");
+
+        // Verify the rewarded Blaze Guardian panda exists and has its image property set
+        const rewarded = userPandas.find(p => p.name === "Blaze Guardian");
+        assert.ok(rewarded, "Blaze Guardian panda should be rewarded and added to collection");
+        assert.equal(rewarded.type, "Fire");
+        assert.ok(rewarded.image, "Rewarded panda should have a procedural image path defined");
+        assert.ok(rewarded.image.includes("fusion_inferno.jpg"), "Procedural image path should map to inferno static asset");
+
+        // 2. Arena Battle Opponent Scaling Test
+        const __createBattleMatch = read("__createBattleMatch");
+
+        // Test with a low-level champion
+        const lowLvlChamp = { name: "Starter Classic", power: 12, level: 1 };
+        const lowMatch = __createBattleMatch(lowLvlChamp, "void-howler");
+
+        // Test with a high-level champion
+        const highLvlChamp = { name: "Omega Plasma", power: 180, level: 10 };
+        const highMatch = __createBattleMatch(highLvlChamp, "void-howler");
+
+        // Asserts on difficulty scaling
+        assert.ok(highMatch.enemyMax > lowMatch.enemyMax, "Opponent Max HP should scale higher for a stronger champion");
+        assert.ok(highMatch.enemyBaseDamage > lowMatch.enemyBaseDamage, "Opponent base damage should scale higher for a stronger champion");
+        assert.ok(highMatch.enemyLevel > lowMatch.enemyLevel, "Opponent level should scale based on champion level");
+
+        // 3. Battle Defeat Scenario Test
+        // Mock a battle where the player has low HP and the enemy deals high damage
+        const weakChamp = { name: "Weak Champion", power: 10, level: 1 };
+        const battle = __createBattleMatch(weakChamp, "nexus-bear"); // nexus-bear is HARD difficulty
+        battle.playerCur = 5; // extremely low HP
+        battle.playerBaseDamage = 0; // ensure player doesn't defeat the enemy
+        battle.enemyCur = 100; // enemy has plenty of health
+        battle.enemyBaseDamage = 30; // very high opponent damage
+        
+        write("__activeBattle", battle);
+        
+        const simulateBattleAttack = read("simulateBattleAttack");
+        
+        // Mock failure cinematics to prevent errors
+        write("showInArenaFailureCinematic", () => {});
+        write("showFailureCinematic", () => {});
+
+        // Run attack simulation (will trigger player's turn, then enemy's turn resulting in player defeat)
+        await simulateBattleAttack(null, false);
+
+        const finalBattle = read("__activeBattle");
+        assert.equal(finalBattle.playerCur, 0, "Player HP should be reduced to 0 upon defeat");
+        assert.ok(finalBattle.ended, "Battle state should mark the combat as ended");
     }
 
     process.stdout.write("mechanics ok\n");

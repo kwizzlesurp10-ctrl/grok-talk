@@ -1222,7 +1222,7 @@
             if (t === 'steam') species = 'steam';
             else if (t === 'eclipse') species = 'eclipse';
             else if (t === 'plasma') species = 'plasma';
-            else if (t === 'inferno mystic') species = 'inferno';
+            else if (t === 'inferno mystic' || t === 'fire' || cleanEmoji.includes('🔥')) species = 'inferno';
             else if (t === 'dark' || cleanEmoji.includes('🕳️')) species = 'void';
             else if (t === 'light' || cleanEmoji.includes('☀️') || t === 'solar') species = 'solar';
             else if (t === 'mythic' || cleanEmoji.includes('👑')) species = 'quantum';
@@ -1667,6 +1667,7 @@
                 color: "#f97316",
                 level: 1,
                 desc: "Rewarded for completing today's Inferno Fusion challenge. A loyal guardian of the flame.",
+                image: generateProceduralPandaImage("🦍🔥", "Fire", "#f97316", "rare"),
                 acquired: new Date().toISOString().split('T')[0]
             };
             
@@ -1684,7 +1685,9 @@
                 rewardModal.className = `fixed inset-0 z-[140] flex items-center justify-center bg-black/70`;
                 rewardModal.innerHTML = `
                     <div class="cyber-card max-w-xs w-full mx-4 rounded-3xl p-8 text-center border border-amber-400">
-                        <div class="text-7xl mb-4">🦍🔥</div>
+                        <div class="mb-4">
+                            <img src="${rewardPanda.image}" alt="${rewardPanda.name}" class="w-32 h-32 rounded-3xl object-cover border border-white/10 shadow-2xl mx-auto">
+                        </div>
                         <div class="font-black text-2xl">NEW PANDA UNLOCKED!</div>
                         <div class="mt-1 text-amber-400">Blaze Guardian</div>
                         
@@ -1837,15 +1840,7 @@
             const playerLevel = Math.max(0, Number(gameState.level) || 0);
             const champion = selectedChampion || [...userPandas].sort((a, b) => (b.power || 0) - (a.power || 0))[0] || basePandas[0];
             const championPower = Math.max(1, Number(champion.power) || 1);
-            const enemyLevelFloor = Math.max(0, playerLevel - 1);
-            const enemyLevelCeil = Math.max(enemyLevelFloor, playerLevel + (playerLevel < 3 ? 0 : 1));
-            const enemyLevel = enemyLevelFloor + Math.floor(Math.random() * (enemyLevelCeil - enemyLevelFloor + 1));
-            const playerMax = 120 + Math.floor(championPower * 2.2) + playerLevel * 9;
-            const enemyMax = Math.max(72, Math.floor(playerMax * (playerLevel < 3 ? 0.55 : 0.72)));
-            let playerBaseDamage = Math.max(16, Math.floor(championPower * 0.8) + 12 + playerLevel);
-            const trainingLvl = (gameState.upgrades && gameState.upgrades.training) || 0;
-            playerBaseDamage = Math.floor(playerBaseDamage * (1 + trainingLvl * 0.05));
-            const enemyBaseDamage = Math.max(7, Math.floor(playerBaseDamage * (playerLevel < 3 ? 0.48 : 0.64)));
+            const championLevel = Math.max(1, Number(champion.level) || 1);
 
             // Pick a named rival from the roster (using new Grok-generated arts + lore)
             let rival;
@@ -1854,6 +1849,36 @@
             } else {
                 rival = BATTLE_RIVALS[Math.floor(Math.random() * BATTLE_RIVALS.length)];
             }
+
+            // Adjust difficulty scaling based on rival's difficulty tier
+            let diffMult = 1.0;
+            if (rival.difficulty === 'INTRO') {
+                diffMult = 0.75;
+            } else if (rival.difficulty === 'MEDIUM') {
+                diffMult = 1.0;
+            } else if (rival.difficulty === 'HARD') {
+                diffMult = 1.25;
+            }
+
+            // Scale opponent level based on a combination of selected Champion's Level and Player Account Level
+            const combinedLevel = Math.max(1, Math.floor((championLevel + playerLevel) / 2));
+            const enemyLevelFloor = Math.max(1, combinedLevel - 1);
+            const enemyLevelCeil = combinedLevel + (combinedLevel < 3 ? 0 : 1);
+            const enemyLevel = enemyLevelFloor + Math.floor(Math.random() * (enemyLevelCeil - enemyLevelFloor + 1));
+
+            const playerMax = 120 + Math.floor(championPower * 2.2) + playerLevel * 9;
+
+            // Opponent HP scales with champion power, player account level, rival difficulty tier, and a random variance (+/- 15%)
+            const hpVariance = 0.85 + Math.random() * 0.3; // 0.85 to 1.15
+            const enemyMax = Math.max(72, Math.floor(playerMax * (playerLevel < 3 ? 0.65 : 0.85) * diffMult * hpVariance));
+
+            let playerBaseDamage = Math.max(16, Math.floor(championPower * 0.8) + 12 + playerLevel);
+            const trainingLvl = (gameState.upgrades && gameState.upgrades.training) || 0;
+            playerBaseDamage = Math.floor(playerBaseDamage * (1 + trainingLvl * 0.05));
+
+            // Opponent damage scales with player base damage, rival difficulty tier, and a random variance (+/- 15%)
+            const dmgVariance = 0.85 + Math.random() * 0.3; // 0.85 to 1.15
+            const enemyBaseDamage = Math.max(7, Math.floor(playerBaseDamage * (playerLevel < 3 ? 0.55 : 0.75) * diffMult * dmgVariance));
 
             return {
                 playerCur: playerMax,
@@ -1878,7 +1903,7 @@
                 enemyFailureVideo: rival.failureVideo || null,
                 enemyKeyart: rival.keyart || rival.art,
                 enemyLevel,
-                enemyPower: Math.max(6, Math.floor(championPower * (playerLevel < 3 ? 0.72 : 0.9))),
+                enemyPower: Math.max(6, Math.floor(championPower * (playerLevel < 3 ? 0.72 : 0.9) * diffMult * (0.9 + Math.random() * 0.2))),
                 playerBaseDamage,
                 enemyBaseDamage,
             };
