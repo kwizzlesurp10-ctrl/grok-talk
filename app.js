@@ -248,7 +248,7 @@
                 const el = document.createElement('div');
                 el.className = `flex items-center gap-x-4 p-3 hover:bg-[#1a1f2e] rounded-2xl transition-colors cursor-pointer`;
                 el.innerHTML = `
-                    <div class="text-4xl flex-shrink-0">${fusion.emoji}</div>
+                    <img src="${fusion.image || 'assets/pandas/fusion_celestial.jpg'}" alt="${fusion.name}" class="w-10 h-10 rounded-xl object-cover flex-shrink-0 border border-white/10 shadow-sm">
                     <div class="flex-1 min-w-0">
                         <div class="font-semibold">${fusion.name}</div>
                         <div class="text-xs text-gray-400 flex items-center gap-x-2">
@@ -276,9 +276,7 @@
                 const card = document.createElement('div');
                 card.className = `panda-card cyber-card rounded-2xl p-3 border border-gray-700 cursor-pointer flex flex-col items-center text-center ${!isUnlocked ? 'opacity-60' : ''}`;
                 
-                const visualHtml = panda.image 
-                    ? `<img src="${panda.image}" alt="${panda.name}" class="w-12 h-12 rounded-xl object-cover mb-2 border border-white/10 transition-transform">`
-                    : `<div class="text-5xl mb-2 transition-transform">${panda.emoji}</div>`;
+                const visualHtml = `<img src="${panda.image}" alt="${panda.name}" class="w-12 h-12 rounded-xl object-cover mb-2 border border-white/10 transition-transform">`;
                 
                 card.innerHTML = `
                     ${visualHtml}
@@ -340,9 +338,7 @@
                 card.className = `panda-card cyber-card rounded-3xl p-4 border border-gray-700 cursor-pointer group`;
                 
                 const rarityColor = getRarityColor(panda.rarity);
-                const visualHtml = panda.image 
-                    ? `<img src="${panda.image}" alt="${panda.name}" class="w-16 h-16 rounded-2xl object-cover mb-3 border border-white/10 transition-all group-hover:scale-110">`
-                    : `<div class="text-6xl mb-3 transition-all group-hover:scale-110">${panda.emoji}</div>`;
+                const visualHtml = `<img src="${panda.image}" alt="${panda.name}" class="w-16 h-16 rounded-2xl object-cover mb-3 border border-white/10 transition-all group-hover:scale-110">`;
                 
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
@@ -608,7 +604,7 @@
                 const chip = document.createElement("button");
                 chip.type = "button";
                 chip.className = "flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-2xl border border-gray-700 bg-[#1a1f2e] hover:border-purple-400/50 text-left";
-                chip.innerHTML = "<span class=\"text-2xl\">" + p.emoji + "</span><span class=\"text-xs font-semibold max-w-[7rem] truncate\">" + p.name + "</span>";
+                chip.innerHTML = "<img src=\"" + p.image + "\" alt=\"" + p.name + "\" class=\"w-6 h-6 rounded-lg object-cover border border-white/10\"><span class=\"text-xs font-semibold max-w-[7rem] truncate\">" + p.name + "</span>";
                 el.appendChild(chip);
             });
         }
@@ -790,10 +786,7 @@
                             <button onclick="event.target.closest('.fixed').remove()" class="absolute top-6 right-6 text-gray-400 hover:text-white text-2xl">×</button>
                             
                             <div class="flex justify-center mb-4">
-                                ${entry.image 
-                                    ? `<img src="${entry.image}" alt="${entry.name}" class="w-32 h-32 rounded-3xl object-cover border border-white/10 shadow-2xl transition-transform">`
-                                    : `<div class="text-[140px]">${entry.emoji}</div>`
-                                }
+                                <img src="${entry.image}" alt="${entry.name}" class="w-32 h-32 rounded-3xl object-cover border border-white/10 shadow-2xl transition-transform">
                             </div>
                             
                             <div class="text-center">
@@ -848,10 +841,7 @@
                             </button>
                             
                             <div class="flex justify-center">
-                                ${panda.image 
-                                    ? `<img src="${panda.image}" alt="${panda.name}" class="w-32 h-32 rounded-3xl object-cover border border-white/10 transition-all">`
-                                    : `<div class="text-[130px] transition-all">${panda.emoji}</div>`
-                                }
+                                <img src="${panda.image}" alt="${panda.name}" class="w-32 h-32 rounded-3xl object-cover border border-white/10 transition-all">
                             </div>
                             
                             <div class="text-center mt-1">
@@ -964,9 +954,7 @@
                 card.className = `panda-card cyber-card rounded-2xl p-4 border border-gray-700 cursor-pointer hover:border-emerald-400 flex flex-col`;
                 
                 const rarityColor = getRarityColor(panda.rarity);
-                const visualHtml = panda.image 
-                    ? `<img src="${panda.image}" alt="${panda.name}" class="w-12 h-12 rounded-xl object-cover mb-2 border border-white/10">`
-                    : `<div class="text-5xl mb-2">${panda.emoji}</div>`;
+                const visualHtml = `<img src="${panda.image}" alt="${panda.name}" class="w-12 h-12 rounded-xl object-cover mb-2 border border-white/10">`;
                 
                 card.innerHTML = `
                     <div class="flex justify-between">
@@ -1018,10 +1006,7 @@
             // Update slot UI
             slotEl.innerHTML = `
                 <div class="p-5 w-full flex flex-col items-center justify-center text-center">
-                    ${panda.image 
-                        ? `<img src="${panda.image}" alt="${panda.name}" class="w-20 h-20 rounded-2xl object-cover mb-3 border border-white/10 shadow-md">`
-                        : `<div class="text-7xl mb-3 transition-all">${panda.emoji}</div>`
-                    }
+                    <img src="${panda.image}" alt="${panda.name}" class="w-20 h-20 rounded-2xl object-cover mb-3 border border-white/10 shadow-md">
                     <div class="font-black text-xl">${panda.name}</div>
                     <div class="flex items-center gap-x-2 mt-1">
                         <span class="px-3 py-px text-xs rounded-full" style="background: ${panda.color}25; color: ${panda.color}">${panda.type}</span>
@@ -1208,6 +1193,7 @@
                 gameState.recentFusions.unshift({
                     name: newPanda.name,
                     emoji: newPanda.emoji,
+                    image: newPanda.image,
                     power: newPanda.power,
                     time: "just now"
                 });
@@ -1227,82 +1213,27 @@
         }
 
         function generateProceduralPandaImage(emoji, type, color, rarity) {
-            if (typeof document === 'undefined' || typeof document.createElement !== 'function') {
-                return null;
-            }
-            try {
-                const canvas = document.createElement('canvas');
-                if (!canvas || typeof canvas.getContext !== 'function') {
-                    return null;
-                }
-                canvas.width = 256;
-                canvas.height = 256;
-                const ctx = canvas.getContext('2d');
-                if (!ctx) return null;
-                
-                // Draw background radial gradient
-                const grad = ctx.createRadialGradient(128, 128, 20, 128, 128, 150);
-                grad.addColorStop(0, '#1a1d24');
-                grad.addColorStop(1, '#0b0c10');
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, 256, 256);
-                
-                // Draw background grid lines (cyber style)
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
-                ctx.lineWidth = 1;
-                for (let i = 16; i < 256; i += 16) {
-                    ctx.beginPath();
-                    ctx.moveTo(i, 0);
-                    ctx.lineTo(i, 256);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(0, i);
-                    ctx.lineTo(256, i);
-                    ctx.stroke();
-                }
-
-                // Glow border using rarity/type color
-                const themeColor = color || '#64748b';
-                ctx.strokeStyle = themeColor + '55';
-                ctx.lineWidth = 8;
-                ctx.strokeRect(10, 10, 236, 236);
-                
-                // Solid border
-                ctx.strokeStyle = themeColor;
-                ctx.lineWidth = 2;
-                ctx.strokeRect(14, 14, 228, 228);
-
-                // Cyber-decors (circles)
-                ctx.strokeStyle = themeColor + '33';
-                ctx.beginPath();
-                ctx.arc(128, 128, 80, 0, Math.PI * 2);
-                ctx.stroke();
-                
-                ctx.beginPath();
-                ctx.arc(128, 128, 90, 0, Math.PI * 2);
-                ctx.stroke();
-
-                // Draw Type text at the top
-                ctx.fillStyle = '#ffffff';
-                ctx.font = 'bold 12px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(type ? type.toUpperCase() : 'HYBRID', 128, 32);
-
-                // Draw Rarity text at the bottom
-                ctx.fillStyle = themeColor;
-                ctx.font = 'bold 11px sans-serif';
-                ctx.fillText(rarity ? rarity.toUpperCase() : 'UNKNOWN', 128, 230);
-
-                // Draw Central Emoji
-                ctx.font = '80px sans-serif';
-                ctx.textBaseline = 'middle';
-                ctx.textAlign = 'center';
-                ctx.fillText(emoji || '🐼', 128, 128);
-
-                return canvas.toDataURL('image/jpeg', 0.85);
-            } catch (e) {
-                return null;
-            }
+            const isEvolved = emoji && emoji.endsWith('✨');
+            const cleanEmoji = emoji ? emoji.replace('✨', '') : '';
+            const t = type ? type.toLowerCase() : '';
+            
+            let species = 'celestial'; // fallback
+            
+            if (t === 'steam') species = 'steam';
+            else if (t === 'eclipse') species = 'eclipse';
+            else if (t === 'plasma') species = 'plasma';
+            else if (t === 'inferno mystic') species = 'inferno';
+            else if (t === 'dark' || cleanEmoji.includes('🕳️')) species = 'void';
+            else if (t === 'light' || cleanEmoji.includes('☀️') || t === 'solar') species = 'solar';
+            else if (t === 'mythic' || cleanEmoji.includes('👑')) species = 'quantum';
+            else if (t === 'arcane' || cleanEmoji.includes('🔮') || cleanEmoji.includes('🌀')) species = 'chaos';
+            else if (t === 'ice' || cleanEmoji.includes('❄️')) species = 'frost';
+            else if (t === 'balanced' || cleanEmoji.includes('🌿') || cleanEmoji.includes('🌿🐼') || cleanEmoji.includes('🐼') || cleanEmoji.includes('🔴')) species = 'bamboo';
+            else if (t === 'crystal' || cleanEmoji.includes('🌌') || cleanEmoji.includes('💎')) species = 'nebula';
+            else if (t === 'hybrid' || cleanEmoji.includes('🌈')) species = 'celestial';
+            
+            const suffix = isEvolved ? '_evolved' : '';
+            return `assets/pandas/fusion_${species}${suffix}.jpg`;
         }
 
         function createFusionResult(pandaA, pandaB, mode = 'basic') {
@@ -1458,11 +1389,7 @@
         function showFusionResult(newPanda) {
             const modal = document.getElementById('fusion-result-modal');
             
-            if (newPanda.image) {
-                document.getElementById('fusion-result-emoji').innerHTML = `<img src="${newPanda.image}" alt="${newPanda.name}" class="w-32 h-32 rounded-3xl object-cover border border-white/10 shadow-2xl mx-auto">`;
-            } else {
-                document.getElementById('fusion-result-emoji').innerHTML = newPanda.emoji;
-            }
+            document.getElementById('fusion-result-emoji').innerHTML = `<img src="${newPanda.image}" alt="${newPanda.name}" class="w-32 h-32 rounded-3xl object-cover border border-white/10 shadow-2xl mx-auto">`;
             document.getElementById('fusion-result-name').innerText = newPanda.name;
             document.getElementById('fusion-result-type').innerText = newPanda.type.toUpperCase();
             document.getElementById('fusion-result-power').innerText = newPanda.power;
@@ -1614,11 +1541,7 @@
             // Update modal live
             document.getElementById('fusion-result-name').innerText = current.name;
             document.getElementById('fusion-result-power').innerText = current.power;
-            if (current.image) {
-                document.getElementById('fusion-result-emoji').innerHTML = `<img src="${current.image}" alt="${current.name}" class="w-32 h-32 rounded-3xl object-cover border border-white/10 shadow-2xl mx-auto">`;
-            } else {
-                document.getElementById('fusion-result-emoji').innerHTML = current.emoji;
-            }
+            document.getElementById('fusion-result-emoji').innerHTML = `<img src="${current.image}" alt="${current.name}" class="w-32 h-32 rounded-3xl object-cover border border-white/10 shadow-2xl mx-auto">`;
             
             const rarityColor = getRarityColor(current.rarity);
             document.getElementById('fusion-result-rarity').innerText = current.rarity.toUpperCase();
@@ -1999,7 +1922,7 @@
                                         onclick="startDemoBattle(${index})"
                                         class="cyber-card text-left rounded-3xl p-5 border border-gray-700 hover:border-red-400 transition-all group">
                                     <div class="flex items-start gap-4">
-                                        <div class="text-6xl transition-transform group-hover:scale-110" aria-hidden="true">${panda.emoji || "🐼"}</div>
+                                        <img src="${panda.image || 'assets/pandas/classic_panda.jpg'}" alt="${panda.name}" class="w-16 h-16 rounded-2xl object-cover flex-shrink-0 border border-white/10 shadow-md transition-all group-hover:scale-110">
                                         <div class="min-w-0 flex-1">
                                             <div class="font-black text-xl truncate">${__escapeBattleText(panda.name || "Unknown Panda")}</div>
                                             <div class="flex flex-wrap gap-2 mt-2 text-[10px] font-bold">
@@ -2146,11 +2069,7 @@
                             <div class="battle-anim-flash battle-anim-flash--emerald pointer-events-none" id="battle-flash-player" aria-hidden="true"></div>
                             <div class="text-xs mb-1 text-emerald-400">YOUR CHAMPION</div>
                             <div class="mb-2 min-h-[5rem] flex items-center justify-center relative" aria-hidden="true" style="background: radial-gradient(circle at 50% 40%, rgba(0,0,0,0.1), transparent);">
-                                ${battle.playerImage ? `
-                                    <img src="${battle.playerImage}" alt="${safePlayerName}" class="max-h-28 md:max-h-32 w-auto rounded-2xl object-cover shadow-lg border border-white/10" style="max-width: 70%;" id="battle-image-player"/>
-                                ` : `
-                                    <span class="battle-fighter__emoji text-6xl sm:text-8xl" id="battle-emoji-player">${battle.playerEmoji}</span>
-                                `}
+                                <img src="${battle.playerImage || 'assets/pandas/classic_panda.jpg'}" alt="${safePlayerName}" class="max-h-28 md:max-h-32 w-auto rounded-2xl object-cover shadow-lg border border-white/10" style="max-width: 70%;" id="battle-image-player"/>
                             </div>
                             <div class="font-black text-lg md:text-2xl">${safePlayerName}</div>
                             <div class="text-xs sm:text-sm text-emerald-400/90 mb-3">LVL ${battle.playerLevel} · ${battle.playerPower} PWR</div>
@@ -2175,11 +2094,7 @@
                             <div class="battle-anim-flash battle-anim-flash--red pointer-events-none" id="battle-flash-enemy" aria-hidden="true"></div>
                             <div class="text-xs mb-1 text-red-400">RIVAL</div>
                             <div class="mb-2 min-h-[5rem] flex items-center justify-center relative" aria-hidden="true" style="background: radial-gradient(circle at 50% 40%, rgba(0,0,0,0.1), transparent);">
-                                ${battle.enemyArt ? `
-                                    <img src="${battle.enemyArt}" alt="${safeEnemyName}" class="max-h-28 md:max-h-32 w-auto rounded-2xl object-cover shadow-lg border border-white/10" style="max-width: 70%;"/>
-                                ` : `
-                                    <span class="battle-fighter__emoji text-6xl sm:text-8xl" id="battle-emoji-enemy">${battle.enemyEmoji}</span>
-                                `}
+                                <img src="${battle.enemyArt || 'assets/pandas/classic_panda.jpg'}" alt="${safeEnemyName}" class="max-h-28 md:max-h-32 w-auto rounded-2xl object-cover shadow-lg border border-white/10" style="max-width: 70%;"/>
                             </div>
                             <div class="font-black text-lg md:text-2xl">${safeEnemyName}</div>
                             ${battle.enemySubtitle ? `<div class="text-[10px] text-red-300/80 -mt-0.5 mb-1">${__escapeBattleText(battle.enemySubtitle)}</div>` : ''}
