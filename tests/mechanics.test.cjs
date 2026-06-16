@@ -495,6 +495,93 @@ async function runTests() {
         assert.equal(result.type, "Balanced");
     }
 
+    // -------------------- TEST 10: Base Pandas Image Property --------------------
+    {
+        const { read } = runAppWithGameState();
+        const basePandas = read("basePandas");
+        
+        assert.ok(Array.isArray(basePandas), "basePandas should be an array");
+        assert.equal(basePandas.length, 9, "There should be exactly 9 base pandas");
+        
+        basePandas.forEach(p => {
+            assert.ok(p.image, `Base panda ${p.name} is missing the image property`);
+            assert.ok(typeof p.image === "string", `Base panda ${p.name} image should be a string`);
+            assert.ok(p.image.startsWith("assets/pandas/"), `Base panda ${p.name} image path should start with assets/pandas/`);
+            assert.ok(p.image.endsWith(".jpg"), `Base panda ${p.name} image should be a .jpg file`);
+        });
+    }
+
+    // -------------------- TEST 11: Procedural Card Art Generator --------------------
+    {
+        const { read, sandbox, gameState } = runAppWithGameState();
+        const generateProceduralPandaImage = read("generateProceduralPandaImage");
+        const createFusionResult = read("createFusionResult");
+        const loadGameState = read("loadGameState");
+
+        // 1. Assert generateProceduralPandaImage returns null in headless Node without throwing exceptions
+        let imgResult = null;
+        assert.doesNotThrow(() => {
+            imgResult = generateProceduralPandaImage("🌋", "Steam", "#22d3ee", "epic");
+        }, "generateProceduralPandaImage threw an error in headless Node");
+        assert.equal(imgResult, null, "generateProceduralPandaImage should return null in headless Node environment");
+
+        // 2. Assert createFusionResult generates a fusion with the image property (which will be null in headless Node)
+        const classicPanda = { name: "Classic Panda", emoji: "🐼", type: "Balanced", power: 12, rarity: "common" };
+        const infernoPanda = { name: "Inferno Panda", emoji: "🔥🐼", type: "Fire", power: 18, rarity: "rare" };
+        const result = createFusionResult(classicPanda, infernoPanda, "basic");
+        assert.ok(Object.prototype.hasOwnProperty.call(result, "image"), "Fusion result should have an 'image' property");
+        
+        // 3. Test migration: mock a fusion in local storage with missing/null image, and verify loadGameState attempts to generate image
+        let mockCanvasCalled = false;
+        const originalCreateElement = sandbox.document.createElement;
+        sandbox.document.createElement = function(tag) {
+            if (tag === 'canvas') {
+                mockCanvasCalled = true;
+                return {
+                    getContext: () => ({
+                        createRadialGradient: () => ({ addColorStop() {} }),
+                        fillRect() {},
+                        strokeRect() {},
+                        beginPath() {},
+                        moveTo() {},
+                        lineTo() {},
+                        stroke() {},
+                        arc() {},
+                        fillText() {}
+                    }),
+                    toDataURL: () => "data:image/jpeg;base64,mockdata"
+                };
+            }
+            return originalCreateElement.call(sandbox.document, tag);
+        };
+
+        const oldState = {
+            level: 3,
+            fusions: 10,
+            collection: [
+                { id: 'f12345', name: "Steam Classic", emoji: "🌋", type: "Steam", power: 50, rarity: "epic", image: null },
+                { id: 'f67890', name: "Red Fire Hybrid", emoji: "🔴🐼", type: "Balanced", power: 45, rarity: "epic", image: "null" },
+                { id: 'u1', name: "Classic Panda", emoji: "🐼", type: "Balanced", power: 12, rarity: "common", image: null }
+            ]
+        };
+        sandbox.localStorage.setItem("fusionPandaMaster", JSON.stringify(oldState));
+        
+        loadGameState();
+        
+        const userPandas = read("userPandas");
+        const migratedFusionNull = userPandas.find(p => p.id === 'f12345');
+        const migratedFusionStrNull = userPandas.find(p => p.id === 'f67890');
+        const restoredBase = userPandas.find(p => p.id === 'u1');
+
+        assert.ok(mockCanvasCalled, "Should have called canvas generator to migrate missing fusion image");
+        assert.equal(migratedFusionNull.image, "data:image/jpeg;base64,mockdata", "Missing fusion image (null) should be migrated");
+        assert.equal(migratedFusionStrNull.image, "data:image/jpeg;base64,mockdata", "Missing fusion image ('null' string) should be migrated");
+        assert.equal(restoredBase.image, "assets/pandas/classic_panda.jpg", "Base panda image should be restored to static path");
+
+        // Clean up mock
+        sandbox.document.createElement = originalCreateElement;
+    }
+
     process.stdout.write("mechanics ok\n");
 }
 
