@@ -2454,6 +2454,126 @@
             __syncBattleHpBars();
         }
 
+        function triggerSpecialActionClips(battle, attackName) {
+            if (typeof document === 'undefined' || typeof document.createElement !== 'function') {
+                return;
+            }
+            const stage = document.getElementById('battle-stage');
+            if (!stage) return;
+
+            const shapes = [
+                {
+                    name: 'hexagon',
+                    clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)',
+                    width: '150px',
+                    height: '130px',
+                    left: '8%',
+                    top: '12%',
+                    panClass: 'action-pan-1',
+                    rotate: '-6deg'
+                },
+                {
+                    name: 'rhombus',
+                    clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+                    width: '130px',
+                    height: '130px',
+                    left: '70%',
+                    top: '10%',
+                    panClass: 'action-pan-2',
+                    rotate: '8deg'
+                },
+                {
+                    name: 'octagon',
+                    clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)',
+                    width: '160px',
+                    height: '160px',
+                    left: '38%',
+                    top: '25%',
+                    panClass: 'action-pan-3',
+                    rotate: '2deg'
+                },
+                {
+                    name: 'trapezoid',
+                    clipPath: 'polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)',
+                    width: '140px',
+                    height: '110px',
+                    left: '6%',
+                    top: '52%',
+                    panClass: 'action-pan-4',
+                    rotate: '-10deg'
+                },
+                {
+                    name: 'triangle',
+                    clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+                    width: '130px',
+                    height: '130px',
+                    left: '72%',
+                    top: '48%',
+                    panClass: 'action-pan-5',
+                    rotate: '12deg'
+                }
+            ];
+
+            const championColor = battle.playerRarity ? getRarityColor(battle.playerRarity) : '#d946ef';
+            const championImage = battle.playerImage || 'assets/pandas/classic_panda.jpg';
+
+            shapes.forEach((shape, index) => {
+                setTimeout(() => {
+                    const popup = document.createElement('div');
+                    popup.className = 'special-clip-popup absolute pointer-events-none border-2';
+                    popup.setAttribute('data-testid', 'special-popup');
+                    popup.style.width = shape.width;
+                    popup.style.height = shape.height;
+                    popup.style.left = shape.left;
+                    popup.style.top = shape.top;
+                    popup.style.clipPath = shape.clipPath;
+                    popup.style.borderColor = championColor;
+                    popup.style.boxShadow = `0 0 20px ${championColor}80`;
+                    popup.style.transform = `scale(0) rotate(${shape.rotate})`;
+                    popup.style.transition = 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease';
+                    popup.style.zIndex = '100';
+                    popup.style.opacity = '0';
+                    popup.style.background = '#06060c';
+                    popup.style.overflow = 'hidden';
+
+                    popup.innerHTML = `
+                        <div class="relative w-full h-full flex items-center justify-center">
+                            <div class="absolute inset-0 opacity-20" style="background-color: ${championColor}"></div>
+                            
+                            <img src="${championImage}" alt="" 
+                                 class="w-full h-full object-cover ${shape.panClass}" 
+                                 style="max-width: none; max-height: none; filter: contrast(1.3) brightness(1.2);">
+                            
+                            <div class="absolute inset-0 bg-scanlines pointer-events-none opacity-30"></div>
+                            
+                            <div class="absolute bottom-1 px-1.5 py-0.5 rounded text-[7px] font-black font-mono tracking-wider text-white whitespace-nowrap bg-black/80 border border-white/10">
+                                ${index % 2 === 0 ? attackName.toUpperCase() : 'SURGE ACTIVE'}
+                            </div>
+                            
+                            <div class="absolute inset-0 bg-white opacity-0 animate-rapid-flash pointer-events-none"></div>
+                        </div>
+                    `;
+
+                    stage.appendChild(popup);
+
+                    void popup.offsetWidth;
+                    popup.style.transform = `scale(1) rotate(${shape.rotate})`;
+                    popup.style.opacity = '1';
+
+                    setTimeout(() => {
+                        if (popup && popup.parentElement) {
+                            popup.style.transform = `scale(0) rotate(${shape.rotate})`;
+                            popup.style.opacity = '0';
+                            setTimeout(() => {
+                                if (popup && popup.parentElement) popup.remove();
+                            }, 250);
+                        }
+                    }, 850);
+
+                }, index * 80);
+            });
+        }
+
         async function simulateBattleAttack(element, isSpecial = false, customMoveName = null) {
             const b = window.__activeBattle;
             const log = document.getElementById("battle-log");
@@ -2475,6 +2595,9 @@
             const dmg = isSpecial
                 ? Math.floor(Math.random() * 14) + b.playerBaseDamage + 12
                 : Math.floor(Math.random() * 10) + b.playerBaseDamage;
+            if (isSpecial) {
+                triggerSpecialActionClips(b, attackName);
+            }
             pCard.classList.add("battle-anim-attack-left");
             __resetBeam(beam);
             if (beam) {

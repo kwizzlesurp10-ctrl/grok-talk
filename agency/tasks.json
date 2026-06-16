@@ -141,5 +141,16 @@
         "createdAt": "2026-06-16T20:13:00Z",
         "completedAt": "2026-06-16T20:12:55.829Z",
         "notes": "Completed after 0 fix retries. Trace recorded in traces/task_013.json."
+    },
+    {
+        "id": "task_014",
+        "title": "Special Move Action Popups",
+        "description": "Create multiple absolute pop-up windows in different shapes (clip-paths) and small sizes displaying stop-motion high-speed panning action sequences of the selected champion when executing a special move.",
+        "status": "completed",
+        "assignedTo": "developer",
+        "plan": "agency/plans/task_014.md",
+        "createdAt": "2026-06-16T20:20:00Z",
+        "completedAt": "2026-06-16T20:20:43.622Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_014.json."
     }
 ]

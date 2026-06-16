@@ -808,6 +808,42 @@ async function runTests() {
         assert.ok(!appJs.includes('<span class="text-xs">🔥</span>'), "🔥 emoji badge should be eliminated from battle arena landing in app.js");
     }
 
+    // -------------------- TEST 17: Special Move Action Popups --------------------
+    {
+        const { read, write, sandbox } = runAppWithGameState();
+        const __createBattleMatch = read("__createBattleMatch");
+        const simulateBattleAttack = read("simulateBattleAttack");
+        
+        const weakChamp = { name: "Thunder Spark", power: 10, level: 1, type: "Electric", rarity: "rare", image: "assets/pandas/thunder_panda.jpg" };
+        const battle = __createBattleMatch(weakChamp, "void-howler");
+        battle.playerCur = 100;
+        battle.enemyCur = 100;
+        battle.playerBaseDamage = 10;
+        
+        write("__activeBattle", battle);
+        
+        const originalSetTimeout = sandbox.setTimeout;
+        sandbox.setTimeout = (fn, delay) => {
+            fn();
+            return 1;
+        };
+        
+        const stage = sandbox.document.getElementById('battle-stage');
+        assert.ok(stage, "battle-stage should exist in mock DOM");
+        stage.children = [];
+        
+        simulateBattleAttack(null, true, "Thunder Volt Strike");
+        
+        sandbox.setTimeout = originalSetTimeout;
+        
+        const popups = stage.children.filter(c => c.tag === 'div' && c.className.includes('special-clip-popup'));
+        assert.equal(popups.length, 5, "Exactly 5 special action popups should be spawned in the battle stage");
+        
+        const firstPopup = popups[0];
+        assert.ok(firstPopup.style.clipPath.includes("polygon"), "Popup should have a clip-path polygon defined");
+        assert.equal(firstPopup.style.borderColor, "#22d3ee", "Popup border color should match the rare champion color (#22d3ee)");
+    }
+
     process.stdout.write("mechanics ok\n");
 }
 
