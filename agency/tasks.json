@@ -20,5 +20,16 @@
         "createdAt": "2026-06-16T05:50:54.948Z",
         "completedAt": "2026-06-16T05:55:35.575Z",
         "notes": "Successfully designed, developed, and verified through agency test engine."
+    },
+    {
+        "id": "task_003",
+        "title": "Verification Test of ACP Engine",
+        "description": "Verify that the new state machine, plan reviews, code checks, and test runner execute without exceptions",
+        "status": "completed",
+        "assignedTo": "orchestrator",
+        "plan": null,
+        "createdAt": "2026-06-16T06:10:43.664Z",
+        "completedAt": "2026-06-16T06:10:48.240Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_003.json."
     }
 ]

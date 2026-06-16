@@ -1,61 +1,122 @@
-# Grok-talk Development Agency
+# Grok-talk Development Agency (v2: Adaptive State Machine)
 
-Welcome to the **Grok-talk Development Agency**, an autonomous agentic framework designed to evolve and enhance the **FusionPanda Master** web application. 
+Welcome to the **Grok-talk Development Agency v2**, a self-correcting multi-agent framework designed to safely and continuously evolve the **FusionPanda Master** web application. 
 
-This agency consists of specialized roles working in a cooperative loop to design, implement, and verify features and bug fixes.
+Version 2 introduces closed-loop feedback systems, multi-stage Critic review gates, an automated Fixer agent to remediate test failures, and a persistent Evolutionary Memory Bank to learn from successes and failures.
 
 ---
 
-## 🏢 Agency Architecture
-
-The agency is organized into three specialized divisions coordinate by a central orchestrator:
+## 🏢 Hierarchical Architecture Layers
 
 ```
-                  ┌──────────────────────┐
-                  │     Orchestrator     │
-                  └──────────┬───────────┘
-                             │
-            ┌────────────────┼────────────────┐
-            ▼                ▼                ▼
-   ┌────────────────┐ ┌──────────────┐ ┌──────────────┐
-   │   Architect    │ │  Developer   │ │  QA / Tester │
-   │  System Design │ │ Code Edits   │ │ Assertions   │
-   └────────────────┘ └──────────────┘ └──────────────┘
+              ┌─────────────────────────────────────┐
+              │      Orchestration Layer (CLI)      │
+              │  Risk Assessor • ACP State Machine  │
+              └──────────────────┬──────────────────┘
+                                 │
+         ┌───────────────────────┼───────────────────────┐
+         ▼                       ▼                       ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│ Memory Layer    │     │ Execution Layer │     │ Governance Layer│
+│ tasks.json      │     │ Architect       │     │ Observability   │
+│ task_state.json │ ──➔ │ Developer       │ ──➔ │ Failure Heatmap │
+│ git repo history│     │ QA / Tester     │     │ Memory Bank     │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                                 ▲
+                                 │
+                      ┌──────────────────┐
+                      │ Review & Fix     │
+                      │ Critic (Plan)    │
+                      │ Critic (Code)    │
+                      │ Fixer (Patches)  │
+                      └──────────────────┘
 ```
 
-1. **[Architect](roles/architect.md)**: Analyzes the codebase, assesses impacts on DOM hooks and LocalStorage states, and writes a detailed Implementation Plan.
-2. **[Developer](roles/developer.md)**: Receives the Implementation Plan, executes precise file content replacements inside `app.js` and `source.html`, and verifies state preservation.
-3. **[Tester](roles/tester.md)**: Compiles the source files, adds new assertions to the Node test suites (`tests/`), and executes automated verifications to guarantee zero regression.
+1. **Orchestration Layer**: Orchestrates state transitions, analyzes tasks for risk metrics, and handles agent escalation.
+2. **Memory & Context Layer**: Integrates persistent task backlogs (`tasks.json`), live runtime state tracking (`task_state.json`), and project-scoped Git repository checkpoints.
+3. **Execution Layer**: Specialized subagents (Architect, Developer, Tester) carrying out coding tasks.
+4. **Review & Correction Layer**: Proactive Critics checking planning models and developer code diffs, and the Fixer agent restoring workspace integrity and generating patches on test regressions.
+5. **Observability & Governance Layer**: Logs transition traces (`traces/`), measures failure categories (Failure Heat Map), and writes global patterns (Evolutionary Memory Bank).
+
+---
+
+## 👥 Roster of Specialized Agents
+
+* **Orchestrator**: Core engine enforcing transitions, risk evaluations, and recovery paths.
+* **Architect**: System designer mapping state schemas and drafting plan specs to `plans/`.
+* **Plan Critic**: Gates design models. Reviews structure, safety guards, and stub definitions.
+* **Developer**: Codifies edits using diff-based modifications.
+* **Code Critic**: Inspects changesets for syntax correctness, reference matches, and DOM-safe guards.
+* **Tester**: Verifies structural layout builds and executes assertion pipelines.
+* **Fixer**: Parses test/compilation errors, proposes repairs, rolls back bad code, and requests retries.
+
+---
+
+## 🔄 Adaptive Workflow (ACP State Machine)
+
+The agency executes tasks through the **Agent Communication & Orchestration Protocol (ACP)**:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Planning : Run Task
+    Planning --> PlanReviewing : Plan generated
+    PlanReviewing --> Planning : Plan Rejected
+    PlanReviewing --> Developing : Plan Approved
+    Developing --> CodeReviewing : Code edited
+    CodeReviewing --> Developing : Code Rejected
+    CodeReviewing --> Testing : Code Approved
+    Testing --> Fixing : Test Failures
+    Fixing --> Developing : Retry (under limit)
+    Fixing --> Failed : Exceeded Max Retries
+    Testing --> Completed : All Tests Pass
+    Completed --> [*]
+    Failed --> [*]
+```
 
 ---
 
 ## 📂 Directory Structure
 
-- **[roles/](roles/)**: Role instructions and system prompts for each agent.
-- **`plans/`**: Markdown implementations drafted by the Architect for each task.
-- **`orchestrator.js`**: The central workflow engine that drives task states (Pending ➔ Planning ➔ Developing ➔ Testing ➔ Completed/Failed) and executes local builds/tests.
-- **`tasks.json`**: The persistent task history database.
+* **`roles/`**: Instructions defining agent capabilities (**[architect.md](roles/architect.md)**, **[developer.md](roles/developer.md)**, **[tester.md](roles/tester.md)**, **[critic_plan.md](roles/critic_plan.md)**, **[critic_code.md](roles/critic_code.md)**, **[fixer.md](roles/fixer.md)**).
+* **`plans/`**: Task plans drafted by the Architect and verified by the Plan Critic.
+* **`traces/`**: JSON execution traces storing timestamps and metadata for every state transition.
+* **`orchestrator.js`**: Core Node.js state machine running the agency CLI.
+* **`tasks.json`**: Backlog archive.
+* **`task_state.json`**: Temporary metadata for active workflows.
+* **`failure_heatmap.json`**: Real-time failure category analytics (misalignment, design, verification, coordination).
+* **`evolutionary_memory.json`**: Global cache of successful patterns, anti-patterns, and learnings.
 
 ---
 
 ## 🛠 Usage Instructions
 
-You can manage the agency workflow using the central Orchestrator CLI.
+You can run the agency and inspect performance metrics using the CLI:
 
-### 1. View Task Archive
-List all tasks in the backlog along with their current status, description, and completion logs:
+### 1. File a Task & Run Workflow
+Add a task to the queue and execute it:
 ```bash
-node agency/orchestrator.js list
+node agency/orchestrator.js add "My Feature" "Description"
+node agency/orchestrator.js run task_003
 ```
 
-### 2. File a Feature Request / Add a Task
-Add a new feature request or bug report to the queue:
+### 2. Monitor Active Tasks & Traces
+Inspect the current status and transition logs of a running workflow:
 ```bash
-node agency/orchestrator.js add "Add Combat Training Upgrade" "Create a shop card for Battle Training that boosts player damage in the arena"
+node agency/orchestrator.js status
 ```
 
-### 3. Run the Development Loop
-Trigger the orchestrator to run the complete loop (Planning, Development compiling, Test suite verification):
+### 3. Review Failure Analytics & Memory
+Analyze error distributions and read continuous learnings across runs:
 ```bash
-node agency/orchestrator.js run task_002
+node agency/orchestrator.js heatmap
+node agency/orchestrator.js memory
 ```
+
+---
+
+## 🔌 Protocol Stack
+
+* **MCP (Multi-Context Protocol)**: Governs secure file reading, command running, and Git checkpoint tracking.
+* **A2A (Agent-to-Agent Protocol)**: Enables message and critique loops between subagents (Architect-to-Critic, Developer-to-Fixer).
+* **ACP (Agent Communication & Orchestration Protocol)**: Core state transition schema driving state progression, retry thresholds, and closeout archives.
