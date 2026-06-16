@@ -537,8 +537,8 @@
         }
 
         #special-branches .fractal-node:hover {
-            box-shadow: 0 0 15px rgba(217, 70, 239, 0.7);
-            border-color: rgba(217, 70, 239, 0.8);
+            box-shadow: 0 0 15px var(--champion-color, rgba(217, 70, 239, 0.7));
+            border-color: var(--champion-color, rgba(217, 70, 239, 0.8));
         }
 
         /* Connecting lines for fractal feel */
@@ -547,7 +547,7 @@
             bottom: -15px;
             left: 50%;
             transform-origin: bottom center;
-            opacity: 0.4;
+            opacity: 0.45;
             pointer-events: none;
             z-index: 5;
         }
@@ -557,25 +557,55 @@
         }
 
         #special-branches .fractal-line {
-            background: #d946ef;
+            background: var(--champion-color, #d946ef);
         }
 
         .fractal-line--left {
             width: 1.5px;
             height: 32px;
             transform: rotate(-30deg) translateX(-50%);
+            animation: sproutLineLeft 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
         .fractal-line--center {
             width: 1.5px;
             height: 38px;
             transform: translateX(-50%);
+            animation: sproutLineCenter 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
         .fractal-line--right {
             width: 1.5px;
             height: 32px;
             transform: rotate(30deg) translateX(-50%);
+            animation: sproutLineRight 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes sproutLineLeft {
+            0% {
+                transform: rotate(-30deg) translateX(-50%) scaleY(0);
+            }
+            100% {
+                transform: rotate(-30deg) translateX(-50%) scaleY(1);
+            }
+        }
+
+        @keyframes sproutLineCenter {
+            0% {
+                transform: translateX(-50%) scaleY(0);
+            }
+            100% {
+                transform: translateX(-50%) scaleY(1);
+            }
+        }
+
+        @keyframes sproutLineRight {
+            0% {
+                transform: rotate(30deg) translateX(-50%) scaleY(0);
+            }
+            100% {
+                transform: rotate(30deg) translateX(-50%) scaleY(1);
+            }
         }
 
         @keyframes fractalDisperse {

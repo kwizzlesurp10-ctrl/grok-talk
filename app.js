@@ -2282,7 +2282,7 @@
                         </div>
 
                         <!-- Special Branching Container -->
-                        <div class="fractal-menu-container relative text-fuchsia-500/50" id="special-menu-container">
+                        <div class="fractal-menu-container relative text-fuchsia-500/50" id="special-menu-container" style="--champion-color: ${selectedChampion.color || '#d946ef'};">
                             <button type="button" id="battle-special-btn" onclick="toggleFractalMenu('special')" class="parent-action-btn w-full sm:w-auto min-w-[11rem] px-6 py-3.5 text-sm border border-fuchsia-400 text-fuchsia-300 hover:bg-fuchsia-500/10 transition-all rounded-2xl font-bold flex items-center justify-center gap-x-2 relative z-20 shadow-lg backdrop-blur-md">
                                 <span>SPECIAL</span> <i class="fas fa-magic" aria-hidden="true"></i>
                             </button>
