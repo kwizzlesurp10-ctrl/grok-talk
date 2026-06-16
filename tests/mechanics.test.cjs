@@ -107,7 +107,11 @@ function makeDomStub() {
         "booster-blazing-btn",
         "booster-cryo-btn",
         "booster-lightning-btn",
-        "dash-ep"
+        "dash-ep",
+        "detail-panda-power-val",
+        "detail-panda-level",
+        "detail-panda-cost",
+        "train-panda-btn"
     ];
     for (const id of stubIds) {
         byId.set(id, el("div"));
@@ -416,6 +420,65 @@ async function runTests() {
         const dmgUpgraded = matchUpgraded.playerBaseDamage;
 
         assert.equal(dmgUpgraded, Math.floor(dmgBase * 1.15));
+    }
+
+    // -------------------- TEST 8: EP-Based Panda Training System --------------------
+    {
+        const { read, gameState, userPandas } = runAppWithGameState({ ep: 1000 });
+        const getTrainingCost = read("getTrainingCost");
+        const getPowerGainPerLevel = read("getPowerGainPerLevel");
+        const trainPanda = read("trainPanda");
+        const recalculateTotalPower = read("recalculateTotalPower");
+
+        // 1. Cost and Gain formula checks
+        assert.equal(getTrainingCost("common", 1), 100);
+        assert.equal(getTrainingCost("common", 2), 150);
+        assert.equal(getTrainingCost("mythic", 1), 600);
+        assert.equal(getPowerGainPerLevel("common"), 3);
+        assert.equal(getPowerGainPerLevel("mythic"), 18);
+
+        // 2. Setup user pandas for testing training
+        const commonPanda = { id: 'u1', name: "Common Test", rarity: "common", power: 10, level: 1 };
+        const mythicPanda = { id: 'u2', name: "Mythic Test", rarity: "mythic", power: 50, level: 1 };
+        userPandas.length = 0;
+        userPandas.push(commonPanda);
+        userPandas.push(mythicPanda);
+
+        // Recalculate totalPower initially
+        recalculateTotalPower();
+        assert.equal(gameState.totalPower, 60);
+
+        // 3. Train common panda: level 1 -> 2 (costs 100 EP, power +3)
+        trainPanda(0);
+        assert.equal(commonPanda.level, 2);
+        assert.equal(commonPanda.power, 13);
+        assert.equal(gameState.ep, 900);
+        assert.equal(gameState.totalPower, 63);
+
+        // 4. Train mythic panda: level 1 -> 2 (costs 600 EP, power +18)
+        trainPanda(1);
+        assert.equal(mythicPanda.level, 2);
+        assert.equal(mythicPanda.power, 68);
+        assert.equal(gameState.ep, 300);
+        assert.equal(gameState.totalPower, 81);
+
+        // 5. Attempt training mythic panda again: level 2 -> 3 (costs 900 EP, fails due to lack of EP)
+        trainPanda(1);
+        assert.equal(mythicPanda.level, 2);
+        assert.equal(mythicPanda.power, 68);
+        assert.equal(gameState.ep, 300); // EP remains unchanged
+
+        // 6. Max level cap check (level 10)
+        commonPanda.level = 9;
+        gameState.ep = 10000;
+        
+        trainPanda(0); // lvl 9 -> 10 (costs 100 * Math.pow(1.5, 8) = 2562 EP)
+        assert.equal(commonPanda.level, 10);
+        const epAfter10 = gameState.ep;
+
+        trainPanda(0); // lvl 10 -> 11 (should fail, level stays 10, EP stays same)
+        assert.equal(commonPanda.level, 10);
+        assert.equal(gameState.ep, epAfter10);
     }
 
     process.stdout.write("mechanics ok\n");

@@ -31,5 +31,16 @@
         "createdAt": "2026-06-16T06:10:43.664Z",
         "completedAt": "2026-06-16T06:10:48.240Z",
         "notes": "Completed after 0 fix retries. Trace recorded in traces/task_003.json."
+    },
+    {
+        "id": "task_004",
+        "title": "Panda Training Mechanics",
+        "description": "Implement EP-based training in My Collection to level up individual pandas and boost their battle power",
+        "status": "completed",
+        "assignedTo": "orchestrator",
+        "plan": null,
+        "createdAt": "2026-06-16T06:13:02.262Z",
+        "completedAt": "2026-06-16T06:18:30.115Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_004.json."
     }
 ]

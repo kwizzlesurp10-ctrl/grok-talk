@@ -61,7 +61,7 @@
 
         // User's unlocked pandas (new users start with one fair starter)
         let userPandas = [
-            { ...basePandas[0], id: 'u1', acquired: new Date().toISOString().split('T')[0] }
+            { ...basePandas[0], id: 'u1', level: 1, acquired: new Date().toISOString().split('T')[0] }
         ];
 
         // Current selected for fusion
@@ -70,6 +70,7 @@
         let currentFusionMode = 'basic'; // basic | advanced | ritual
 
         function saveGameState() {
+            recalculateTotalPower();
             localStorage.setItem('fusionPandaMaster', JSON.stringify({
                 ...gameState,
                 collection: userPandas,
@@ -119,6 +120,11 @@
                 if (typeof gameState.ep !== "number" || gameState.ep < 0) {
                     gameState.ep = 500;
                 }
+                // Migrate collection and set level default
+                userPandas.forEach(p => {
+                    if (p.level === undefined) p.level = 1;
+                });
+                recalculateTotalPower();
             } else {
                 gameState.recentFusions = [];
                 saveGameState();
@@ -322,8 +328,11 @@
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div class="text-6xl mb-3 transition-all group-hover:scale-110">${panda.emoji}</div>
-                        <div class="px-2.5 py-0.5 text-xs font-bold rounded-full self-start" style="background: ${rarityColor}30; color: ${rarityColor}">
-                            ${panda.rarity.toUpperCase()}
+                        <div class="flex flex-col items-end gap-y-1">
+                            <div class="px-2.5 py-0.5 text-xs font-bold rounded-full" style="background: ${rarityColor}30; color: ${rarityColor}">
+                                ${panda.rarity.toUpperCase()}
+                            </div>
+                            <div class="text-[10px] text-gray-400 font-bold">LVL ${panda.level || 1}</div>
                         </div>
                     </div>
                     
@@ -361,6 +370,94 @@
                 case 'mythic': return '#f43f5e';
                 default: return '#64748b';
             }
+        }
+
+        function getTrainingCost(rarity, currentLevel) {
+            let baseCost = 100;
+            switch (rarity) {
+                case 'common': baseCost = 100; break;
+                case 'rare': baseCost = 150; break;
+                case 'epic': baseCost = 250; break;
+                case 'legendary': baseCost = 400; break;
+                case 'mythic': baseCost = 600; break;
+            }
+            return Math.floor(baseCost * Math.pow(1.5, currentLevel - 1));
+        }
+
+        function getPowerGainPerLevel(rarity) {
+            switch (rarity) {
+                case 'common': return 3;
+                case 'rare': return 5;
+                case 'epic': return 8;
+                case 'legendary': return 12;
+                case 'mythic': return 18;
+                default: return 3;
+            }
+        }
+
+        function recalculateTotalPower() {
+            gameState.totalPower = userPandas.reduce((sum, p) => sum + (p.power || 0), 0);
+        }
+
+        function trainPanda(index) {
+            const panda = userPandas[index];
+            if (!panda) return;
+            
+            const currentLevel = panda.level || 1;
+            if (currentLevel >= 10) {
+                showToast("This panda has reached max level!", "error");
+                return;
+            }
+            
+            const cost = getTrainingCost(panda.rarity, currentLevel);
+            if (gameState.ep < cost) {
+                showToast("Insufficient EP to train this panda!", "error");
+                return;
+            }
+            
+            // Deduct EP and mutate stats
+            gameState.ep -= cost;
+            panda.level = currentLevel + 1;
+            const powerGain = getPowerGainPerLevel(panda.rarity);
+            panda.power += powerGain;
+            
+            // Update and save state
+            recalculateTotalPower();
+            saveGameState();
+            updateDashboard();
+            renderCollection();
+            
+            // Update details modal elements inline
+            const levelEl = document.getElementById('detail-panda-level');
+            const costEl = document.getElementById('detail-panda-cost');
+            const btnEl = document.getElementById('train-panda-btn');
+            const powerValEl = document.getElementById('detail-panda-power-val');
+            
+            if (levelEl) levelEl.innerText = `LVL ${panda.level} / 10`;
+            if (powerValEl) powerValEl.innerText = panda.power;
+            
+            if (costEl) {
+                costEl.innerText = panda.level >= 10 ? 'MAXED' : getTrainingCost(panda.rarity, panda.level) + ' EP';
+            }
+            
+            if (btnEl) {
+                if (panda.level >= 10) {
+                    btnEl.innerText = 'MAX LEVEL REACHED';
+                    btnEl.disabled = true;
+                    btnEl.className = 'w-full py-2.5 rounded-xl font-bold text-xs bg-gray-800 text-gray-500 cursor-not-allowed transition-all flex items-center justify-center gap-2';
+                } else {
+                    const nextCost = getTrainingCost(panda.rarity, panda.level);
+                    btnEl.innerHTML = `<i class="fas fa-dumbbell"></i> <span>TRAIN PANDA</span>`;
+                    btnEl.disabled = gameState.ep < nextCost;
+                    if (gameState.ep >= nextCost) {
+                        btnEl.className = 'w-full py-2.5 rounded-xl font-bold text-xs bg-amber-400 text-black hover:bg-amber-300 transition-all flex items-center justify-center gap-2';
+                    } else {
+                        btnEl.className = 'w-full py-2.5 rounded-xl font-bold text-xs bg-amber-400/10 text-amber-400 opacity-60 cursor-not-allowed transition-all flex items-center justify-center gap-2';
+                    }
+                }
+            }
+            
+            showToast(`${panda.name} trained to LVL ${panda.level}! (+${powerGain} PWR)`, "success");
         }
 
         function filterCollection() {
@@ -737,12 +834,38 @@
                             <div class="mt-8 grid grid-cols-2 gap-4">
                                 <div class="bg-[#1a1f2e] rounded-2xl p-4 text-center">
                                     <div class="text-xs text-gray-400">ATTACK POWER</div>
-                                    <div class="text-5xl font-black text-emerald-400 mt-1">${panda.power}</div>
+                                    <div class="text-5xl font-black text-emerald-400 mt-1" id="detail-panda-power-val">${panda.power}</div>
                                 </div>
                                 <div class="bg-[#1a1f2e] rounded-2xl p-4 text-center">
                                     <div class="text-xs text-gray-400">SPECIAL</div>
                                     <div class="text-3xl mt-2 font-bold">${panda.type}</div>
                                     <div class="text-xs mt-1 text-gray-400">TRAIT</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Training Section -->
+                            <div class="mt-6 border-t border-b border-gray-800 py-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="text-xs text-gray-400">PANDA LEVEL</div>
+                                        <div class="text-lg font-bold text-white" id="detail-panda-level">LVL ${panda.level || 1} / 10</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-xs text-gray-400">TRAINING COST</div>
+                                        <div class="text-lg font-mono font-bold text-amber-400" id="detail-panda-cost">
+                                            ${(panda.level || 1) >= 10 ? 'MAXED' : getTrainingCost(panda.rarity, panda.level || 1) + ' EP'}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <button id="train-panda-btn" onclick="trainPanda(${index})" 
+                                            class="w-full py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 
+                                            ${(panda.level || 1) >= 10 ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 
+                                              (gameState.ep >= getTrainingCost(panda.rarity, panda.level || 1) ? 'bg-amber-400 text-black hover:bg-amber-300' : 'bg-amber-400/10 text-amber-400 opacity-60 cursor-not-allowed')}"
+                                            ${(panda.level || 1) >= 10 || gameState.ep < getTrainingCost(panda.rarity, panda.level || 1) ? 'disabled' : ''}>
+                                        <i class="fas fa-dumbbell"></i>
+                                        <span>${(panda.level || 1) >= 10 ? 'MAX LEVEL REACHED' : 'TRAIN PANDA'}</span>
+                                    </button>
                                 </div>
                             </div>
                             
@@ -811,10 +934,11 @@
                 card.innerHTML = `
                     <div class="flex justify-between">
                         <div class="text-5xl mb-2">${panda.emoji}</div>
-                        <div>
+                        <div class="flex flex-col items-end gap-y-1">
                             <div class="px-2 py-0.5 text-xs font-bold rounded-full text-center" style="background: ${rarityColor}30; color: ${rarityColor}">
                                 ${panda.rarity}
                             </div>
+                            <div class="text-[10px] text-gray-400 font-bold">LVL ${panda.level || 1}</div>
                         </div>
                     </div>
                     <div class="font-bold">${panda.name}</div>
@@ -1178,6 +1302,7 @@
                 rarity: rarity,
                 color: getRarityColor(rarity),
                 desc: `Advanced ${mode} fusion of ${pandaA.name} and ${pandaB.name}. ${synergyName ? 'Powerful ' + synergyName + ' synergy detected!' : ''} ${isCritical ? 'CRITICAL FUSION!' : ''}`,
+                level: 1,
                 acquired: new Date().toISOString().split('T')[0],
                 isCritical: isCritical,
                 fusionMode: mode
@@ -1472,6 +1597,7 @@
                 power: 29,
                 rarity: "rare",
                 color: "#f97316",
+                level: 1,
                 desc: "Rewarded for completing today's Inferno Fusion challenge. A loyal guardian of the flame.",
                 acquired: new Date().toISOString().split('T')[0]
             };
@@ -3250,6 +3376,7 @@
                         power: 88,
                         rarity: "mythic",
                         color: "#f43f5e",
+                        level: 1,
                         desc: "The ultimate panda. Achieved only by true masters of the fusion arts.",
                         acquired: new Date().toISOString().split('T')[0]
                     };
@@ -3330,7 +3457,7 @@
         // Expose some functions for console debugging (fun)
         window.FusionPanda = {
             addPanda: (name) => {
-                const newP = {...basePandas[0], name: name || "Debug Panda", id: 'debug-' + Date.now(), rarity: 'legendary', power: 55};
+                const newP = {...basePandas[0], name: name || "Debug Panda", id: 'debug-' + Date.now(), rarity: 'legendary', power: 55, level: 1};
                 userPandas.push(newP);
                 renderCollection();
                 console.log('%c[Panda added]', 'color:#00ff9d', newP);
