@@ -108,5 +108,60 @@
         "createdAt": "2026-06-16T19:35:00Z",
         "completedAt": "2026-06-16T19:40:31.355Z",
         "notes": "Completed after 0 fix retries. Trace recorded in traces/task_010.json."
+    },
+    {
+        "id": "task_011",
+        "title": "Arena Fractal Moves Menu",
+        "description": "Design a sci-fi fractal dispersing pop-out menu for Attack and Special buttons in the Arena, generating dynamic champion-specific move names based on name, type, and style, and incorporating them into combat logs.",
+        "status": "completed",
+        "assignedTo": "developer",
+        "plan": "agency/plans/task_011.md",
+        "createdAt": "2026-06-16T19:50:00Z",
+        "completedAt": "2026-06-16T19:59:59.324Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_011.json."
+    },
+    {
+        "id": "task_012",
+        "title": "UI Holographic Enhancements",
+        "description": "Enhance Fusion Lab, Panda Training, and Codex views with pulsing energy lines, floating training stats, holographic card flashes, and dynamic type-color glow accents.",
+        "status": "completed",
+        "assignedTo": "developer",
+        "plan": "agency/plans/task_012.md",
+        "createdAt": "2026-06-16T20:10:00Z",
+        "completedAt": "2026-06-16T20:11:36.521Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_012.json."
+    },
+    {
+        "id": "task_013",
+        "title": "Visual Emoji Elimination Catch-Up",
+        "description": "Eliminate residual raw emojis from the visual interface (including dashboard challenge card, level up modals, and landing badge icons) and replace them with premium FontAwesome icons.",
+        "status": "completed",
+        "assignedTo": "developer",
+        "plan": "agency/plans/task_013.md",
+        "createdAt": "2026-06-16T20:13:00Z",
+        "completedAt": "2026-06-16T20:12:55.829Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_013.json."
+    },
+    {
+        "id": "task_014",
+        "title": "Special Move Action Popups",
+        "description": "Create multiple absolute pop-up windows in different shapes (clip-paths) and small sizes displaying stop-motion high-speed panning action sequences of the selected champion when executing a special move.",
+        "status": "completed",
+        "assignedTo": "developer",
+        "plan": "agency/plans/task_014.md",
+        "createdAt": "2026-06-16T20:20:00Z",
+        "completedAt": "2026-06-16T20:20:43.622Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_014.json."
+    },
+    {
+        "id": "task_015",
+        "title": "Comic Action Replay Popups",
+        "description": "Evolve the action pop-up clips to showcase special moves in a step-by-step comic strip format, rendering customized element-specific onomatopoeias, halftone patterns, and retro spiked speech bursts.",
+        "status": "completed",
+        "assignedTo": "developer",
+        "plan": "agency/plans/task_015.md",
+        "createdAt": "2026-06-16T20:24:00Z",
+        "completedAt": "2026-06-16T20:31:41.602Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_015.json."
     }
 ]

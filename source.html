@@ -227,7 +227,7 @@
                         <div class="font-semibold mb-4">Today's Challenge</div>
                         
                         <div class="flex-1 flex flex-col justify-center items-center text-center py-2">
-                            <div class="text-6xl mb-3">🌋</div>
+                            <div class="mb-3"><i class="fas fa-fire-alt text-6xl text-orange-500 animate-pulse"></i></div>
                             <div class="font-bold">Inferno Fusion</div>
                             <div class="text-xs text-gray-400 mt-1 max-w-[180px]">Fuse 3 Fire-type pandas to unlock the legendary Volcanic Overlord</div>
                             
@@ -266,7 +266,9 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 relative" id="fusion-slots-container">
+                    <!-- Dynamic SVG Connector Paths -->
+                    <svg id="fusion-flow-svg" class="absolute inset-0 w-full h-full pointer-events-none z-10" style="min-height: 210px;"></svg>
                     
                     <!-- Left Panda Slot -->
                     <div class="lg:col-span-5">

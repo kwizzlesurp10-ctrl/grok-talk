@@ -16,7 +16,14 @@ function makeDomStub() {
             remove() {}, 
             contains() { return false; } 
         },
-        style: {},
+        style: {
+            position: "",
+            borderColor: "",
+            boxShadow: "",
+            setProperty(prop, val) {
+                this[prop] = val;
+            },
+        },
         innerHTML: "",
         innerText: "",
         textContent: "",
@@ -35,12 +42,21 @@ function makeDomStub() {
         closest() {
             return null;
         },
+        querySelector() {
+            return null;
+        },
+        querySelectorAll() {
+            return [];
+        },
         onclick: null,
         value: "",
     });
 
     const byId = new Map();
     const stubIds = [
+        "detail-panda-card",
+        "detail-panda-image-container",
+        "fusion-flow-svg",
         "section-dashboard",
         "nav-dashboard",
         "collection-grid",
@@ -146,6 +162,9 @@ function makeDomStub() {
         },
         querySelectorAll() {
             return [];
+        },
+        querySelector() {
+            return null;
         },
         addEventListener() {},
         createElement(t) {
@@ -675,6 +694,232 @@ async function runTests() {
         const finalBattle = read("__activeBattle");
         assert.equal(finalBattle.playerCur, 0, "Player HP should be reduced to 0 upon defeat");
         assert.ok(finalBattle.ended, "Battle state should mark the combat as ended");
+    }
+
+    // -------------------- TEST 14: Fractal Moves Menu & Champion Themed Attacks --------------------
+    {
+        const { read, write, sandbox } = runAppWithGameState();
+        const getChampionMoves = read("getChampionMoves");
+        
+        // 1. Assert moves generation for different types
+        const fireMoves = getChampionMoves({ name: "Inferno Guardian", type: "Fire" });
+        assert.ok(fireMoves.attacks.length === 3);
+        assert.ok(fireMoves.specials.length === 3);
+        assert.ok(fireMoves.attacks[0].startsWith("Inferno"), "Attack move name should prefix with champion first name");
+        
+        const iceMoves = getChampionMoves({ name: "Frostbite Golem", type: "Ice" });
+        assert.ok(iceMoves.attacks[0].startsWith("Frostbite"));
+
+        // 2. Battle Simulation with custom move
+        const __createBattleMatch = read("__createBattleMatch");
+        const weakChamp = { name: "Thunder Spark", power: 10, level: 1, type: "Electric", rarity: "rare" };
+        const battle = __createBattleMatch(weakChamp, "void-howler");
+        battle.playerCur = 100;
+        battle.enemyCur = 100;
+        battle.playerBaseDamage = 10;
+        
+        write("__activeBattle", battle);
+        
+        const simulateBattleAttack = read("simulateBattleAttack");
+        
+        // Run a custom attack
+        const customMove = "Thunder Volt Strike";
+        await simulateBattleAttack(null, false, customMove);
+        
+        const finalBattle = read("__activeBattle");
+        assert.ok(finalBattle.enemyCur < 100, "Enemy HP should be reduced after custom attack");
+        
+        // Inspect battle log children in DOM stub
+        const logContainer = sandbox.document.getElementById("battle-log");
+        const loggedLine = logContainer.children.find(child => child.innerHTML.includes("Thunder Volt Strike"));
+        assert.ok(loggedLine, "Combat log should contain the custom attack move name");
+    }
+
+    // -------------------- TEST 15: Holographic UI & Fusion Flows --------------------
+    {
+        const { read, write, sandbox, gameState } = runAppWithGameState();
+        
+        // 1. Setup Document / Element mocks
+        sandbox.document.createElementNS = (ns, tag) => {
+            return sandbox.document.createElement(tag);
+        };
+        
+        const mockCore = sandbox.document.createElement('div');
+        mockCore.parentElement = sandbox.document.createElement('div');
+        sandbox.document.querySelector = (selector) => {
+            if (selector.includes('animate-spin-slow')) {
+                return mockCore;
+            }
+            return null;
+        };
+        
+        const svg = sandbox.document.getElementById('fusion-flow-svg');
+        const slotAlpha = sandbox.document.getElementById('slot-alpha');
+        const slotBeta = sandbox.document.getElementById('slot-beta');
+        
+        svg.getBoundingClientRect = () => ({ left: 0, top: 0, width: 800, height: 600 });
+        slotAlpha.getBoundingClientRect = () => ({ left: 100, top: 100, width: 200, height: 200 });
+        slotBeta.getBoundingClientRect = () => ({ left: 500, top: 100, width: 200, height: 200 });
+        mockCore.parentElement.getBoundingClientRect = () => ({ left: 380, top: 180, width: 40, height: 40 });
+        
+        // 2. Perform selection and assert SVG flow paths
+        const selectPandaForSlot = read("selectPandaForSlot");
+        const pandaA = { name: "Classic Panda", type: "Balanced", color: "#10b981", power: 12, rarity: "common", image: "assets/pandas/classic_panda.jpg" };
+        const pandaB = { name: "Inferno Panda", type: "Fire", color: "#ef4444", power: 18, rarity: "rare", image: "assets/pandas/inferno_panda.jpg" };
+        
+        selectPandaForSlot('alpha', pandaA);
+        selectPandaForSlot('beta', pandaB);
+        
+        assert.equal(svg.children.length, 4, "SVG overlay should contain exactly 4 connector paths (2 per slot)");
+        
+        // 3. Test training floating animation triggers
+        const trainPanda = read("trainPanda");
+        const userPandas = read("userPandas");
+        
+        gameState.ep = 1000;
+        userPandas[0] = { name: "Classic Panda", rarity: "common", level: 1, power: 12, color: "#10b981", image: "assets/pandas/classic_panda.jpg" };
+        
+        const powerVal = sandbox.document.getElementById('detail-panda-power-val');
+        powerVal.parentElement = sandbox.document.createElement('div');
+        powerVal.innerText = "12";
+        const detailCard = sandbox.document.getElementById('detail-panda-card');
+        const imgContainer = sandbox.document.getElementById('detail-panda-image-container');
+        
+        trainPanda(0);
+        
+        const floatPwr = powerVal.parentElement.children.find(c => c.className.includes('float-up-stat'));
+        assert.ok(floatPwr, "Floating power stat element should be appended to power container");
+        assert.ok(floatPwr.innerText.includes("+3 PWR"), "Floating power stat should match common panda training gain (+3 PWR)");
+        
+        const floatLvl = imgContainer.children.find(c => c.className.includes('float-up-stat'));
+        assert.ok(floatLvl, "Floating level up element should be appended to image container");
+        assert.equal(floatLvl.innerText, "LVL UP!", "Floating level element text should be 'LVL UP!'");
+    }
+
+    // -------------------- TEST 16: Visual Emoji Elimination --------------------
+    {
+        const sourceHtmlPath = path.join(root, "source.html");
+        const appJsPath = path.join(root, "app.js");
+        
+        const sourceHtml = fs.readFileSync(sourceHtmlPath, "utf8");
+        const appJs = fs.readFileSync(appJsPath, "utf8");
+        
+        assert.ok(!sourceHtml.includes('<div class="text-6xl mb-3">🌋</div>'), "🌋 emoji should be eliminated from Today's Challenge in source.html");
+        assert.ok(!appJs.includes('<span class="text-6xl">🏆</span>'), "🏆 emoji should be eliminated from level up modal in app.js");
+        assert.ok(!appJs.includes('<span class="text-xs">🐼</span>'), "🐼 emoji badge should be eliminated from battle arena landing in app.js");
+        assert.ok(!appJs.includes('<span class="text-xs">🔥</span>'), "🔥 emoji badge should be eliminated from battle arena landing in app.js");
+    }
+
+    // -------------------- TEST 17: Special Move Action Popups --------------------
+    {
+        const { read, write, sandbox } = runAppWithGameState();
+        const __createBattleMatch = read("__createBattleMatch");
+        const simulateBattleAttack = read("simulateBattleAttack");
+        
+        const weakChamp = { name: "Thunder Spark", power: 10, level: 1, type: "Electric", rarity: "rare", image: "assets/pandas/thunder_panda.jpg" };
+        const battle = __createBattleMatch(weakChamp, "void-howler");
+        battle.playerCur = 100;
+        battle.enemyCur = 100;
+        battle.playerBaseDamage = 10;
+        
+        write("__activeBattle", battle);
+        
+        const originalSetTimeout = sandbox.setTimeout;
+        sandbox.setTimeout = (fn, delay) => {
+            fn();
+            return 1;
+        };
+        
+        const stage = sandbox.document.getElementById('battle-stage');
+        assert.ok(stage, "battle-stage should exist in mock DOM");
+        stage.children = [];
+        
+        simulateBattleAttack(null, true, "Thunder Volt Strike");
+        
+        sandbox.setTimeout = originalSetTimeout;
+        
+        const popups = stage.children.filter(c => c.tag === 'div' && c.className.includes('special-clip-popup'));
+        assert.ok(popups.length >= 1 && popups.length <= 5, "Special action popups length should be in range 1-5");
+        
+        const firstPopup = popups[0];
+        assert.ok(firstPopup.style.clipPath.includes("polygon"), "Popup should have a clip-path polygon defined");
+        assert.equal(firstPopup.style['--champion-color'], "#22d3ee", "Popup border color should match the rare champion color (#22d3ee)");
+    }
+
+    // -------------------- TEST 18: Comic Action Replay Popups --------------------
+    {
+        const { read, write, sandbox } = runAppWithGameState();
+        const __createBattleMatch = read("__createBattleMatch");
+        const simulateBattleAttack = read("simulateBattleAttack");
+        
+        const weakChamp = { name: "Inferno Spark", power: 10, level: 1, type: "Fire", rarity: "rare", image: "assets/pandas/inferno_panda.jpg" };
+        const battle = __createBattleMatch(weakChamp, "void-howler");
+        battle.playerCur = 100;
+        battle.enemyCur = 100;
+        battle.playerBaseDamage = 10;
+        
+        write("__activeBattle", battle);
+        
+        const originalSetTimeout = sandbox.setTimeout;
+        sandbox.setTimeout = (fn, delay) => {
+            fn();
+            return 1;
+        };
+        
+        const stage = sandbox.document.getElementById('battle-stage');
+        stage.children = [];
+        
+        simulateBattleAttack(null, true, "Supernova Burst");
+        
+        sandbox.setTimeout = originalSetTimeout;
+        
+        const popups = stage.children.filter(c => c.tag === 'div' && c.className.includes('special-clip-popup'));
+        assert.ok(popups.length >= 1 && popups.length <= 5, "Special action popups length should be in range 1-5");
+        
+        const impactPanel = popups.find(p => p.innerHTML.includes("IMPACT"));
+        assert.ok(impactPanel, "Should find an IMPACT panel in the popup list");
+        assert.ok(impactPanel.innerHTML.includes("spiked-burst-clip"), "IMPACT panel should contain spiked burst graphic element");
+        assert.ok(impactPanel.innerHTML.includes("BOOM!") || impactPanel.innerHTML.includes("IGNITE!"), "IMPACT panel onomatopoeia should match Fire type step");
+    }
+
+    // -------------------- TEST 19: Uniqueness of Special Move Popups --------------------
+    {
+        const { read, write, sandbox } = runAppWithGameState();
+        const __createBattleMatch = read("__createBattleMatch");
+        const simulateBattleAttack = read("simulateBattleAttack");
+        
+        // Setup battle 1
+        const champ1 = { name: "Thunder Spark", power: 10, level: 1, type: "Electric", rarity: "rare", image: "assets/pandas/thunder_panda.jpg" };
+        const battle1 = __createBattleMatch(champ1, "void-howler");
+        write("__activeBattle", battle1);
+        
+        const originalSetTimeout = sandbox.setTimeout;
+        sandbox.setTimeout = (fn, delay) => { fn(); return 1; };
+        
+        const stage = sandbox.document.getElementById('battle-stage');
+        stage.children = [];
+        simulateBattleAttack(null, true, "Thunder Volt Strike");
+        const popups1 = stage.children.filter(c => c.tag === 'div' && c.className.includes('special-clip-popup'));
+        
+        // Setup battle 2
+        const champ2 = { name: "Inferno Spark", power: 10, level: 1, type: "Fire", rarity: "rare", image: "assets/pandas/inferno_panda.jpg" };
+        const battle2 = __createBattleMatch(champ2, "void-howler");
+        write("__activeBattle", battle2);
+        
+        stage.children = [];
+        simulateBattleAttack(null, true, "Supernova Burst");
+        const popups2 = stage.children.filter(c => c.tag === 'div' && c.className.includes('special-clip-popup'));
+        
+        sandbox.setTimeout = originalSetTimeout;
+        
+        // Assert that different special moves generate unique counts
+        assert.notEqual(popups1.length, popups2.length, "Different special moves should generate different dynamic panel counts");
+        
+        // Assert that sizes/positions are unique
+        const popup1 = popups1[0];
+        const popup2 = popups2[0];
+        assert.notEqual(popup1.style.width, popup2.style.width, "Popups from different moves should have unique widths");
+        assert.notEqual(popup1.style.left, popup2.style.left, "Popups from different moves should have unique positioning coordinates");
     }
 
     process.stdout.write("mechanics ok\n");

@@ -480,6 +480,56 @@
                     }
                 }
             }
+
+            // Holographic training animations and floating indicators
+            if (typeof document !== 'undefined' && typeof document.createElement === 'function') {
+                // Holographic card flash
+                const detailCard = document.getElementById('detail-panda-card');
+                if (detailCard) {
+                    detailCard.classList.remove('holographic-flash');
+                    void detailCard.offsetWidth; // trigger reflow
+                    detailCard.classList.add('holographic-flash');
+                    setTimeout(() => {
+                        if (detailCard) detailCard.classList.remove('holographic-flash');
+                    }, 800);
+                }
+
+                // Floating indicator: +PWR
+                if (powerValEl && powerValEl.parentElement) {
+                    const parent = powerValEl.parentElement;
+                    const originalPosition = parent.style.position;
+                    parent.style.position = 'relative';
+                    
+                    const floatPwr = document.createElement('div');
+                    floatPwr.className = 'float-up-stat text-amber-400 font-black text-2xl pointer-events-none';
+                    floatPwr.style.left = '50%';
+                    floatPwr.style.top = '40%';
+                    floatPwr.innerText = `+${powerGain} PWR`;
+                    parent.appendChild(floatPwr);
+                    
+                    setTimeout(() => {
+                        if (floatPwr) floatPwr.remove();
+                        if (parent && !parent.querySelector('.float-up-stat')) {
+                            parent.style.position = originalPosition;
+                        }
+                    }, 1200);
+                }
+
+                // Floating indicator: LVL UP!
+                const imgContainer = document.getElementById('detail-panda-image-container');
+                if (imgContainer) {
+                    const floatLvl = document.createElement('div');
+                    floatLvl.className = 'float-up-stat text-emerald-400 font-extrabold text-3xl tracking-widest pointer-events-none drop-shadow-[0_4px_12px_rgba(16,185,129,0.6)]';
+                    floatLvl.style.left = '50%';
+                    floatLvl.style.top = '50%';
+                    floatLvl.innerText = 'LVL UP!';
+                    imgContainer.appendChild(floatLvl);
+                    
+                    setTimeout(() => {
+                        if (floatLvl) floatLvl.remove();
+                    }, 1200);
+                }
+            }
             
             showToast(`${panda.name} trained to LVL ${panda.level}! (+${powerGain} PWR)`, "success");
         }
@@ -790,7 +840,7 @@
         function showCodexDetail(index, entry) {
             const modalHTML = `
                 <div onclick="this.remove()" class="fixed inset-0 bg-black/90 z-[130] flex items-center justify-center p-4">
-                    <div onclick="event.stopImmediatePropagation()" class="cyber-card w-full max-w-2xl rounded-3xl overflow-hidden border border-purple-400/50">
+                    <div onclick="event.stopImmediatePropagation()" class="cyber-card w-full max-w-2xl rounded-3xl overflow-hidden border" style="border-color: ${entry.color || getRarityColor(entry.rarity)}80">
                         <div class="px-8 pt-8 pb-6 relative bg-gradient-to-b from-[#0f1117] to-transparent">
                             <button onclick="event.target.closest('.fixed').remove()" class="absolute top-6 right-6 text-gray-400 hover:text-white text-2xl">×</button>
                             
@@ -843,13 +893,13 @@
             const panda = userPandas[index];
             const modalHTML = `
                 <div onclick="this.remove()" class="fixed inset-0 bg-black/80 z-[120] flex items-center justify-center p-4">
-                    <div onclick="event.stopImmediatePropagation()" class="cyber-card w-full max-w-lg rounded-3xl overflow-hidden border border-gray-700">
+                    <div id="detail-panda-card" style="--champion-color: ${panda.color || getRarityColor(panda.rarity)}" onclick="event.stopImmediatePropagation()" class="cyber-card w-full max-w-lg rounded-3xl overflow-hidden border border-gray-700">
                         <div class="px-8 pt-8 pb-6 relative">
                             <button onclick="event.target.closest('.fixed').remove()" class="absolute top-6 right-6 text-gray-400 hover:text-white">
                                 <i class="fas fa-times text-2xl"></i>
                             </button>
                             
-                            <div class="flex justify-center">
+                            <div id="detail-panda-image-container" class="flex justify-center relative">
                                 <img src="${panda.image}" alt="${panda.name}" class="w-32 h-32 rounded-3xl object-cover border border-white/10 transition-all">
                             </div>
                             
@@ -1031,10 +1081,12 @@
             
             slotEl.classList.add('active', 'border-solid');
             slotEl.style.borderColor = panda.color;
+            slotEl.style.boxShadow = `0 0 25px ${panda.color}40, inset 0 0 15px ${panda.color}20`;
             
             // Enable fuse button if both selected
             updateFuseButton();
             updateEnergyCost();
+            updateFusionFlowPaths();
         }
 
         function clearSlot(slot) {
@@ -1053,9 +1105,95 @@
             
             slotEl.classList.remove('active');
             slotEl.style.borderColor = '';
+            slotEl.style.boxShadow = '';
             
             updateFuseButton();
             updateEnergyCost();
+            updateFusionFlowPaths();
+        }
+
+        function updateFusionFlowPaths() {
+            if (typeof document === 'undefined' || typeof document.createElementNS !== 'function') {
+                return;
+            }
+            const svg = document.getElementById('fusion-flow-svg');
+            if (!svg) return;
+            svg.innerHTML = '';
+            if (Array.isArray(svg.children)) {
+                svg.children.length = 0;
+            }
+            
+            const slotAlpha = document.getElementById('slot-alpha');
+            const slotBeta = document.getElementById('slot-beta');
+            const core = document.querySelector('#section-fusion-lab .animate-spin-slow')?.parentElement;
+            
+            if (!slotAlpha || !slotBeta || !core) return;
+            if (typeof slotAlpha.getBoundingClientRect !== 'function') return;
+            
+            const svgRect = svg.getBoundingClientRect();
+            if (svgRect.width === 0 || svgRect.height === 0) return;
+            
+            const getCenter = (el) => {
+                const rect = el.getBoundingClientRect();
+                return {
+                    x: rect.left - svgRect.left + rect.width / 2,
+                    y: rect.top - svgRect.top + rect.height / 2
+                };
+            };
+            
+            const coreCenter = getCenter(core);
+            
+            if (selectedAlpha) {
+                const alphaCenter = getCenter(slotAlpha);
+                drawPath(alphaCenter, coreCenter, selectedAlpha.color || '#10b981');
+            }
+            
+            if (selectedBeta) {
+                const betaCenter = getCenter(slotBeta);
+                drawPath(betaCenter, coreCenter, selectedBeta.color || '#c026ff');
+            }
+            
+            function drawPath(start, end, color) {
+                const dx = end.x - start.x;
+                const dy = end.y - start.y;
+                
+                let pathD;
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    // Horizontal layout (desktop)
+                    const cp1x = start.x + dx * 0.5;
+                    const cp1y = start.y;
+                    const cp2x = start.x + dx * 0.5;
+                    const cp2y = end.y;
+                    pathD = `M ${start.x} ${start.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${end.x} ${end.y}`;
+                } else {
+                    // Vertical layout (mobile)
+                    const cp1x = start.x;
+                    const cp1y = start.y + dy * 0.5;
+                    const cp2x = end.x;
+                    const cp2y = start.y + dy * 0.5;
+                    pathD = `M ${start.x} ${start.y} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${end.x} ${end.y}`;
+                }
+                
+                const baseLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                baseLine.setAttribute('d', pathD);
+                baseLine.setAttribute('stroke', color);
+                baseLine.setAttribute('stroke-width', '4');
+                baseLine.setAttribute('fill', 'none');
+                baseLine.setAttribute('opacity', '0.25');
+                baseLine.setAttribute('stroke-linecap', 'round');
+                
+                const activeLine = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                activeLine.setAttribute('d', pathD);
+                activeLine.setAttribute('stroke', color);
+                activeLine.setAttribute('stroke-width', '4');
+                activeLine.setAttribute('fill', 'none');
+                activeLine.setAttribute('stroke-linecap', 'round');
+                activeLine.setAttribute('class', 'pulse-flow-line');
+                activeLine.setAttribute('style', `filter: drop-shadow(0 0 6px ${color});`);
+                
+                svg.appendChild(baseLine);
+                svg.appendChild(activeLine);
+            }
         }
 
         function updateFuseButton() {
@@ -1602,7 +1740,7 @@
                 <div class="fixed inset-0 bg-black/90 z-[130] flex items-center justify-center" onclick="this.remove()">
                     <div class="text-center max-w-xs px-6" onclick="event.stopImmediatePropagation()">
                         <div class="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-amber-300 to-yellow-400 flex items-center justify-center mb-6 shadow-[0_0_80px_#fbbf24]">
-                            <span class="text-6xl">🏆</span>
+                            <i class="fas fa-trophy text-4xl text-black"></i>
                         </div>
                         
                         <div class="text-5xl font-black mb-1">LEVEL UP!</div>
@@ -1905,6 +2043,8 @@
                 playerImage: champion.image || null,
                 playerLevel,
                 playerPower: championPower,
+                playerType: champion.type || "Balanced",
+                playerRarity: champion.rarity || "common",
                 enemyId: rival.id,
                 enemyName: rival.name,
                 enemySubtitle: rival.subtitle,
@@ -1921,6 +2061,115 @@
                 enemyBaseDamage,
             };
         }
+
+        function getChampionMoves(champion) {
+            const t = String(champion.type || "").toLowerCase();
+            const name = String(champion.name || "");
+            
+            let attacks = [];
+            let specials = [];
+            
+            if (t.includes('steam')) {
+                attacks = ["Scald Jet", "Pressure Slam", "Vapor Punch"];
+                specials = ["Superheat Geyser", "Scalding Tempest", "Steam Core Eruption"];
+            } else if (t.includes('eclipse')) {
+                attacks = ["Twilight Cut", "Lunar Eclipse", "Corona Strike"];
+                specials = ["Umbral Judgement", "Celestial Alignment", "Eclipse Oblivion"];
+            } else if (t.includes('plasma')) {
+                attacks = ["Plasma Spark", "Ion Strike", "Volt Claw"];
+                specials = ["Plasma Vaporizer", "Lightning Storm", "Supercharge Eruption"];
+            } else if (t.includes('inferno mystic') || t.includes('fire') || name.toLowerCase().includes('blaze')) {
+                attacks = ["Flame Strike", "Ember Claw", "Volcanic Dash"];
+                specials = ["Supernova Burst", "Hellfire Devastation", "Pyroclastic Surge"];
+            } else if (t.includes('ice') || t.includes('frost')) {
+                attacks = ["Frost Jab", "Icicle Pierce", "Glacial Sweep"];
+                specials = ["Blizzard Storm", "Absolute Zero Blast", "Cryogenic Stasis"];
+            } else if (t.includes('dark') || t.includes('void')) {
+                attacks = ["Void Slash", "Shadow Strike", "Umbral Dagger"];
+                specials = ["Abyssal Devour", "Black Hole Collapse", "Nightmare Nexus"];
+            } else if (t.includes('light') || t.includes('solar')) {
+                attacks = ["Sun Burst", "Radiant Lance", "Solar Blade"];
+                specials = ["Supernova Radiance", "Daybreak Judgement", "Corona Overdrive"];
+            } else if (t.includes('electric') || t.includes('thunder')) {
+                attacks = ["Volt Spark", "Lightning Claw", "Tesla Strike"];
+                specials = ["Thunderbolt Storm", "Plasma Burst", "Overcharge Discharge"];
+            } else if (t.includes('arcane') || t.includes('chaos')) {
+                attacks = ["Aether Bolt", "Mana Slash", "Chaos Shift"];
+                specials = ["Runic Ruin", "Cosmic Singularity", "Chaotic Cataclysm"];
+            } else if (t.includes('crystal') || t.includes('nebula')) {
+                attacks = ["Quartz Spike", "Prism Shard", "Nebula Strike"];
+                specials = ["Crystal Refraction", "Supernova Shatter", "Galactic Prism"];
+            } else if (t.includes('hybrid') || t.includes('celestial')) {
+                attacks = ["Cosmic Claw", "Stellar Strike", "Nebula Bash"];
+                specials = ["Dimensional Rift", "Astral Convergence", "Celestial Fusion Beam"];
+            } else if (t.includes('balanced') || t.includes('bamboo')) {
+                attacks = ["Bamboo Slam", "Paw Strike", "Swift Kick"];
+                specials = ["Panda Fury", "Nature Resonance", "Zen Focus Blast"];
+            } else {
+                attacks = ["Quick Attack", "Heavy Hit", "Struggle Strike"];
+                specials = ["Ultimate Move", "Elemental Surge", "Signature Overload"];
+            }
+            
+            // Customize the first move with the champion's name prefix for character identity
+            const namePrefix = name.split(' ')[0] || "Panda";
+            attacks[0] = `${namePrefix} ${attacks[0]}`;
+            specials[0] = `${namePrefix} ${specials[0]}`;
+            
+            return { attacks, specials };
+        }
+
+        function toggleFractalMenu(type) {
+            const b = window.__activeBattle;
+            if (!b || b.ended) return;
+            
+            const triggerBtn = document.getElementById(type === 'attack' ? "battle-attack-btn" : "battle-special-btn");
+            if (triggerBtn && triggerBtn.disabled) return;
+
+            const atkBranches = document.getElementById("attack-branches");
+            const spBranches = document.getElementById("special-branches");
+            if (!atkBranches || !spBranches) return;
+            
+            if (type === 'attack') {
+                atkBranches.classList.toggle("hidden");
+                atkBranches.classList.toggle("flex");
+                spBranches.classList.add("hidden");
+                spBranches.classList.remove("flex");
+            } else {
+                spBranches.classList.toggle("hidden");
+                spBranches.classList.toggle("flex");
+                atkBranches.classList.add("hidden");
+                atkBranches.classList.remove("flex");
+            }
+        }
+
+        function triggerFractalMove(btn, isSpecial, moveIndex) {
+            const b = window.__activeBattle;
+            if (!b || b.ended) return;
+            
+            const moves = getChampionMoves({
+                name: b.playerName,
+                type: b.playerType,
+                rarity: b.playerRarity
+            });
+            const moveName = isSpecial ? moves.specials[moveIndex] : moves.attacks[moveIndex];
+            
+            simulateBattleAttack(btn, isSpecial, moveName);
+            
+            const atkBranches = document.getElementById("attack-branches");
+            const spBranches = document.getElementById("special-branches");
+            if (atkBranches) {
+                atkBranches.classList.add("hidden");
+                atkBranches.classList.remove("flex");
+            }
+            if (spBranches) {
+                spBranches.classList.add("hidden");
+                spBranches.classList.remove("flex");
+            }
+        }
+
+        window.getChampionMoves = getChampionMoves;
+        window.toggleFractalMenu = toggleFractalMenu;
+        window.triggerFractalMove = triggerFractalMove;
 
         function renderBattleChampionSelect() {
             const arenaSection = document.getElementById("section-arena");
@@ -2034,8 +2283,8 @@
                     
                     <div class="mt-10 inline-flex items-center gap-x-2 px-6 py-3 bg-[#1a1f2e] rounded-3xl text-sm border border-gray-700">
                         <div class="flex -space-x-2">
-                            <div class="w-7 h-7 bg-red-400 rounded-full flex items-center justify-center ring-2 ring-[#1a1f2e]"><span class="text-xs">🐼</span></div>
-                            <div class="w-7 h-7 bg-orange-400 rounded-full flex items-center justify-center ring-2 ring-[#1a1f2e]"><span class="text-xs">🔥</span></div>
+                            <div class="w-7 h-7 bg-red-400 rounded-full flex items-center justify-center ring-2 ring-[#1a1f2e]"><i class="fas fa-paw text-xs text-black"></i></div>
+                            <div class="w-7 h-7 bg-orange-400 rounded-full flex items-center justify-center ring-2 ring-[#1a1f2e]"><i class="fas fa-fire-alt text-xs text-black"></i></div>
                         </div>
                         <span class="text-gray-400">6 signature rivals • Grok-powered cinematics live</span>
                     </div>
@@ -2086,6 +2335,7 @@
             const selectedChampion = userPandas[championIndex] || userPandas[0] || basePandas[0];
             const battle = __createBattleMatch(selectedChampion, specificRivalId);
             window.__activeBattle = battle;
+            const moves = getChampionMoves(selectedChampion);
             console.log('Started battle vs:', battle.enemyName, 'video will be:', battle.enemyVideo, 'failureVideo will be:', battle.enemyFailureVideo);
             const safePlayerName = __escapeBattleText(battle.playerName);
             const safeEnemyName = __escapeBattleText(battle.enemyName);
@@ -2157,20 +2407,304 @@
                         </div>
                     </div>
                     
-                    <div class="flex flex-col sm:flex-row flex-wrap justify-center gap-2 sm:gap-3 mt-6">
-                        <button type="button" id="battle-attack-btn" onclick="void simulateBattleAttack(this, false)" class="w-full sm:w-auto min-w-[10rem] px-6 sm:px-8 py-3 text-sm bg-red-600 hover:bg-red-500 transition-colors rounded-2xl font-bold flex items-center justify-center gap-x-2">
-                            <span>ATTACK</span> <i class="fas fa-fist-raised" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" id="battle-special-btn" onclick="void simulateBattleAttack(this, true)" class="w-full sm:w-auto min-w-[10rem] px-6 sm:px-8 py-3 text-sm border border-fuchsia-400 text-fuchsia-300 hover:bg-fuchsia-500/20 transition-all rounded-2xl font-bold flex items-center justify-center gap-x-2">
-                            <span>SPECIAL</span> <i class="fas fa-magic" aria-hidden="true"></i>
-                        </button>
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10 relative select-none">
+                        <!-- Attack Branching Container -->
+                        <div class="fractal-menu-container relative text-red-500/50" id="attack-menu-container">
+                            <button type="button" id="battle-attack-btn" onclick="toggleFractalMenu('attack')" class="parent-action-btn w-full sm:w-auto min-w-[11rem] px-6 py-3.5 text-sm bg-red-600 hover:bg-red-500 transition-all rounded-2xl font-bold flex items-center justify-center gap-x-2 relative z-20 shadow-lg border border-red-500/30">
+                                <span>ATTACK</span> <i class="fas fa-fist-raised" aria-hidden="true"></i>
+                            </button>
+                            
+                            <!-- Branching Nodes -->
+                            <div class="fractal-branches hidden z-10 absolute left-1/2 -translate-x-1/2 bottom-0 w-max" id="attack-branches">
+                                <div class="fractal-line fractal-line--left"></div>
+                                <div class="fractal-line fractal-line--center"></div>
+                                <div class="fractal-line fractal-line--right"></div>
+                                
+                                <button type="button" onclick="void triggerFractalMove(this, false, 0)" class="fractal-node fractal-node--left px-4 py-2 text-xs bg-slate-900/95 hover:bg-red-950/80 text-red-200 border border-red-500/50 rounded-xl font-bold transition-all shadow-md backdrop-blur-md">
+                                    ${moves.attacks[0]}
+                                </button>
+                                <button type="button" onclick="void triggerFractalMove(this, false, 1)" class="fractal-node fractal-node--center px-4 py-2 text-xs bg-slate-900/95 hover:bg-red-950/80 text-red-200 border border-red-500/50 rounded-xl font-bold transition-all shadow-md backdrop-blur-md">
+                                    ${moves.attacks[1]}
+                                </button>
+                                <button type="button" onclick="void triggerFractalMove(this, false, 2)" class="fractal-node fractal-node--right px-4 py-2 text-xs bg-slate-900/95 hover:bg-red-950/80 text-red-200 border border-red-500/50 rounded-xl font-bold transition-all shadow-md backdrop-blur-md">
+                                    ${moves.attacks[2]}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Special Branching Container -->
+                        <div class="fractal-menu-container relative text-fuchsia-500/50" id="special-menu-container" style="--champion-color: ${selectedChampion.color || '#d946ef'};">
+                            <button type="button" id="battle-special-btn" onclick="toggleFractalMenu('special')" class="parent-action-btn w-full sm:w-auto min-w-[11rem] px-6 py-3.5 text-sm border border-fuchsia-400 text-fuchsia-300 hover:bg-fuchsia-500/10 transition-all rounded-2xl font-bold flex items-center justify-center gap-x-2 relative z-20 shadow-lg backdrop-blur-md">
+                                <span>SPECIAL</span> <i class="fas fa-magic" aria-hidden="true"></i>
+                            </button>
+                            
+                            <!-- Branching Nodes -->
+                            <div class="fractal-branches hidden z-10 absolute left-1/2 -translate-x-1/2 bottom-0 w-max" id="special-branches">
+                                <div class="fractal-line fractal-line--left"></div>
+                                <div class="fractal-line fractal-line--center"></div>
+                                <div class="fractal-line fractal-line--right"></div>
+                                
+                                <button type="button" onclick="void triggerFractalMove(this, true, 0)" class="fractal-node fractal-node--left px-4 py-2 text-xs bg-slate-900/95 hover:bg-fuchsia-950/80 text-fuchsia-200 border border-fuchsia-500/50 rounded-xl font-bold transition-all shadow-md backdrop-blur-md">
+                                    ${moves.specials[0]}
+                                </button>
+                                <button type="button" onclick="void triggerFractalMove(this, true, 1)" class="fractal-node fractal-node--center px-4 py-2 text-xs bg-slate-900/95 hover:bg-fuchsia-950/80 text-fuchsia-200 border border-fuchsia-500/50 rounded-xl font-bold transition-all shadow-md backdrop-blur-md">
+                                    ${moves.specials[1]}
+                                </button>
+                                <button type="button" onclick="void triggerFractalMove(this, true, 2)" class="fractal-node fractal-node--right px-4 py-2 text-xs bg-slate-900/95 hover:bg-fuchsia-950/80 text-fuchsia-200 border border-fuchsia-500/50 rounded-xl font-bold transition-all shadow-md backdrop-blur-md">
+                                    ${moves.specials[2]}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
             __syncBattleHpBars();
         }
 
-        async function simulateBattleAttack(element, isSpecial = false) {
+        function triggerSpecialActionClips(battle, attackName) {
+            if (typeof document === 'undefined' || typeof document.createElement !== 'function') {
+                return;
+            }
+            const stage = document.getElementById('battle-stage');
+            if (!stage) return;
+
+            function getComicActionText(type, stepIndex) {
+                const t = String(type || "").toLowerCase();
+                if (t.includes('fire') || t.includes('inferno') || t.includes('blaze')) {
+                    const words = ["FWOOSH!", "IGNITE!", "BOOM!", "KABOOM!", "BURN!"];
+                    return words[stepIndex] || "BURN!";
+                } else if (t.includes('ice') || t.includes('frost')) {
+                    const words = ["SHIVER!", "FREEZE!", "CRACK!", "SHATTER!", "COLD!"];
+                    return words[stepIndex] || "FREEZE!";
+                } else if (t.includes('steam')) {
+                    const words = ["HISS!", "SCALD!", "BOIL!", "STEAM!", "BURST!"];
+                    return words[stepIndex] || "STEAM!";
+                } else if (t.includes('plasma') || t.includes('electric') || t.includes('lightning') || t.includes('thunder')) {
+                    const words = ["ZZZAP!", "SHOCK!", "CRACKLE!", "BOOM!", "BOLT!"];
+                    return words[stepIndex] || "SHOCK!";
+                } else if (t.includes('dark') || t.includes('void') || t.includes('eclipse')) {
+                    const words = ["VOID!", "GRAVITY!", "CRUSH!", "OBLIVION!", "SHADOW!"];
+                    return words[stepIndex] || "VOID!";
+                } else if (t.includes('light') || t.includes('celestial') || t.includes('nebula') || t.includes('solar')) {
+                    const words = ["FLASH!", "BEAM!", "GLARE!", "SUPERNOVA!", "RAY!"];
+                    return words[stepIndex] || "FLASH!";
+                } else {
+                    const words = ["SLAM!", "CRASH!", "POW!", "WHACK!", "SMASH!"];
+                    return words[stepIndex] || "SLAM!";
+                }
+            }
+
+            function getComicActionIcon(type) {
+                const t = String(type || "").toLowerCase();
+                if (t.includes('fire') || t.includes('inferno') || t.includes('blaze')) {
+                    return 'fa-solid fa-fire-flame-curved text-orange-500';
+                } else if (t.includes('ice') || t.includes('frost')) {
+                    return 'fa-solid fa-snowflake text-cyan-300';
+                } else if (t.includes('steam')) {
+                    return 'fa-solid fa-smog text-slate-300';
+                } else if (t.includes('plasma') || t.includes('electric') || t.includes('lightning') || t.includes('thunder')) {
+                    return 'fa-solid fa-bolt-lightning text-yellow-400';
+                } else if (t.includes('dark') || t.includes('void') || t.includes('eclipse')) {
+                    return 'fa-solid fa-circle-nodes text-purple-600';
+                } else if (t.includes('light') || t.includes('celestial') || t.includes('nebula') || t.includes('solar')) {
+                    return 'fa-solid fa-wand-magic-sparkles text-amber-300';
+                } else {
+                    return 'fa-solid fa-burst text-red-500';
+                }
+            }
+
+            function getComicActionBg(type, championColor) {
+                const t = String(type || "").toLowerCase();
+                if (t.includes('fire') || t.includes('inferno') || t.includes('blaze')) {
+                    return `radial-gradient(circle, rgba(239, 68, 68, 0.35) 0%, rgba(10, 10, 15, 0.95) 85%)`;
+                } else if (t.includes('ice') || t.includes('frost')) {
+                    return `radial-gradient(circle, rgba(6, 182, 212, 0.35) 0%, rgba(10, 10, 15, 0.95) 85%)`;
+                } else if (t.includes('steam')) {
+                    return `radial-gradient(circle, rgba(156, 163, 175, 0.35) 0%, rgba(10, 10, 15, 0.95) 85%)`;
+                } else if (t.includes('plasma') || t.includes('electric') || t.includes('lightning') || t.includes('thunder')) {
+                    return `radial-gradient(circle, rgba(234, 179, 8, 0.35) 0%, rgba(10, 10, 15, 0.95) 85%)`;
+                } else if (t.includes('dark') || t.includes('void') || t.includes('eclipse')) {
+                    return `radial-gradient(circle, rgba(147, 51, 234, 0.35) 0%, rgba(10, 10, 15, 0.95) 85%)`;
+                } else if (t.includes('light') || t.includes('celestial') || t.includes('nebula') || t.includes('solar')) {
+                    return `radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, rgba(10, 10, 15, 0.95) 85%)`;
+                } else {
+                    return `radial-gradient(circle, ${championColor}55 0%, rgba(10, 10, 15, 0.95) 85%)`;
+                }
+            }
+
+            function getSeed(str) {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+                }
+                return Math.abs(hash);
+            }
+
+            const seed = getSeed(attackName + (battle.playerName || ""));
+            const numPanels = 1 + (seed % 5);
+            
+            const shapePool = [
+                { name: 'hexagon', clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)' },
+                { name: 'rhombus', clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)' },
+                { name: 'octagon', clipPath: 'polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%)' },
+                { name: 'trapezoid', clipPath: 'polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%)' },
+                { name: 'triangle', clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' },
+                { name: 'parallelogram', clipPath: 'polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%)' },
+                { name: 'bevel', clipPath: 'polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%)' }
+            ];
+
+            const championColor = battle.playerRarity ? getRarityColor(battle.playerRarity) : '#d946ef';
+            const championImage = battle.playerImage || 'assets/pandas/classic_panda.jpg';
+            const actionIcon = getComicActionIcon(battle.playerType);
+            const actionBg = getComicActionBg(battle.playerType, championColor);
+
+            const impactIndex = numPanels >= 3 ? 2 : (numPanels - 1);
+
+            for (let index = 0; index < numPanels; index++) {
+                const pSeed = seed + index * 37;
+                const shape = shapePool[pSeed % shapePool.length];
+                
+                const width = (110 + (pSeed % 51)) + 'px';
+                const height = (100 + ((pSeed >> 2) % 51)) + 'px';
+                
+                const colWidth = 70 / numPanels;
+                const baseLeft = 5 + (index * colWidth);
+                const offsetLeft = (pSeed >> 4) % Math.max(5, Math.floor(colWidth - 5));
+                const left = (baseLeft + offsetLeft) + '%';
+                
+                const top = (10 + ((pSeed >> 6) % 46)) + '%';
+                const rotate = (-12 + ((pSeed >> 8) % 25)) + 'deg';
+                const panClass = 'action-pan-' + (1 + ((pSeed >> 10) % 5));
+
+                setTimeout(() => {
+                    const popup = document.createElement('div');
+                    popup.className = 'special-clip-popup absolute pointer-events-none comic-border bg-halftone';
+                    popup.setAttribute('data-testid', 'special-popup');
+                    popup.style.width = width;
+                    popup.style.height = height;
+                    popup.style.left = left;
+                    popup.style.top = top;
+                    popup.style.clipPath = shape.clipPath;
+                    popup.style.setProperty('--champion-color', championColor);
+                    popup.style.boxShadow = `0 0 25px ${championColor}A0`;
+                    popup.style.transform = `scale(0) rotate(${rotate})`;
+                    popup.style.transition = 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease';
+                    popup.style.zIndex = '100';
+                    popup.style.opacity = '0';
+                    popup.style.background = '#0a0a0f';
+                    popup.style.overflow = 'hidden';
+
+                    let panelHTML = '';
+                    const actionWord = getComicActionText(battle.playerType, index);
+                    
+                    if (index === impactIndex) {
+                        panelHTML = `
+                            <div class="relative w-full h-full flex items-center justify-center" style="background: ${actionBg}">
+                                <div class="absolute inset-0 bg-halftone"></div>
+                                <div class="spiked-burst-clip absolute w-[90%] h-[90%] flex items-center justify-center">
+                                    <div class="font-comic text-2xl md:text-3xl font-black text-white tracking-wider transform -rotate-12">${actionWord}</div>
+                                </div>
+                                <div class="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[6px] font-mono tracking-widest text-yellow-400 bg-black border border-yellow-400/30">
+                                    PANEL ${index + 1}: IMPACT
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        let panelContent = '';
+                        let panelTitle = '';
+                        
+                        if (index === 0) {
+                            panelTitle = 'PANEL 1: CHARGE';
+                            panelContent = `
+                                <div class="relative w-full h-full flex items-center justify-center" style="background: ${actionBg}">
+                                    <div class="absolute inset-0 bg-halftone opacity-45 pointer-events-none"></div>
+                                    <!-- Rotating energy ring -->
+                                    <div class="w-16 h-16 rounded-full border-4 border-dashed border-white/20 animate-spin absolute" style="animation-duration: 4s;"></div>
+                                    <i class="${actionIcon} text-5xl animate-pulse filter drop-shadow-[0_0_15px_currentColor] z-10 ${panClass}"></i>
+                                    <!-- Champion inset portrait -->
+                                    <div class="absolute top-2 right-2 w-8 h-8 rounded-full border border-black/50 overflow-hidden z-20 shadow-md">
+                                        <img src="${championImage}" class="w-full h-full object-cover">
+                                    </div>
+                                </div>
+                            `;
+                        } else if (index === 1) {
+                            panelTitle = 'PANEL 2: UNLEASH';
+                            panelContent = `
+                                <div class="relative w-full h-full flex items-center justify-center" style="background: ${actionBg}">
+                                    <!-- Comic speed lines repeating gradient -->
+                                    <div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 12px);"></div>
+                                    <!-- Motion trails -->
+                                    <i class="${actionIcon} text-3xl opacity-30 transform -translate-x-8 translate-y-1 scale-75 skew-x-12 absolute z-5"></i>
+                                    <i class="${actionIcon} text-4xl opacity-60 transform -translate-x-4 scale-90 skew-x-12 absolute z-10"></i>
+                                    <i class="${actionIcon} text-5xl transform translate-x-4 scale-100 skew-x-12 absolute z-20 filter drop-shadow-[0_0_10px_currentColor] ${panClass}"></i>
+                                </div>
+                            `;
+                        } else if (index === 3 || (index > impactIndex && index < numPanels - 1)) {
+                            panelTitle = `PANEL ${index + 1}: BURST`;
+                            panelContent = `
+                                <div class="relative w-full h-full flex items-center justify-center" style="background: ${actionBg}">
+                                    <div class="absolute inset-0 bg-halftone opacity-45 pointer-events-none"></div>
+                                    <!-- Concentric shockwaves -->
+                                    <div class="w-20 h-20 rounded-full border border-white/20 absolute animate-ping" style="animation-duration: 1.5s;"></div>
+                                    <i class="fa-solid fa-burst text-7xl text-orange-500 absolute opacity-50 z-5"></i>
+                                    <i class="fa-solid fa-burst text-8xl text-red-600 absolute z-10 ${panClass}"></i>
+                                    <i class="${actionIcon} text-3xl text-white absolute z-20 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.9)]"></i>
+                                </div>
+                            `;
+                        } else {
+                            panelTitle = `PANEL ${index + 1}: RESOLVE`;
+                            panelContent = `
+                                <div class="relative w-full h-full flex items-center justify-center flex-col" style="background: ${actionBg}">
+                                    <div class="absolute inset-0 bg-halftone opacity-60 pointer-events-none"></div>
+                                    <i class="${actionIcon} text-4xl opacity-50 transform rotate-12 z-10 ${panClass}"></i>
+                                    <div class="mt-2 bg-emerald-500 text-black border border-black font-comic text-[8px] font-black px-1.5 py-0.5 rotate-3 z-20">
+                                        STRIKE COMPLETE!
+                                    </div>
+                                </div>
+                            `;
+                        }
+
+                        panelHTML = `
+                            <div class="relative w-full h-full flex items-center justify-center">
+                                ${panelContent}
+                                
+                                <div class="absolute inset-0 bg-scanlines pointer-events-none opacity-20 z-10"></div>
+                                
+                                <div class="absolute bottom-2 left-3 bg-yellow-400 text-black border-2 border-black font-comic text-[10px] font-black px-2 py-0.5 transform -rotate-3 z-20">
+                                    ${actionWord}
+                                </div>
+                                
+                                <div class="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[6px] font-mono tracking-widest text-white/90 bg-black/80 border border-white/10 z-20">
+                                    ${panelTitle}
+                                </div>
+                                
+                                <div class="absolute inset-0 bg-white opacity-0 animate-rapid-flash pointer-events-none z-30"></div>
+                            </div>
+                        `;
+                    }
+
+                    popup.innerHTML = panelHTML;
+                    stage.appendChild(popup);
+
+                    void popup.offsetWidth;
+                    popup.style.transform = `scale(1) rotate(${rotate})`;
+                    popup.style.opacity = '1';
+
+                    setTimeout(() => {
+                        if (popup && popup.parentElement) {
+                            popup.style.transform = `scale(0) rotate(${rotate})`;
+                            popup.style.opacity = '0';
+                            setTimeout(() => {
+                                if (popup && popup.parentElement) popup.remove();
+                            }, 250);
+                        }
+                    }, 850);
+
+                }, index * 80);
+            }
+        }
+
+        async function simulateBattleAttack(element, isSpecial = false, customMoveName = null) {
             const b = window.__activeBattle;
             const log = document.getElementById("battle-log");
             if (!log || !b || b.ended) return;
@@ -2185,13 +2719,15 @@
             if (element && element.disabled) return;
             if (atkBtn) atkBtn.disabled = true;
             if (spBtn) spBtn.disabled = true;
-            const attacks = isSpecial
-                ? ["CRITICAL FUSION BEAM", "DIMENSION RIFT", "PANDAS UNITE"]
-                : ["BAMBOO SLAM", "PAW STRIKE", "ROAR OF FURY"];
-            const attackName = attacks[Math.floor(Math.random() * attacks.length)];
+            const attackName = customMoveName || (isSpecial
+                ? "SPECIAL SURGE"
+                : "BASIC STRIKE");
             const dmg = isSpecial
                 ? Math.floor(Math.random() * 14) + b.playerBaseDamage + 12
                 : Math.floor(Math.random() * 10) + b.playerBaseDamage;
+            if (isSpecial) {
+                triggerSpecialActionClips(b, attackName);
+            }
             pCard.classList.add("battle-anim-attack-left");
             __resetBeam(beam);
             if (beam) {
@@ -3275,6 +3811,9 @@
             });
             
             // Special actions per section
+            if (section === 'fusion-lab') {
+                setTimeout(updateFusionFlowPaths, 50);
+            }
             if (section === 'collection') {
                 renderCollection();
             }
@@ -3525,6 +4064,9 @@
             
             wireNavLinkAccessibility();
             initKeyboardShortcuts();
+            if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+                window.addEventListener('resize', updateFusionFlowPaths);
+            }
             
             // Make sure fuse button starts disabled
             document.getElementById('fuse-btn').disabled = true;
