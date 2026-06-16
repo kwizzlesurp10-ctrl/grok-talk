@@ -247,6 +247,11 @@
             border-color: rgba(251, 191, 36, 0.5);
         }
 
+        .battle-stage--defeat {
+            animation: battleDefeatPulse 1.2s ease-in-out 2;
+            border-color: rgba(244, 63, 94, 0.5);
+        }
+
         .battle-fighter--defeated {
             animation: battleDefeatedVanish 0.75s ease-in forwards;
             pointer-events: none;
@@ -278,6 +283,16 @@
             }
             50% {
                 box-shadow: 0 0 40px 6px rgba(251, 191, 36, 0.35);
+            }
+        }
+
+        @keyframes battleDefeatPulse {
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+            }
+            50% {
+                box-shadow: 0 0 40px 6px rgba(244, 63, 94, 0.35);
             }
         }
 
