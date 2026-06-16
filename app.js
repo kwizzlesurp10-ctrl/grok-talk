@@ -1860,9 +1860,10 @@
                 diffMult = 1.25;
             }
 
-            // Scale opponent level based on selected Champion's Level
-            const enemyLevelFloor = Math.max(1, championLevel - 1);
-            const enemyLevelCeil = championLevel + (championLevel < 3 ? 0 : 1);
+            // Scale opponent level based on a combination of selected Champion's Level and Player Account Level
+            const combinedLevel = Math.max(1, Math.floor((championLevel + playerLevel) / 2));
+            const enemyLevelFloor = Math.max(1, combinedLevel - 1);
+            const enemyLevelCeil = combinedLevel + (combinedLevel < 3 ? 0 : 1);
             const enemyLevel = enemyLevelFloor + Math.floor(Math.random() * (enemyLevelCeil - enemyLevelFloor + 1));
 
             const playerMax = 120 + Math.floor(championPower * 2.2) + playerLevel * 9;
