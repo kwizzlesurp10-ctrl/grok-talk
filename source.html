@@ -770,5 +770,15 @@
     <div id="toast-container" class="fixed bottom-[5.5rem] lg:bottom-5 right-3 sm:right-5 left-3 sm:left-auto z-[200] flex flex-col gap-y-2 max-w-md sm:max-w-xs mx-auto sm:mx-0"></div>
 
     <script defer src="/app.js"></script>
+    <!-- Production PWA Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('[PWA] Service worker registered:', reg.scope))
+            .catch(err => console.warn('[PWA] Service worker registration failed:', err));
+        });
+      }
+    </script>
 </body>
 </html>
