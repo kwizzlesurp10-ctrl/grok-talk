@@ -56,7 +56,8 @@
             { id: 5, name: "Thunder Panda", emoji: "⚡🐼", type: "Electric", power: 19, rarity: "rare", color: "#eab308", desc: "Channeling the power of storms. Fast and shocking." },
             { id: 6, name: "Golden Fortune", emoji: "✨🐼", type: "Light", power: 27, rarity: "legendary", color: "#fbbf24", desc: "Extremely rare. Brings incredible luck and prosperity." },
             { id: 7, name: "Mystic Panda", emoji: "🔮🐼", type: "Arcane", power: 24, rarity: "epic", color: "#c026ff", desc: "Wielder of ancient panda magic. Unpredictable and wise." },
-            { id: 8, name: "Crystal Panda", emoji: "💎🐼", type: "Crystal", power: 16, rarity: "rare", color: "#67e8f9", desc: "Crystalline armor protects it from harm. Beautiful but deadly." }
+            { id: 8, name: "Crystal Panda", emoji: "💎🐼", type: "Crystal", power: 16, rarity: "rare", color: "#67e8f9", desc: "Crystalline armor protects it from harm. Beautiful but deadly." },
+            { id: 9, name: "Red Panda", emoji: "🔴🐼", type: "Balanced", power: 25, rarity: "epic", color: "#ef4444", desc: "A charming, chestnut-colored climber with a ringed tail and playful spirit. Unlocks special elemental resonance." }
         ];
 
         // User's unlocked pandas (new users start with one fair starter)
@@ -498,7 +499,7 @@
         ];
 
         const FUSION_TREE_RECIPES = [
-            { a: "Classic Panda", b: "Inferno Panda", result: "Steam Panda", mode: "basic", extra: "Fire + Balanced" },
+            { a: "Classic Panda", b: "Inferno Panda", result: "Red Panda", mode: "basic", extra: "Fire + Balanced" },
             { a: "Shadow Panda", b: "Mystic Panda", result: "Void Walker", mode: "basic", extra: "Dark + Arcane" },
             { a: "Golden Fortune", b: "Thunder Panda", result: "Solar Flare", mode: "ritual", extra: "Light + Electric" },
             { a: "Inferno Panda", b: "Mystic Panda", result: "Inferno Mystic", mode: "ritual", extra: "Fire + Arcane" },
@@ -1220,7 +1221,7 @@
                 hybridName = prefixes[Math.floor(Math.random() * prefixes.length)];
             }
             
-            const fullName = `${hybridName} ${pandaA.name.split(' ').pop() || 'Panda'}`;
+            let fullName = `${hybridName} ${pandaA.name.split(' ').pop() || 'Panda'}`;
             
             // === POWER CALCULATION (Advanced Mechanics) ===
             let basePower = Math.floor((pandaA.power + pandaB.power) / 2);
@@ -1282,6 +1283,16 @@
             let newType = 'Hybrid';
             if (synergyName) newType = synergyName;
             else if (types[0] !== types[1]) newType = `${types[0]}-${types[1]}`;
+            
+            // Intercept Classic + Inferno combo for Red Panda
+            const isRedPandaCombo = (pandaA.name === "Classic Panda" && pandaB.name === "Inferno Panda") ||
+                                    (pandaA.name === "Inferno Panda" && pandaB.name === "Classic Panda");
+            if (isRedPandaCombo) {
+                fullName = "Red Panda";
+                emoji = "🔴🐼";
+                newType = "Balanced";
+                rarity = "epic";
+            }
             
             // Apply Blazing Catalyst (+22% Fire power)
             if (gameState.boosters && gameState.boosters.blazing && (emoji.includes('🔥') || emoji === '🌋' || newType.toLowerCase().includes('fire'))) {

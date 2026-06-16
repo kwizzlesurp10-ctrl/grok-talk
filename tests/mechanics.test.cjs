@@ -481,6 +481,20 @@ async function runTests() {
         assert.equal(gameState.ep, epAfter10);
     }
 
+    // -------------------- TEST 9: Red Panda Fusion Recipe --------------------
+    {
+        const { read } = runAppWithGameState();
+        const createFusionResult = read("createFusionResult");
+
+        const classicPanda = { name: "Classic Panda", emoji: "🐼", type: "Balanced", power: 12, rarity: "common" };
+        const infernoPanda = { name: "Inferno Panda", emoji: "🔥🐼", type: "Fire", power: 18, rarity: "rare" };
+
+        const result = createFusionResult(classicPanda, infernoPanda, "basic");
+        assert.equal(result.name, "Red Panda");
+        assert.equal(result.rarity, "epic");
+        assert.equal(result.type, "Balanced");
+    }
+
     process.stdout.write("mechanics ok\n");
 }
 

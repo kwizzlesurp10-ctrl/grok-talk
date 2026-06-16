@@ -42,5 +42,16 @@
         "createdAt": "2026-06-16T06:13:02.262Z",
         "completedAt": "2026-06-16T06:18:30.115Z",
         "notes": "Completed after 0 fix retries. Trace recorded in traces/task_004.json."
+    },
+    {
+        "id": "task_005",
+        "title": "Red Panda Integration",
+        "description": "Add Red Panda to basePandas, update fusion recipes to make it obtainable by combining Classic Panda and Inferno Panda, and update codex listings.",
+        "status": "completed",
+        "assignedTo": "orchestrator",
+        "plan": null,
+        "createdAt": "2026-06-16T06:23:16.116Z",
+        "completedAt": "2026-06-16T06:26:46.885Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_005.json."
     }
 ]
