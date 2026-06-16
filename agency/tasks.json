@@ -152,5 +152,16 @@
         "createdAt": "2026-06-16T20:20:00Z",
         "completedAt": "2026-06-16T20:20:43.622Z",
         "notes": "Completed after 0 fix retries. Trace recorded in traces/task_014.json."
+    },
+    {
+        "id": "task_015",
+        "title": "Comic Action Replay Popups",
+        "description": "Evolve the action pop-up clips to showcase special moves in a step-by-step comic strip format, rendering customized element-specific onomatopoeias, halftone patterns, and retro spiked speech bursts.",
+        "status": "completed",
+        "assignedTo": "developer",
+        "plan": "agency/plans/task_015.md",
+        "createdAt": "2026-06-16T20:24:00Z",
+        "completedAt": "2026-06-16T20:27:04.799Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_015.json."
     }
 ]

@@ -2461,6 +2461,70 @@
             const stage = document.getElementById('battle-stage');
             if (!stage) return;
 
+            function getComicActionText(type, stepIndex) {
+                const t = String(type || "").toLowerCase();
+                if (t.includes('fire') || t.includes('inferno') || t.includes('blaze')) {
+                    const words = ["FWOOSH!", "IGNITE!", "BOOM!", "KABOOM!", "BURN!"];
+                    return words[stepIndex] || "BURN!";
+                } else if (t.includes('ice') || t.includes('frost')) {
+                    const words = ["SHIVER!", "FREEZE!", "CRACK!", "SHATTER!", "COLD!"];
+                    return words[stepIndex] || "FREEZE!";
+                } else if (t.includes('steam')) {
+                    const words = ["HISS!", "SCALD!", "BOIL!", "STEAM!", "BURST!"];
+                    return words[stepIndex] || "STEAM!";
+                } else if (t.includes('plasma') || t.includes('electric') || t.includes('lightning') || t.includes('thunder')) {
+                    const words = ["ZZZAP!", "SHOCK!", "CRACKLE!", "BOOM!", "BOLT!"];
+                    return words[stepIndex] || "SHOCK!";
+                } else if (t.includes('dark') || t.includes('void') || t.includes('eclipse')) {
+                    const words = ["VOID!", "GRAVITY!", "CRUSH!", "OBLIVION!", "SHADOW!"];
+                    return words[stepIndex] || "VOID!";
+                } else if (t.includes('light') || t.includes('celestial') || t.includes('nebula') || t.includes('solar')) {
+                    const words = ["FLASH!", "BEAM!", "GLARE!", "SUPERNOVA!", "RAY!"];
+                    return words[stepIndex] || "FLASH!";
+                } else {
+                    const words = ["SLAM!", "CRASH!", "POW!", "WHACK!", "SMASH!"];
+                    return words[stepIndex] || "SLAM!";
+                }
+            }
+
+            function getComicActionIcon(type) {
+                const t = String(type || "").toLowerCase();
+                if (t.includes('fire') || t.includes('inferno') || t.includes('blaze')) {
+                    return 'fa-solid fa-fire-flame-curved text-orange-500';
+                } else if (t.includes('ice') || t.includes('frost')) {
+                    return 'fa-solid fa-snowflake text-cyan-300';
+                } else if (t.includes('steam')) {
+                    return 'fa-solid fa-smog text-slate-300';
+                } else if (t.includes('plasma') || t.includes('electric') || t.includes('lightning') || t.includes('thunder')) {
+                    return 'fa-solid fa-bolt-lightning text-yellow-400';
+                } else if (t.includes('dark') || t.includes('void') || t.includes('eclipse')) {
+                    return 'fa-solid fa-circle-nodes text-purple-600';
+                } else if (t.includes('light') || t.includes('celestial') || t.includes('nebula') || t.includes('solar')) {
+                    return 'fa-solid fa-wand-magic-sparkles text-amber-300';
+                } else {
+                    return 'fa-solid fa-burst text-red-500';
+                }
+            }
+
+            function getComicActionBg(type, championColor) {
+                const t = String(type || "").toLowerCase();
+                if (t.includes('fire') || t.includes('inferno') || t.includes('blaze')) {
+                    return `radial-gradient(circle, rgba(239, 68, 68, 0.35) 0%, rgba(10, 10, 15, 0.95) 85%)`;
+                } else if (t.includes('ice') || t.includes('frost')) {
+                    return `radial-gradient(circle, rgba(6, 182, 212, 0.35) 0%, rgba(10, 10, 15, 0.95) 85%)`;
+                } else if (t.includes('steam')) {
+                    return `radial-gradient(circle, rgba(156, 163, 175, 0.35) 0%, rgba(10, 10, 15, 0.95) 85%)`;
+                } else if (t.includes('plasma') || t.includes('electric') || t.includes('lightning') || t.includes('thunder')) {
+                    return `radial-gradient(circle, rgba(234, 179, 8, 0.35) 0%, rgba(10, 10, 15, 0.95) 85%)`;
+                } else if (t.includes('dark') || t.includes('void') || t.includes('eclipse')) {
+                    return `radial-gradient(circle, rgba(147, 51, 234, 0.35) 0%, rgba(10, 10, 15, 0.95) 85%)`;
+                } else if (t.includes('light') || t.includes('celestial') || t.includes('nebula') || t.includes('solar')) {
+                    return `radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, rgba(10, 10, 15, 0.95) 85%)`;
+                } else {
+                    return `radial-gradient(circle, ${championColor}55 0%, rgba(10, 10, 15, 0.95) 85%)`;
+                }
+            }
+
             const shapes = [
                 {
                     name: 'hexagon',
@@ -2516,44 +2580,118 @@
 
             const championColor = battle.playerRarity ? getRarityColor(battle.playerRarity) : '#d946ef';
             const championImage = battle.playerImage || 'assets/pandas/classic_panda.jpg';
+            const actionIcon = getComicActionIcon(battle.playerType);
+            const actionBg = getComicActionBg(battle.playerType, championColor);
 
             shapes.forEach((shape, index) => {
                 setTimeout(() => {
                     const popup = document.createElement('div');
-                    popup.className = 'special-clip-popup absolute pointer-events-none border-2';
+                    popup.className = 'special-clip-popup absolute pointer-events-none comic-border bg-halftone';
                     popup.setAttribute('data-testid', 'special-popup');
                     popup.style.width = shape.width;
                     popup.style.height = shape.height;
                     popup.style.left = shape.left;
                     popup.style.top = shape.top;
                     popup.style.clipPath = shape.clipPath;
-                    popup.style.borderColor = championColor;
-                    popup.style.boxShadow = `0 0 20px ${championColor}80`;
+                    popup.style.setProperty('--champion-color', championColor);
+                    popup.style.boxShadow = `0 0 25px ${championColor}A0`;
                     popup.style.transform = `scale(0) rotate(${shape.rotate})`;
                     popup.style.transition = 'transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease';
                     popup.style.zIndex = '100';
                     popup.style.opacity = '0';
-                    popup.style.background = '#06060c';
+                    popup.style.background = '#0a0a0f';
                     popup.style.overflow = 'hidden';
 
-                    popup.innerHTML = `
-                        <div class="relative w-full h-full flex items-center justify-center">
-                            <div class="absolute inset-0 opacity-20" style="background-color: ${championColor}"></div>
-                            
-                            <img src="${championImage}" alt="" 
-                                 class="w-full h-full object-cover ${shape.panClass}" 
-                                 style="max-width: none; max-height: none; filter: contrast(1.3) brightness(1.2);">
-                            
-                            <div class="absolute inset-0 bg-scanlines pointer-events-none opacity-30"></div>
-                            
-                            <div class="absolute bottom-1 px-1.5 py-0.5 rounded text-[7px] font-black font-mono tracking-wider text-white whitespace-nowrap bg-black/80 border border-white/10">
-                                ${index % 2 === 0 ? attackName.toUpperCase() : 'SURGE ACTIVE'}
+                    let panelHTML = '';
+                    const actionWord = getComicActionText(battle.playerType, index);
+                    
+                    if (index === 2) {
+                        panelHTML = `
+                            <div class="relative w-full h-full flex items-center justify-center" style="background: ${actionBg}">
+                                <div class="absolute inset-0 bg-halftone"></div>
+                                <div class="spiked-burst-clip absolute w-[90%] h-[90%] flex items-center justify-center">
+                                    <div class="font-comic text-2xl md:text-3xl font-black text-white tracking-wider transform -rotate-12">${actionWord}</div>
+                                </div>
+                                <div class="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[6px] font-mono tracking-widest text-yellow-400 bg-black border border-yellow-400/30">
+                                    PANEL 3: IMPACT
+                                </div>
                             </div>
-                            
-                            <div class="absolute inset-0 bg-white opacity-0 animate-rapid-flash pointer-events-none"></div>
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        let panelContent = '';
+                        let panelTitle = '';
+                        
+                        if (index === 0) {
+                            panelTitle = 'PANEL 1: CHARGE';
+                            panelContent = `
+                                <div class="relative w-full h-full flex items-center justify-center" style="background: ${actionBg}">
+                                    <div class="absolute inset-0 bg-halftone opacity-45 pointer-events-none"></div>
+                                    <!-- Rotating energy ring -->
+                                    <div class="w-16 h-16 rounded-full border-4 border-dashed border-white/20 animate-spin absolute" style="animation-duration: 4s;"></div>
+                                    <i class="${actionIcon} text-5xl animate-pulse filter drop-shadow-[0_0_15px_currentColor] z-10 ${shape.panClass}"></i>
+                                    <!-- Champion inset portrait -->
+                                    <div class="absolute top-2 right-2 w-8 h-8 rounded-full border border-black/50 overflow-hidden z-20 shadow-md">
+                                        <img src="${championImage}" class="w-full h-full object-cover">
+                                    </div>
+                                </div>
+                            `;
+                        } else if (index === 1) {
+                            panelTitle = 'PANEL 2: UNLEASH';
+                            panelContent = `
+                                <div class="relative w-full h-full flex items-center justify-center" style="background: ${actionBg}">
+                                    <!-- Comic speed lines repeating gradient -->
+                                    <div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 2px, transparent 2px, transparent 12px);"></div>
+                                    <!-- Motion trails -->
+                                    <i class="${actionIcon} text-3xl opacity-30 transform -translate-x-8 translate-y-1 scale-75 skew-x-12 absolute z-5"></i>
+                                    <i class="${actionIcon} text-4xl opacity-60 transform -translate-x-4 scale-90 skew-x-12 absolute z-10"></i>
+                                    <i class="${actionIcon} text-5xl transform translate-x-4 scale-100 skew-x-12 absolute z-20 filter drop-shadow-[0_0_10px_currentColor] ${shape.panClass}"></i>
+                                </div>
+                            `;
+                        } else if (index === 3) {
+                            panelTitle = 'PANEL 4: BURST';
+                            panelContent = `
+                                <div class="relative w-full h-full flex items-center justify-center" style="background: ${actionBg}">
+                                    <div class="absolute inset-0 bg-halftone opacity-45 pointer-events-none"></div>
+                                    <!-- Concentric shockwaves -->
+                                    <div class="w-20 h-20 rounded-full border border-white/20 absolute animate-ping" style="animation-duration: 1.5s;"></div>
+                                    <i class="fa-solid fa-burst text-7xl text-orange-500 absolute opacity-50 z-5"></i>
+                                    <i class="fa-solid fa-burst text-8xl text-red-600 absolute z-10 ${shape.panClass}"></i>
+                                    <i class="${actionIcon} text-3xl text-white absolute z-20 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.9)]"></i>
+                                </div>
+                            `;
+                        } else {
+                            panelTitle = 'PANEL 5: RESOLVE';
+                            panelContent = `
+                                <div class="relative w-full h-full flex items-center justify-center flex-col" style="background: ${actionBg}">
+                                    <div class="absolute inset-0 bg-halftone opacity-60 pointer-events-none"></div>
+                                    <i class="${actionIcon} text-4xl opacity-50 transform rotate-12 z-10 ${shape.panClass}"></i>
+                                    <div class="mt-2 bg-emerald-500 text-black border border-black font-comic text-[8px] font-black px-1.5 py-0.5 rotate-3 z-20">
+                                        STRIKE COMPLETE!
+                                    </div>
+                                </div>
+                            `;
+                        }
 
+                        panelHTML = `
+                            <div class="relative w-full h-full flex items-center justify-center">
+                                ${panelContent}
+                                
+                                <div class="absolute inset-0 bg-scanlines pointer-events-none opacity-20 z-10"></div>
+                                
+                                <div class="absolute bottom-2 left-3 bg-yellow-400 text-black border-2 border-black font-comic text-[10px] font-black px-2 py-0.5 transform -rotate-3 z-20">
+                                    ${actionWord}
+                                </div>
+                                
+                                <div class="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[6px] font-mono tracking-widest text-white/90 bg-black/80 border border-white/10 z-20">
+                                    ${panelTitle}
+                                </div>
+                                
+                                <div class="absolute inset-0 bg-white opacity-0 animate-rapid-flash pointer-events-none z-30"></div>
+                            </div>
+                        `;
+                    }
+
+                    popup.innerHTML = panelHTML;
                     stage.appendChild(popup);
 
                     void popup.offsetWidth;
