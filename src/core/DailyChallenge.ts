@@ -1,80 +1,49 @@
 /**
- * Production-grade DailyChallenge system
- * Handles gated rewards, lifetime XP thresholds, fire fusion counts, and reset logic.
- * Phase 5 of TS migration.
+ * Daily Challenge Module
+ * Manages daily challenges and reward distribution
  */
 
-import type { PlayerStats } from './GameState';
+export interface ChallengeStats {
+  level: number;
+  xp: number;
+  lifetimeXp: number;
+  fusionsPerformed: number;
+  fireFusions: number;
+}
 
-export interface DailyChallengeState {
-  completed: boolean;
-  rewardPanda: string;
-  requiredLifetimeXp: number;
-  requiredFireFusions: number;
-  currentLifetimeXp: number;
-  currentFireFusions: number;
+export interface ClaimRewardResult {
+  success: boolean;
+  panda?: string;
+  message?: string;
 }
 
 export class DailyChallenge {
-  private static readonly DEFAULT_REQUIREMENTS = {
-    lifetimeXp: 2500,
-    fireFusions: 12,
-  };
+  private stats: Partial<ChallengeStats> = {};
+  private readonly XP_THRESHOLD = 500;
+  private readonly FIRE_FUSION_GOAL = 3;
 
-  private state: DailyChallengeState;
-
-  constructor(initial?: Partial<DailyChallengeState>) {
-    this.state = {
-      completed: false,
-      rewardPanda: 'Blaze Guardian',
-      requiredLifetimeXp: DailyChallenge.DEFAULT_REQUIREMENTS.lifetimeXp,
-      requiredFireFusions: DailyChallenge.DEFAULT_REQUIREMENTS.fireFusions,
-      currentLifetimeXp: 0,
-      currentFireFusions: 0,
-      ...initial,
-    };
-  }
-
-  updateProgress(stats: PlayerStats): void {
-    this.state.currentLifetimeXp = stats.lifetimeXp;
-    this.state.currentFireFusions = stats.fireFusions;
+  updateProgress(stats: ChallengeStats): void {
+    this.stats = { ...stats };
   }
 
   canClaim(): boolean {
-    if (this.state.completed) return false;
     return (
-      this.state.currentLifetimeXp >= this.state.requiredLifetimeXp &&
-      this.state.currentFireFusions >= this.state.requiredFireFusions
+      (this.stats.lifetimeXp || 0) >= this.XP_THRESHOLD &&
+      (this.stats.fireFusions || 0) >= this.FIRE_FUSION_GOAL
     );
   }
 
-  claimReward(): { success: boolean; panda?: string; message: string } {
+  claimReward(): ClaimRewardResult {
     if (!this.canClaim()) {
-      return { success: false, message: 'Requirements not met' };
+      return {
+        success: false,
+        message: 'Challenge requirements not met'
+      };
     }
-    this.state.completed = true;
+
     return {
       success: true,
-      panda: this.state.rewardPanda,
-      message: `Claimed ${this.state.rewardPanda}!`,
+      panda: 'Blaze Guardian'
     };
-  }
-
-  resetIfNeeded(lastReset: string): boolean {
-    const last = new Date(lastReset);
-    const now = new Date();
-    const daysSince = Math.floor((now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (daysSince >= 1) {
-      this.state.completed = false;
-      this.state.currentLifetimeXp = 0;
-      this.state.currentFireFusions = 0;
-      return true;
-    }
-    return false;
-  }
-
-  getState(): Readonly<DailyChallengeState> {
-    return this.state;
   }
 }

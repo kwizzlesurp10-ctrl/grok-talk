@@ -1,97 +1,102 @@
 /**
- * Production-grade FusionEngine for FusionPanda Master
- * Handles all fusion modes with type safety and synergy calculations.
- * Phase 2 of TS migration.
+ * Fusion Engine Module
+ * Core fusion mechanics and synergy calculations
  */
 
-import type { Panda } from './GameState';
-
-export type FusionMode = 'basic' | 'advanced' | 'ritual';
+export interface PandaType {
+  id?: string;
+  name: string;
+  rarity: string;
+  element?: string;
+  type?: string;
+  power: number;
+  level?: number;
+  count?: number;
+  emoji?: string;
+  color?: string;
+  desc?: string;
+  image?: string;
+}
 
 export interface FusionResult {
   success: boolean;
-  newPanda?: Panda;
-  xpGained: number;
-  critical: boolean;
-  synergyBonus: number;
-  message: string;
+  newPanda?: PandaType;
+  xpGained?: number;
+  synergy?: string;
 }
 
 export class FusionEngine {
-  private static readonly RARITY_WEIGHTS: Record<string, number> = {
-    Common: 0.5,
-    Rare: 0.3,
-    Epic: 0.15,
-    Legendary: 0.04,
-    Mythic: 0.01,
+  private synergies: Record<string, string[]> = {
+    'Fire:Ice': 'Steam',
+    'Ice:Fire': 'Steam',
+    'Dark:Light': 'Eclipse',
+    'Light:Dark': 'Eclipse',
+    'Electric:Crystal': 'Plasma',
+    'Crystal:Electric': 'Plasma'
   };
 
-  private static readonly ELEMENT_SYNERGIES: Record<string, string[]> = {
-    Fire: ['Wind', 'Earth'],
-    Water: ['Fire', 'Lightning'],
-    Earth: ['Water', 'Wind'],
-    Wind: ['Earth', 'Lightning'],
-    Lightning: ['Water', 'Fire'],
-  };
+  fuse(panda1: PandaType, panda2: PandaType, mode: string = 'basic'): FusionResult {
+    const avgPower = Math.floor((panda1.power + panda2.power) / 2);
+    const synergy = this.getSynergy(panda1, panda2);
+    
+    const basePower = this.calculateBasePower(avgPower, mode);
+    const xpGain = this.calculateXP(avgPower, mode);
 
-  fuse(panda1: Panda, panda2: Panda, mode: FusionMode = 'basic'): FusionResult {
-    if (!panda1 || !panda2) {
-      return { success: false, xpGained: 0, critical: false, synergyBonus: 0, message: 'Invalid pandas' };
-    }
-
-    const synergy = this.calculateSynergy(panda1, panda2);
-    const critical = Math.random() < (mode === 'ritual' ? 0.25 : 0.12);
-    const baseXp = this.getBaseXp(mode) + Math.floor(synergy * 15);
-
-    // Simplified new panda generation (production version would pull from full tables)
-    const newRarity = this.determineRarity(panda1.rarity, panda2.rarity, mode, critical);
-    const newElement = synergy > 1.2 ? panda1.element : panda2.element;
-
-    const newPanda: Panda = {
-      id: `panda_${Date.now()}`,
-      name: `${panda1.name.split(' ')[0]}-${panda2.name.split(' ')[0]} ${newRarity}`,
-      rarity: newRarity,
-      element: newElement,
-      power: Math.floor((panda1.power + panda2.power) * (0.6 + synergy * 0.3) * (critical ? 1.5 : 1)),
-      level: 1,
-      count: 1,
+    const newPanda: PandaType = {
+      name: `${panda1.name} + ${panda2.name}`,
+      type: synergy || panda1.type || 'Balanced',
+      power: basePower,
+      rarity: this.calculateRarity(panda1.rarity, panda2.rarity),
+      element: synergy
     };
 
     return {
       success: true,
       newPanda,
-      xpGained: baseXp,
-      critical,
-      synergyBonus: Math.floor(synergy * 10),
-      message: critical ? 'CRITICAL FUSION!' : 'Fusion successful',
+      xpGained: xpGain,
+      synergy
     };
   }
 
-  private calculateSynergy(p1: Panda, p2: Panda): number {
-    let score = 1.0;
-    if (p1.element === p2.element) score += 0.4;
-    const synergies = FusionEngine.ELEMENT_SYNERGIES[p1.element] || [];
-    if (synergies.includes(p2.element)) score += 0.6;
-    if (p1.rarity !== p2.rarity) score += 0.2;
-    return Math.min(score, 2.5);
+  private getSynergy(panda1: PandaType, panda2: PandaType): string | null {
+    const key1 = `${panda1.type}:${panda2.type}`;
+    const key2 = `${panda2.type}:${panda1.type}`;
+    return this.synergies[key1] || this.synergies[key2] || null;
   }
 
-  private getBaseXp(mode: FusionMode): number {
-    switch (mode) {
-      case 'ritual': return 85;
-      case 'advanced': return 45;
-      default: return 25;
-    }
+  private calculateBasePower(avgPower: number, mode: string): number {
+    const modeMultipliers: Record<string, number> = {
+      'basic': 1.0,
+      'advanced': 1.2,
+      'ritual': 1.5
+    };
+    const multiplier = modeMultipliers[mode] || 1.0;
+    return Math.floor(avgPower * (1 + multiplier));
   }
 
-  private determineRarity(r1: string, r2: string, mode: FusionMode, critical: boolean): Panda['rarity'] {
-    const weight = (FusionEngine.RARITY_WEIGHTS[r1] || 0.5) + (FusionEngine.RARITY_WEIGHTS[r2] || 0.5);
-    let roll = Math.random() * weight * (mode === 'ritual' ? 1.6 : 1) * (critical ? 1.8 : 1);
+  private calculateXP(avgPower: number, mode: string): number {
+    const baseXP = 100;
+    const modeBonus: Record<string, number> = {
+      'basic': 1.0,
+      'advanced': 1.5,
+      'ritual': 2.0
+    };
+    const bonus = modeBonus[mode] || 1.0;
+    return Math.floor(baseXP * bonus + avgPower * 0.5);
+  }
 
-    if (roll > 1.8) return 'Mythic';
-    if (roll > 1.3) return 'Legendary';
-    if (roll > 0.9) return 'Epic';
-    if (roll > 0.5) return 'Rare';
-    return 'Common';
+  private calculateRarity(rarity1: string, rarity2: string): string {
+    const rarityRank: Record<string, number> = {
+      'common': 1,
+      'rare': 2,
+      'epic': 3,
+      'legendary': 4,
+      'mythic': 5
+    };
+    const avg = (rarityRank[rarity1] || 1 + rarityRank[rarity2] || 1) / 2;
+    if (avg >= 4) return 'legendary';
+    if (avg >= 3) return 'epic';
+    if (avg >= 2) return 'rare';
+    return 'common';
   }
 }
