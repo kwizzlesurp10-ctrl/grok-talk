@@ -1,0 +1,24 @@
+[
+    {
+        "id": "task_001",
+        "title": "Wire Up upgrades section & EP currency",
+        "description": "Connect static upgrades elements to dynamic game states, add Energy Points (EP) balance stat, and create purchase actions.",
+        "status": "completed",
+        "assignedTo": "developer",
+        "plan": "agency/plans/task_001.md",
+        "createdAt": "2026-06-16T00:30:00Z",
+        "completedAt": "2026-06-16T05:37:00Z",
+        "notes": "EP balance is now stored in gameState.ep, and upgrades are fully interactive. Test suite updated and verified."
+    },
+    {
+        "id": "task_002",
+        "title": "Add Combat Training Upgrade",
+        "description": "Create a shop card for Battle Training that boosts player damage in the arena",
+        "status": "completed",
+        "assignedTo": "tester",
+        "plan": "agency/plans/task_002.md",
+        "createdAt": "2026-06-16T05:50:54.948Z",
+        "completedAt": "2026-06-16T05:55:35.575Z",
+        "notes": "Successfully designed, developed, and verified through agency test engine."
+    }
+]
