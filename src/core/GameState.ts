@@ -1,68 +1,67 @@
 /**
- * GameState Management Module
- * Handles game state persistence and schema versioning
+ * Production-grade GameState types for FusionPanda Master
+ * Phase 1 of full TypeScript migration (v4.4.0 target)
  */
 
-export interface GameStateType {
+export interface Panda {
+  id: string;
+  name: string;
+  rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary' | 'Mythic';
+  element: string;
+  power: number;
   level: number;
-  xp: number;
-  lifetimeEarnedXp: number;
-  saveSchemaVersion: number;
-  fireChallengeFusions: number;
-  fusions: number;
-  ritualFusionsCount: number;
-  collectionCount: number;
-  totalPower: number;
-  collection: any[];
-  recentFusions: any[];
-  ep?: number;
-  upgrades?: Record<string, number>;
-  boosters?: Record<string, boolean>;
+  count: number;
 }
 
-export class GameStateManager {
-  private state: GameStateType;
+export interface PlayerStats {
+  level: number;
+  xp: number;
+  lifetimeXp: number;
+  fusionsPerformed: number;
+  fireFusions: number;
+}
 
-  constructor(initialState?: Partial<GameStateType>) {
-    this.state = {
-      level: 0,
-      xp: 0,
-      lifetimeEarnedXp: 0,
-      saveSchemaVersion: 2,
-      fireChallengeFusions: 0,
-      fusions: 0,
-      ritualFusionsCount: 0,
-      collectionCount: 0,
-      totalPower: 0,
-      collection: [],
-      recentFusions: [],
-      ep: 0,
-      upgrades: {},
-      boosters: {},
-      ...initialState
-    };
+export interface GameState {
+  pandas: Panda[];
+  player: PlayerStats;
+  collection: Record<string, Panda>;
+  discovered: Set<string>;
+  lastDailyReset: string;
+}
+
+export const DEFAULT_STATE: GameState = {
+  pandas: [],
+  player: {
+    level: 1,
+    xp: 0,
+    lifetimeXp: 0,
+    fusionsPerformed: 0,
+    fireFusions: 0,
+  },
+  collection: {},
+  discovered: new Set(),
+  lastDailyReset: new Date().toISOString(),
+};
+
+export class GameStateManager {
+  private state: GameState;
+
+  constructor(initial?: Partial<GameState>) {
+    this.state = { ...DEFAULT_STATE, ...initial };
   }
 
-  getState(): GameStateType {
+  getState(): Readonly<GameState> {
     return this.state;
   }
 
-  updateState(partial: Partial<GameStateType>): void {
-    this.state = { ...this.state, ...partial };
+  addPanda(panda: Panda): void {
+    this.state.pandas.push(panda);
+    this.state.collection[panda.id] = panda;
+    this.state.discovered.add(panda.name);
   }
 
-  migrateSchema(): void {
-    if (this.state.saveSchemaVersion < 2) {
-      this.state.saveSchemaVersion = 2;
-      if (!('fireChallengeFusions' in this.state)) {
-        this.state.fireChallengeFusions = 0;
-      }
-      if (!('lifetimeEarnedXp' in this.state) || this.state.lifetimeEarnedXp < 0) {
-        const estimatedXp = Math.floor(
-          (this.state.fusions || 0) * 95 + (this.state.level || 0) * 400
-        );
-        this.state.lifetimeEarnedXp = estimatedXp;
-      }
-    }
+  // Future: full fusion logic, XP, daily gates, etc. will be typed here
+  calculateLevel(xp: number): number {
+    return Math.floor(Math.sqrt(xp / 100)) + 1;
   }
 }

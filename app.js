@@ -57,7 +57,7 @@
             { id: 6, name: "Golden Fortune", emoji: "✨🐼", type: "Light", power: 27, rarity: "legendary", color: "#fbbf24", desc: "Extremely rare. Brings incredible luck and prosperity.", image: "assets/pandas/golden_fortune.jpg" },
             { id: 7, name: "Mystic Panda", emoji: "🔮🐼", type: "Arcane", power: 24, rarity: "epic", color: "#c026ff", desc: "Wielder of ancient panda magic. Unpredictable and wise.", image: "assets/pandas/mystic_panda.jpg" },
             { id: 8, name: "Crystal Panda", emoji: "💎🐼", type: "Crystal", power: 16, rarity: "rare", color: "#67e8f9", desc: "Crystalline armor protects it from harm. Beautiful but deadly.", image: "assets/pandas/crystal_panda.jpg" },
-            { id: 9, name: "Red Panda", emoji: "🔴🐼", type: "Balanced", power: 25, rarity: "epic", color: "#ef4444", desc: "A charming, chestnut-colored climber with a ringed tail and playful spirit. Unlocks special elemental resonance.", image: "assets/pandas/red_panda.jpg" }
+            { id: 9, name: "Red Panda", emoji: "🔴🐼", type: "Balanced", power: 25, rarity: "epic", color: "#ef4444", desc: "A charming, chestnut-colored climber with a ringed tail and playful spirit. Unlocks special elemental resonance.", image: "assets/pandas/red_panda.jpg" },
 
             // New production content integration (from expanded roster)
             { id: 9, name: "Ember Cub", emoji: "🔥🐼", type: "Fire", power: 85, rarity: "common", color: "#f97316", desc: "Newly discovered fire-type starter." },
@@ -756,7 +756,7 @@
                 const isUnlocked = userPandas.some(p => p.name === entry.name || (p.type === entry.type && p.rarity === entry.rarity));
                 
                 const card = document.createElement('div');
-                card.className = `panda-card cyber-card rounded-3xl p-5 border border-gray-700 cursor-pointer ${panda.rarity === "mythic" ? "ring-2 ring-purple-400/70 shadow-\[0_0_20px_rgba(168,85,247,0.3)\]" : ""} group ${!isUnlocked ? 'opacity-75 grayscale-[0.3]' : ''}`;
+                card.className = `panda-card cyber-card rounded-3xl p-5 border border-gray-700 cursor-pointer ${entry.rarity === "mythic" ? "ring-2 ring-purple-400/70 shadow-\[0_0_20px_rgba(168,85,247,0.3)\]" : ""} group ${!isUnlocked ? 'opacity-75 grayscale-[0.3]' : ''}`;
                 
                 const rarityColor = getRarityColor(entry.rarity);
                 const visualHtml = entry.image 
