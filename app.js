@@ -58,15 +58,6 @@
             { id: 7, name: "Mystic Panda", emoji: "🔮🐼", type: "Arcane", power: 24, rarity: "epic", color: "#c026ff", desc: "Wielder of ancient panda magic. Unpredictable and wise.", image: "assets/pandas/mystic_panda.jpg" },
             { id: 8, name: "Crystal Panda", emoji: "💎🐼", type: "Crystal", power: 16, rarity: "rare", color: "#67e8f9", desc: "Crystalline armor protects it from harm. Beautiful but deadly.", image: "assets/pandas/crystal_panda.jpg" },
             { id: 9, name: "Red Panda", emoji: "🔴🐼", type: "Balanced", power: 25, rarity: "epic", color: "#ef4444", desc: "A charming, chestnut-colored climber with a ringed tail and playful spirit. Unlocks special elemental resonance.", image: "assets/pandas/red_panda.jpg" }
-
-            // New production content integration (from expanded roster)
-            { id: 9, name: "Ember Cub", emoji: "🔥🐼", type: "Fire", power: 85, rarity: "common", color: "#f97316", desc: "Newly discovered fire-type starter." },
-            { id: 10, name: "Inferno Guardian", emoji: "🔥🛡️", type: "Fire", power: 145, rarity: "rare", color: "#f97316", desc: "Elite fire guardian from the new roster." },
-            { id: 11, name: "Blazing Phoenix Panda", emoji: "🔥🦅", type: "Fire", power: 210, rarity: "epic", color: "#f97316", desc: "Mythic-level fire evolution." },
-            { id: 12, name: "Cyclone Striker", emoji: "🌪️🐼", type: "Wind", power: 138, rarity: "rare", color: "#22c55e", desc: "New wind-type from expanded content." },
-            { id: 13, name: "Storm Dragon Panda", emoji: "🐉💨", type: "Wind", power: 205, rarity: "epic", color: "#22c55e", desc: "High-tier wind evolution." },
-            { id: 14, name: "Quantum Overlord Panda", emoji: "🌌🐼", type: "Lightning", power: 450, rarity: "mythic", color: "#a855f7", desc: "Mythic pinnacle — extremely rare." },
-            { id: 15, name: "Eternal Flame Sovereign", emoji: "🔥👑", type: "Fire", power: 440, rarity: "mythic", color: "#f97316", desc: "The ultimate fire evolution." },
         ];
 
         // User's unlocked pandas (new users start with one fair starter)
@@ -756,7 +747,7 @@
                 const isUnlocked = userPandas.some(p => p.name === entry.name || (p.type === entry.type && p.rarity === entry.rarity));
                 
                 const card = document.createElement('div');
-                card.className = `panda-card cyber-card rounded-3xl p-5 border border-gray-700 cursor-pointer ${panda.rarity === "mythic" ? "ring-2 ring-purple-400/70 shadow-\[0_0_20px_rgba(168,85,247,0.3)\]" : ""} group ${!isUnlocked ? 'opacity-75 grayscale-[0.3]' : ''}`;
+                card.className = `panda-card cyber-card rounded-3xl p-5 border border-gray-700 cursor-pointer ${entry.rarity === "mythic" ? "ring-2 ring-purple-400/70 shadow-\[0_0_20px_rgba(168,85,247,0.3)\]" : ""} group ${!isUnlocked ? 'opacity-75 grayscale-[0.3]' : ''}`;
                 
                 const rarityColor = getRarityColor(entry.rarity);
                 const visualHtml = entry.image 
@@ -1810,7 +1801,7 @@
             // Reward panda
             const rewardPanda = {
                 id: 'daily-' + Date.now(),
-                name: ["Blaze Guardian", "Tempest Warden", "Quantum Overlord Panda", "Eternal Flame Sovereign"][Math.floor(Math.random()*4)],
+                name: "Blaze Guardian",
                 emoji: "🦍🔥",
                 type: "Fire",
                 power: 29,
@@ -2560,6 +2551,40 @@
 
             const impactIndex = numPanels >= 3 ? 2 : (numPanels - 1);
 
+            // Cinematic "cover" title card announcing the special move by name.
+            const titleCard = document.createElement('div');
+            titleCard.className = 'special-move-titlecard';
+            titleCard.setAttribute('data-testid', 'special-titlecard');
+            titleCard.style.setProperty('--champion-color', championColor);
+            titleCard.innerHTML = `
+                <div class="tc-label">${(battle.playerName || 'Champion')} · Special</div>
+                <div class="tc-name">${attackName}</div>
+            `;
+            stage.appendChild(titleCard);
+            setTimeout(() => { if (titleCard && titleCard.parentElement) titleCard.remove(); }, 1000);
+
+            // Whole-stage impact beat: camera shake + white flash + radial speed lines.
+            function fireImpactFx() {
+                if (stage.classList && typeof stage.classList.add === 'function') {
+                    stage.classList.remove('battle-stage--impact-shake');
+                    void stage.offsetWidth;
+                    stage.classList.add('battle-stage--impact-shake');
+                    setTimeout(() => {
+                        if (stage.classList) stage.classList.remove('battle-stage--impact-shake');
+                    }, 470);
+                }
+
+                const speedLines = document.createElement('div');
+                speedLines.className = 'special-speed-lines';
+                stage.appendChild(speedLines);
+                setTimeout(() => { if (speedLines && speedLines.parentElement) speedLines.remove(); }, 620);
+
+                const flash = document.createElement('div');
+                flash.className = 'special-impact-flash';
+                stage.appendChild(flash);
+                setTimeout(() => { if (flash && flash.parentElement) flash.remove(); }, 470);
+            }
+
             for (let index = 0; index < numPanels; index++) {
                 const pSeed = seed + index * 37;
                 const shape = shapePool[pSeed % shapePool.length];
@@ -2598,13 +2623,17 @@
                     const actionWord = getComicActionText(battle.playerType, index);
                     
                     if (index === impactIndex) {
+                        fireImpactFx();
                         panelHTML = `
                             <div class="relative w-full h-full flex items-center justify-center" style="background: ${actionBg}">
                                 <div class="absolute inset-0 bg-halftone"></div>
-                                <div class="spiked-burst-clip absolute w-[90%] h-[90%] flex items-center justify-center">
-                                    <div class="font-comic text-2xl md:text-3xl font-black text-white tracking-wider transform -rotate-12">${actionWord}</div>
+                                <div class="absolute inset-0 special-speed-lines"></div>
+                                <i class="${actionIcon} text-7xl absolute opacity-40 z-0 ${panClass}" aria-hidden="true"></i>
+                                <div class="spiked-burst-clip absolute w-[95%] h-[95%] flex items-center justify-center z-10">
+                                    <div class="font-comic chromatic-text text-2xl md:text-3xl font-black text-white tracking-wider transform -rotate-12">${actionWord}</div>
                                 </div>
-                                <div class="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[6px] font-mono tracking-widest text-yellow-400 bg-black border border-yellow-400/30">
+                                <div class="absolute inset-0 bg-white opacity-0 animate-rapid-flash pointer-events-none z-20"></div>
+                                <div class="absolute top-2 left-2 px-1.5 py-0.5 rounded text-[6px] font-mono tracking-widest text-yellow-400 bg-black border border-yellow-400/30 z-30">
                                     PANEL ${index + 1}: IMPACT
                                 </div>
                             </div>
@@ -2687,18 +2716,22 @@
                     stage.appendChild(popup);
 
                     void popup.offsetWidth;
-                    popup.style.transform = `scale(1) rotate(${rotate})`;
+                    // Impact panel punches in slightly bigger for emphasis.
+                    const restScale = index === impactIndex ? 1.08 : 1;
+                    popup.style.transform = `scale(${restScale}) rotate(${rotate})`;
                     popup.style.opacity = '1';
 
+                    // Hold the impact beat longer so it reads as the climax of the clip.
+                    const holdMs = index === impactIndex ? 1150 : 850;
                     setTimeout(() => {
                         if (popup && popup.parentElement) {
-                            popup.style.transform = `scale(0) rotate(${rotate})`;
+                            popup.style.transform = `scale(0) rotate(${parseFloat(rotate) + 18}deg)`;
                             popup.style.opacity = '0';
                             setTimeout(() => {
                                 if (popup && popup.parentElement) popup.remove();
                             }, 250);
                         }
-                    }, 850);
+                    }, holdMs);
 
                 }, index * 80);
             }
