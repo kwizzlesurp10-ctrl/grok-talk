@@ -174,5 +174,16 @@
         "createdAt": "2026-06-19T21:35:19.498Z",
         "completedAt": "2026-06-19T21:35:47.695Z",
         "notes": "Completed after 0 fix retries. Trace recorded in traces/task_016.json."
+    },
+    {
+        "id": "task_017",
+        "title": "PWA Offline Asset Caching",
+        "description": "Expand sw.js cache config to include all character images and arena assets under assets/ and bump cache name to fusionpanda-v4.3.1",
+        "status": "completed",
+        "assignedTo": "orchestrator",
+        "plan": "agency/plans/task_017.md",
+        "createdAt": "2026-06-19T22:08:22.424Z",
+        "completedAt": "2026-06-19T22:08:44.969Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_017.json."
     }
 ]
