@@ -512,23 +512,31 @@
             white-space: nowrap;
             letter-spacing: 0.5px;
             font-size: 11px;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .fractal-node--left {
-            transform: translateX(-12px) translateY(-5px);
+            transform: translateX(-40px) translateY(-35px);
         }
 
         .fractal-node--center {
-            transform: translateY(-16px);
+            transform: translateY(-55px);
         }
 
         .fractal-node--right {
-            transform: translateX(12px) translateY(-5px);
+            transform: translateX(40px) translateY(-35px);
         }
 
-        .fractal-node:hover {
-            transform: scale(1.08) translateY(-3px);
+        .fractal-node--left:hover {
+            transform: translateX(-40px) translateY(-38px) scale(1.08);
+        }
+
+        .fractal-node--center:hover {
+            transform: translateY(-58px) scale(1.08);
+        }
+
+        .fractal-node--right:hover {
+            transform: translateX(40px) translateY(-38px) scale(1.08);
         }
 
         #attack-branches .fractal-node:hover {
@@ -562,31 +570,31 @@
 
         .fractal-line--left {
             width: 1.5px;
-            height: 32px;
-            transform: rotate(-30deg) translateX(-50%);
+            height: 55px;
+            transform: rotate(-35deg) translateX(-50%);
             animation: sproutLineLeft 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
         .fractal-line--center {
             width: 1.5px;
-            height: 38px;
+            height: 65px;
             transform: translateX(-50%);
             animation: sproutLineCenter 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
         .fractal-line--right {
             width: 1.5px;
-            height: 32px;
-            transform: rotate(30deg) translateX(-50%);
+            height: 55px;
+            transform: rotate(35deg) translateX(-50%);
             animation: sproutLineRight 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
 
         @keyframes sproutLineLeft {
             0% {
-                transform: rotate(-30deg) translateX(-50%) scaleY(0);
+                transform: rotate(-35deg) translateX(-50%) scaleY(0);
             }
             100% {
-                transform: rotate(-30deg) translateX(-50%) scaleY(1);
+                transform: rotate(-35deg) translateX(-50%) scaleY(1);
             }
         }
 
@@ -601,10 +609,10 @@
 
         @keyframes sproutLineRight {
             0% {
-                transform: rotate(30deg) translateX(-50%) scaleY(0);
+                transform: rotate(35deg) translateX(-50%) scaleY(0);
             }
             100% {
-                transform: rotate(30deg) translateX(-50%) scaleY(1);
+                transform: rotate(35deg) translateX(-50%) scaleY(1);
             }
         }
 

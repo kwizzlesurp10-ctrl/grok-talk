@@ -2415,7 +2415,7 @@
                             </button>
                             
                             <!-- Branching Nodes -->
-                            <div class="fractal-branches hidden z-10 absolute left-1/2 -translate-x-1/2 bottom-0 w-max" id="attack-branches">
+                            <div class="fractal-branches hidden z-10 absolute left-1/2 -translate-x-1/2 w-max" id="attack-branches">
                                 <div class="fractal-line fractal-line--left"></div>
                                 <div class="fractal-line fractal-line--center"></div>
                                 <div class="fractal-line fractal-line--right"></div>
@@ -2439,7 +2439,7 @@
                             </button>
                             
                             <!-- Branching Nodes -->
-                            <div class="fractal-branches hidden z-10 absolute left-1/2 -translate-x-1/2 bottom-0 w-max" id="special-branches">
+                            <div class="fractal-branches hidden z-10 absolute left-1/2 -translate-x-1/2 w-max" id="special-branches">
                                 <div class="fractal-line fractal-line--left"></div>
                                 <div class="fractal-line fractal-line--center"></div>
                                 <div class="fractal-line fractal-line--right"></div>
@@ -2461,7 +2461,7 @@
             __syncBattleHpBars();
         }
 
-        function triggerSpecialActionClips(battle, attackName) {
+        function triggerSpecialActionClips(battle, attackName, isSpecial = true) {
             if (typeof document === 'undefined' || typeof document.createElement !== 'function') {
                 return;
             }
@@ -2469,7 +2469,52 @@
             if (!stage) return;
 
             function getComicActionText(type, stepIndex) {
+                const name = String(attackName || "").toLowerCase();
                 const t = String(type || "").toLowerCase();
+                
+                // Specific move keywords
+                if (name.includes('scald') || name.includes('vapor') || name.includes('steam')) {
+                    const words = ["HISS!", "BOIL!", "SCALD!", "STEAM!", "EVAPORATE!"];
+                    return words[stepIndex] || "STEAM!";
+                } else if (name.includes('pressure') || name.includes('slam') || name.includes('heavy') || name.includes('bamboo') || name.includes('paw') || name.includes('kick')) {
+                    const words = ["CRASH!", "POW!", "WHACK!", "SLAM!", "SMASH!"];
+                    return words[stepIndex] || "SLAM!";
+                } else if (name.includes('tsunami') || name.includes('tidal') || name.includes('wave') || name.includes('abyssal') || name.includes('aqua')) {
+                    const words = ["SPLASH!", "FLOOD!", "CRASH!", "SURGE!", "WAVE!"];
+                    return words[stepIndex] || "WAVE!";
+                } else if (name.includes('pyro') || name.includes('fire') || name.includes('inferno') || name.includes('blaze') || name.includes('flame') || name.includes('ember') || name.includes('nova')) {
+                    const words = ["BURN!", "FLAME!", "IGNITE!", "BOOM!", "SUPERNOVA!"];
+                    return words[stepIndex] || "BURN!";
+                } else if (name.includes('volt') || name.includes('bolt') || name.includes('charge') || name.includes('thunder') || name.includes('lightning') || name.includes('tesla') || name.includes('spark') || name.includes('plasma')) {
+                    const words = ["ZZZAP!", "SHOCK!", "CRACKLE!", "BOLT!", "VOLT!"];
+                    return words[stepIndex] || "SHOCK!";
+                } else if (name.includes('glacial') || name.includes('absolute') || name.includes('zero') || name.includes('freeze') || name.includes('frost') || name.includes('ice') || name.includes('cryo') || name.includes('icicle')) {
+                    const words = ["FREEZE!", "SHATTER!", "CRACK!", "COLD!", "GLACIER!"];
+                    return words[stepIndex] || "FREEZE!";
+                } else if (name.includes('shadow') || name.includes('dark') || name.includes('umbral') || name.includes('abyssal') || name.includes('void') || name.includes('nightmare')) {
+                    const words = ["VOID!", "CRUSH!", "OBLIVION!", "SHADOW!", "DARKNESS!"];
+                    return words[stepIndex] || "VOID!";
+                } else if (name.includes('light') || name.includes('solar') || name.includes('sun') || name.includes('radiant') || name.includes('daybreak') || name.includes('corona') || name.includes('fortune')) {
+                    const words = ["FLASH!", "BEAM!", "GLARE!", "LIGHT!", "DAYBREAK!"];
+                    return words[stepIndex] || "FLASH!";
+                } else if (name.includes('storm') || name.includes('wind') || name.includes('cyclone') || name.includes('hurricane') || name.includes('breeze') || name.includes('tempest')) {
+                    const words = ["WHOOSH!", "BLOW!", "STRIKE!", "WIND!", "TEMPEST!"];
+                    return words[stepIndex] || "WIND!";
+                } else if (name.includes('golem') || name.includes('earth') || name.includes('mountain') || name.includes('rock') || name.includes('quake') || name.includes('terra')) {
+                    const words = ["CRUMBLE!", "QUAKE!", "SMASH!", "ROCK!", "SHAKE!"];
+                    return words[stepIndex] || "QUAKE!";
+                } else if (name.includes('cosmic') || name.includes('celestial') || name.includes('astral') || name.includes('dimension') || name.includes('nebula') || name.includes('harmony') || name.includes('rift')) {
+                    const words = ["COSMIC!", "WARP!", "BEAM!", "RIFT!", "CELESTIAL!"];
+                    return words[stepIndex] || "COSMIC!";
+                } else if (name.includes('crystal') || name.includes('prism') || name.includes('quartz')) {
+                    const words = ["REFRACT!", "SHARD!", "GLARE!", "SPARKLE!", "CRYSTAL!"];
+                    return words[stepIndex] || "CRYSTAL!";
+                } else if (name.includes('arcane') || name.includes('mana') || name.includes('runic') || name.includes('mystic')) {
+                    const words = ["MAGIC!", "GLOW!", "RUNIC!", "BURST!", "ARCANE!"];
+                    return words[stepIndex] || "MAGIC!";
+                }
+
+                // Fallback to element type
                 if (t.includes('fire') || t.includes('inferno') || t.includes('blaze')) {
                     const words = ["FWOOSH!", "IGNITE!", "BOOM!", "KABOOM!", "BURN!"];
                     return words[stepIndex] || "BURN!";
@@ -2541,7 +2586,8 @@
             }
 
             const seed = getSeed(attackName + (battle.playerName || ""));
-            const numPanels = 1 + (seed % 5);
+            const numPanels = isSpecial ? (3 + (seed % 3)) : (1 + (seed % 3)); // 3-5 for specials, 1-3 for attacks
+            const panelTimeout = isSpecial ? 900 : 700;
             
             const shapePool = [
                 { name: 'hexagon', clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)' },
@@ -2614,7 +2660,7 @@
                         let panelTitle = '';
                         
                         if (index === 0) {
-                            panelTitle = 'PANEL 1: CHARGE';
+                            panelTitle = isSpecial ? 'PANEL 1: CHARGE' : 'PANEL 1: CONTACT';
                             panelContent = `
                                 <div class="relative w-full h-full flex items-center justify-center" style="background: ${actionBg}">
                                     <div class="absolute inset-0 bg-halftone opacity-45 pointer-events-none"></div>
@@ -2628,7 +2674,7 @@
                                 </div>
                             `;
                         } else if (index === 1) {
-                            panelTitle = 'PANEL 2: UNLEASH';
+                            panelTitle = isSpecial ? 'PANEL 2: UNLEASH' : 'PANEL 2: STRIKE';
                             panelContent = `
                                 <div class="relative w-full h-full flex items-center justify-center" style="background: ${actionBg}">
                                     <!-- Comic speed lines repeating gradient -->
@@ -2640,7 +2686,7 @@
                                 </div>
                             `;
                         } else if (index === 3 || (index > impactIndex && index < numPanels - 1)) {
-                            panelTitle = `PANEL ${index + 1}: BURST`;
+                            panelTitle = isSpecial ? `PANEL ${index + 1}: BURST` : `PANEL ${index + 1}: IMPACT`;
                             panelContent = `
                                 <div class="relative w-full h-full flex items-center justify-center" style="background: ${actionBg}">
                                     <div class="absolute inset-0 bg-halftone opacity-45 pointer-events-none"></div>
@@ -2652,7 +2698,7 @@
                                 </div>
                             `;
                         } else {
-                            panelTitle = `PANEL ${index + 1}: RESOLVE`;
+                            panelTitle = isSpecial ? `PANEL ${index + 1}: RESOLVE` : `PANEL ${index + 1}: FLOW`;
                             panelContent = `
                                 <div class="relative w-full h-full flex items-center justify-center flex-col" style="background: ${actionBg}">
                                     <div class="absolute inset-0 bg-halftone opacity-60 pointer-events-none"></div>
@@ -2698,7 +2744,7 @@
                                 if (popup && popup.parentElement) popup.remove();
                             }, 250);
                         }
-                    }, 850);
+                    }, panelTimeout);
 
                 }, index * 80);
             }
@@ -2725,9 +2771,7 @@
             const dmg = isSpecial
                 ? Math.floor(Math.random() * 14) + b.playerBaseDamage + 12
                 : Math.floor(Math.random() * 10) + b.playerBaseDamage;
-            if (isSpecial) {
-                triggerSpecialActionClips(b, attackName);
-            }
+            triggerSpecialActionClips(b, attackName, isSpecial);
             pCard.classList.add("battle-anim-attack-left");
             __resetBeam(beam);
             if (beam) {
