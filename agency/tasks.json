@@ -163,5 +163,16 @@
         "createdAt": "2026-06-16T20:24:00Z",
         "completedAt": "2026-06-16T20:31:41.602Z",
         "notes": "Completed after 0 fix retries. Trace recorded in traces/task_015.json."
+    },
+    {
+        "id": "task_016",
+        "title": "Arena Gameplay & Fractal Menu Optimization",
+        "description": "Optimize fractal Attack and Special move menus to prevent button overlap, and implement customized unique comic panel visuals for all regular and special attacks.",
+        "status": "completed",
+        "assignedTo": "gameplay_tactician",
+        "plan": "agency/plans/task_016.md",
+        "createdAt": "2026-06-19T21:35:19.498Z",
+        "completedAt": "2026-06-19T21:35:47.695Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_016.json."
     }
 ]
