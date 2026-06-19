@@ -185,5 +185,49 @@
         "createdAt": "2026-06-19T22:08:22.424Z",
         "completedAt": "2026-06-19T22:08:44.969Z",
         "notes": "Completed after 0 fix retries. Trace recorded in traces/task_017.json."
+    },
+    {
+        "id": "task_018",
+        "title": "Account & Multi-Profile Schema & Storage",
+        "description": "Implement multiple player profiles in localStorage, add a profile switching panel on the Dashboard, and extend GameState.ts to support accounts.",
+        "status": "completed",
+        "assignedTo": "orchestrator",
+        "plan": "agency/plans/task_018.md",
+        "createdAt": "2026-06-19T22:24:00Z",
+        "completedAt": "2026-06-19T22:29:12.185Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_018.json."
+    },
+    {
+        "id": "task_019",
+        "title": "Training Room Layout & Navigation",
+        "description": "Add desktop and mobile navigation tabs for the Training Room, and build the Training Room section interface layout in source.html.",
+        "status": "pending",
+        "assignedTo": "orchestrator",
+        "plan": "agency/plans/task_019.md",
+        "createdAt": "2026-06-19T22:24:00Z",
+        "completedAt": null,
+        "notes": ""
+    },
+    {
+        "id": "task_020",
+        "title": "AI Synthesis Loader & Procedural Move Synthesis",
+        "description": "Create the neural synthesis loading sequence, prompt parser, and canvas-based procedural visual generator. Store custom moves inside active player's panda collection.",
+        "status": "pending",
+        "assignedTo": "orchestrator",
+        "plan": "agency/plans/task_020.md",
+        "createdAt": "2026-06-19T22:24:00Z",
+        "completedAt": null,
+        "notes": ""
+    },
+    {
+        "id": "task_021",
+        "title": "Battle Arena Custom Moves & Upgrades Integration",
+        "description": "Integrate custom moves into the Battle Arena Moves menu, render custom visual popups during battle attacks, and add Neural Slot upgrade cards to the Upgrades shop.",
+        "status": "pending",
+        "assignedTo": "orchestrator",
+        "plan": "agency/plans/task_021.md",
+        "createdAt": "2026-06-19T22:24:00Z",
+        "completedAt": null,
+        "notes": ""
     }
 ]

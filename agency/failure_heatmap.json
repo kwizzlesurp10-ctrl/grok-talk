@@ -1,0 +1,10 @@
+{
+    "total_failures": 1,
+    "categories": {
+        "misalignment": 0,
+        "design": 0,
+        "verification": 1,
+        "coordination": 0
+    },
+    "task_failures": {}
+}

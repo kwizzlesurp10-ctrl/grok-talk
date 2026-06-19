@@ -3,6 +3,14 @@
  * Phase 1 of full TypeScript migration (v4.4.0 target)
  */
 
+export interface CustomMove {
+  name: string;
+  prompt: string;
+  isSpecial: boolean;
+  element: string;
+  seed: string;
+}
+
 export interface Panda {
   id: string;
   name: string;
@@ -11,6 +19,7 @@ export interface Panda {
   power: number;
   level: number;
   count: number;
+  customMoves?: CustomMove[];
 }
 
 export interface PlayerStats {
@@ -19,7 +28,9 @@ export interface PlayerStats {
   lifetimeXp: number;
   fusionsPerformed: number;
   fireFusions: number;
+  customMoveSlots?: number;
 }
+
 
 export interface GameState {
   pandas: Panda[];

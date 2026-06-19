@@ -79,16 +79,212 @@
         let selectedBeta = null;
         let currentFusionMode = 'basic'; // basic | advanced | ritual
 
-        function saveGameState() {
-            recalculateTotalPower();
-            localStorage.setItem('fusionPandaMaster', JSON.stringify({
-                ...gameState,
-                collection: userPandas,
-                recentFusions: gameState.recentFusions
+        // Profiles & Account State Management
+        let profilesState = {
+            active: 'Default',
+            list: ['Default'],
+            profiles: {
+                Default: null
+            }
+        };
+
+        function saveProfilesToLocalStorage() {
+            localStorage.setItem('fusionPandaProfiles', JSON.stringify({
+                active: profilesState.active,
+                list: profilesState.list,
+                profiles: profilesState.profiles
             }));
         }
 
+        function loadProfilesFromLocalStorage() {
+            const saved = localStorage.getItem('fusionPandaProfiles');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed && parsed.active && Array.isArray(parsed.list)) {
+                        profilesState.active = parsed.active;
+                        profilesState.list = parsed.list;
+                        profilesState.profiles = parsed.profiles || {};
+                    }
+                } catch (e) {
+                    console.error("Error loading profiles:", e);
+                }
+            }
+        }
+
+        function renderProfileSelector() {
+            const selectEl = document.getElementById('profile-select');
+            if (!selectEl) return;
+            selectEl.innerHTML = '';
+            profilesState.list.forEach(prof => {
+                const opt = document.createElement('option');
+                opt.value = prof;
+                opt.textContent = prof;
+                opt.className = 'bg-[#131620]';
+                if (prof === profilesState.active) {
+                    opt.selected = true;
+                }
+                selectEl.appendChild(opt);
+            });
+        }
+
+        function handleProfileSelectChange(e) {
+            const chosen = e.target.value;
+            if (chosen && chosen !== profilesState.active) {
+                recalculateTotalPower();
+                const currentProfileData = {
+                    ...gameState,
+                    collection: userPandas,
+                    recentFusions: gameState.recentFusions
+                };
+                profilesState.profiles[profilesState.active] = currentProfileData;
+                profilesState.active = chosen;
+                
+                let targetData = profilesState.profiles[chosen];
+                if (!targetData) {
+                    targetData = {
+                        level: 0,
+                        xp: 0,
+                        lifetimeEarnedXp: 0,
+                        saveSchemaVersion: 2,
+                        fireChallengeFusions: 0,
+                        fusions: 0,
+                        ritualFusionsCount: 0,
+                        collectionCount: 1,
+                        totalPower: 12,
+                        collection: [
+                            { ...basePandas[0], id: 'u1', level: 1, acquired: new Date().toISOString().split('T')[0] }
+                        ],
+                        recentFusions: [],
+                        ep: 500,
+                        upgrades: { efficiency: 0, stability: 0, training: 0, slots: 0 },
+                        boosters: { blazing: false, cryo: false, lightning: false },
+                        maxCustomMoveSlots: 1
+                    };
+                    profilesState.profiles[chosen] = targetData;
+                }
+                
+                localStorage.setItem('fusionPandaMaster', JSON.stringify(targetData));
+                saveProfilesToLocalStorage();
+                loadGameState();
+                showToast(`Switched to profile: ${chosen}`, 'success');
+            }
+        }
+
+        function handleNewProfileClick() {
+            const name = prompt("Enter new profile name:");
+            if (!name) return;
+            const trimmed = name.trim();
+            if (!trimmed) return;
+            if (profilesState.list.includes(trimmed)) {
+                showToast("Profile already exists!", "error");
+                return;
+            }
+            recalculateTotalPower();
+            const currentProfileData = {
+                ...gameState,
+                collection: userPandas,
+                recentFusions: gameState.recentFusions
+            };
+            profilesState.profiles[profilesState.active] = currentProfileData;
+            
+            profilesState.list.push(trimmed);
+            profilesState.active = trimmed;
+            
+            const defaultNewData = {
+                level: 0,
+                xp: 0,
+                lifetimeEarnedXp: 0,
+                saveSchemaVersion: 2,
+                fireChallengeFusions: 0,
+                fusions: 0,
+                ritualFusionsCount: 0,
+                collectionCount: 1,
+                totalPower: 12,
+                collection: [
+                    { ...basePandas[0], id: 'u1', level: 1, acquired: new Date().toISOString().split('T')[0] }
+                ],
+                recentFusions: [],
+                ep: 500,
+                upgrades: { efficiency: 0, stability: 0, training: 0, slots: 0 },
+                boosters: { blazing: false, cryo: false, lightning: false },
+                maxCustomMoveSlots: 1
+            };
+            profilesState.profiles[trimmed] = defaultNewData;
+            
+            localStorage.setItem('fusionPandaMaster', JSON.stringify(defaultNewData));
+            saveProfilesToLocalStorage();
+            loadGameState();
+            showToast(`Profile ${trimmed} created!`, "success");
+        }
+
+        function handleDeleteProfileClick() {
+            if (profilesState.active === 'Default') {
+                showToast("Cannot delete the Default profile!", "error");
+                return;
+            }
+            if (!confirm(`Are you sure you want to delete profile "${profilesState.active}"?`)) {
+                return;
+            }
+            const toDelete = profilesState.active;
+            const index = profilesState.list.indexOf(toDelete);
+            if (index > -1) {
+                profilesState.list.splice(index, 1);
+            }
+            delete profilesState.profiles[toDelete];
+            profilesState.active = 'Default';
+            
+            let defaultData = profilesState.profiles['Default'];
+            if (!defaultData) {
+                defaultData = {
+                    level: 0,
+                    xp: 0,
+                    lifetimeEarnedXp: 0,
+                    saveSchemaVersion: 2,
+                    fireChallengeFusions: 0,
+                    fusions: 0,
+                    ritualFusionsCount: 0,
+                    collectionCount: 1,
+                    totalPower: 12,
+                    collection: [
+                        { ...basePandas[0], id: 'u1', level: 1, acquired: new Date().toISOString().split('T')[0] }
+                    ],
+                    recentFusions: [],
+                    ep: 500,
+                    upgrades: { efficiency: 0, stability: 0, training: 0, slots: 0 },
+                    boosters: { blazing: false, cryo: false, lightning: false },
+                    maxCustomMoveSlots: 1
+                };
+                profilesState.profiles['Default'] = defaultData;
+            }
+            
+            localStorage.setItem('fusionPandaMaster', JSON.stringify(defaultData));
+            saveProfilesToLocalStorage();
+            loadGameState();
+            showToast(`Deleted profile ${toDelete}.`, "success");
+        }
+
+        function saveGameState() {
+            recalculateTotalPower();
+            const currentProfileData = {
+                ...gameState,
+                collection: userPandas,
+                recentFusions: gameState.recentFusions
+            };
+            profilesState.profiles[profilesState.active] = currentProfileData;
+            saveProfilesToLocalStorage();
+            localStorage.setItem('fusionPandaMaster', JSON.stringify(currentProfileData));
+        }
+
         function loadGameState() {
+            loadProfilesFromLocalStorage();
+            if (!profilesState.list.includes(profilesState.active)) {
+                profilesState.active = profilesState.list[0] || 'Default';
+            }
+            if (!profilesState.list.includes('Default')) {
+                profilesState.list.unshift('Default');
+            }
+            
             const saved = localStorage.getItem('fusionPandaMaster');
             if (saved) {
                 const parsed = JSON.parse(saved);
@@ -118,11 +314,15 @@
                     gameState.saveSchemaVersion = 2;
                 }
                 if (!gameState.upgrades) {
-                    gameState.upgrades = { efficiency: 0, stability: 0, training: 0 };
+                    gameState.upgrades = { efficiency: 0, stability: 0, training: 0, slots: 0 };
                 } else {
                     if (gameState.upgrades.efficiency === undefined) gameState.upgrades.efficiency = 0;
                     if (gameState.upgrades.stability === undefined) gameState.upgrades.stability = 0;
                     if (gameState.upgrades.training === undefined) gameState.upgrades.training = 0;
+                    if (gameState.upgrades.slots === undefined) gameState.upgrades.slots = 0;
+                }
+                if (gameState.maxCustomMoveSlots === undefined) {
+                    gameState.maxCustomMoveSlots = 1;
                 }
                 if (!gameState.boosters) {
                     gameState.boosters = { blazing: false, cryo: false, lightning: false };
@@ -130,10 +330,9 @@
                 if (typeof gameState.ep !== "number" || gameState.ep < 0) {
                     gameState.ep = 500;
                 }
-                // Migrate collection, set level default, restore static paths, and generate fusion art
                 userPandas.forEach(p => {
                     if (p.level === undefined) p.level = 1;
-                    
+                    if (!p.customMoves) p.customMoves = [];
                     const baseMatch = basePandas.find(bp => bp.name === p.name);
                     if (baseMatch) {
                         p.image = baseMatch.image;
@@ -144,16 +343,21 @@
                     }
                 });
                 recalculateTotalPower();
+                profilesState.profiles[profilesState.active] = {
+                    ...gameState,
+                    collection: userPandas,
+                    recentFusions: gameState.recentFusions
+                };
             } else {
                 gameState.recentFusions = [];
                 saveGameState();
             }
             
-            // Update UI
             updateDashboard();
             renderCollection();
             renderBasePandas();
             renderRecentFusions();
+            renderProfileSelector();
         }
 
         function bumpLifetimeEarnedXp(amount) {
