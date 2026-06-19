@@ -29,8 +29,7 @@ collection.addOrIncrement(result.newPanda);
 const filtered = collection.search({ element: 'Fire' });
 assert.ok(filtered.length >= 0, 'Search should not crash');
 
-console.log('[Core Tests] All smoke tests passed. (Full TS integration + Vitest in next phase)');
-process.exit(0);
+console.log('[Core Tests] Core smoke tests passed.');
 const { DailyChallenge } = require('../dist/core/DailyChallenge.js');
 
 const challenge = new DailyChallenge();
@@ -41,8 +40,7 @@ const reward = challenge.claimReward();
 assert.ok(reward.success, 'Claim should succeed');
 assert.strictEqual(reward.panda, 'Blaze Guardian');
 
-console.log('[Core Tests] All smoke tests passed. (Full TS integration + Vitest in next phase)');
-process.exit(0);
+console.log('[Core Tests] Daily challenge tests passed.');
 
 console.log("[Content Tests] Validating expanded panda roster...");
 
