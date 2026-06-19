@@ -201,33 +201,33 @@
         "id": "task_019",
         "title": "Training Room Layout & Navigation",
         "description": "Add desktop and mobile navigation tabs for the Training Room, and build the Training Room section interface layout in source.html.",
-        "status": "pending",
+        "status": "completed",
         "assignedTo": "orchestrator",
         "plan": "agency/plans/task_019.md",
         "createdAt": "2026-06-19T22:24:00Z",
-        "completedAt": null,
-        "notes": ""
+        "completedAt": "2026-06-19T22:35:41.456Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_019.json."
     },
     {
         "id": "task_020",
         "title": "AI Synthesis Loader & Procedural Move Synthesis",
         "description": "Create the neural synthesis loading sequence, prompt parser, and canvas-based procedural visual generator. Store custom moves inside active player's panda collection.",
-        "status": "pending",
+        "status": "completed",
         "assignedTo": "orchestrator",
         "plan": "agency/plans/task_020.md",
         "createdAt": "2026-06-19T22:24:00Z",
-        "completedAt": null,
-        "notes": ""
+        "completedAt": "2026-06-19T22:40:28.637Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_020.json."
     },
     {
         "id": "task_021",
         "title": "Battle Arena Custom Moves & Upgrades Integration",
         "description": "Integrate custom moves into the Battle Arena Moves menu, render custom visual popups during battle attacks, and add Neural Slot upgrade cards to the Upgrades shop.",
-        "status": "pending",
+        "status": "completed",
         "assignedTo": "orchestrator",
         "plan": "agency/plans/task_021.md",
         "createdAt": "2026-06-19T22:24:00Z",
-        "completedAt": null,
-        "notes": ""
+        "completedAt": "2026-06-19T22:40:36.522Z",
+        "notes": "Completed after 0 fix retries. Trace recorded in traces/task_021.json."
     }
 ]

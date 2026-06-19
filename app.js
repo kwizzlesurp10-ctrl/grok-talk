@@ -79,6 +79,11 @@
         let selectedBeta = null;
         let currentFusionMode = 'basic'; // basic | advanced | ritual
 
+        // Training Room State Management
+        let selectedTrainingPandaId = null;
+        let trainingCanvasLoopActive = false;
+        let activeCustomMovePreview = null;
+
         // Profiles & Account State Management
         let profilesState = {
             active: 'Default',
@@ -2249,6 +2254,7 @@
                 playerPower: championPower,
                 playerType: champion.type || "Balanced",
                 playerRarity: champion.rarity || "common",
+                playerCustomMoves: champion.customMoves || [],
                 enemyId: rival.id,
                 enemyName: rival.name,
                 enemySubtitle: rival.subtitle,
@@ -2318,6 +2324,23 @@
             const namePrefix = name.split(' ')[0] || "Panda";
             attacks[0] = `${namePrefix} ${attacks[0]}`;
             specials[0] = `${namePrefix} ${specials[0]}`;
+
+            // Override with custom moves if any exist!
+            if (champion && champion.customMoves && Array.isArray(champion.customMoves)) {
+                const customAttacks = champion.customMoves.filter(m => m.type === 'attack');
+                const customSpecials = champion.customMoves.filter(m => m.type === 'special');
+                
+                customAttacks.forEach((move, idx) => {
+                    if (idx < 2) {
+                        attacks[idx + 1] = move.name;
+                    }
+                });
+                customSpecials.forEach((move, idx) => {
+                    if (idx < 2) {
+                        specials[idx + 1] = move.name;
+                    }
+                });
+            }
             
             return { attacks, specials };
         }
@@ -2672,45 +2695,109 @@
             const stage = document.getElementById('battle-stage');
             if (!stage) return;
 
+            const customMove = (battle && battle.playerCustomMoves || []).find(m => m.name === attackName);
+            const promptText = customMove ? String(customMove.prompt || "").toLowerCase() : "";
+
+            // Trigger custom canvas overlay animation if it's a custom move!
+            if (customMove) {
+                const canvas = document.createElement('canvas');
+                canvas.id = 'battle-custom-canvas';
+                canvas.className = 'absolute inset-0 w-full h-full object-cover pointer-events-none rounded-3xl z-40';
+                canvas.width = stage.clientWidth || 600;
+                canvas.height = stage.clientHeight || 300;
+                stage.appendChild(canvas);
+                
+                const ctx = typeof canvas.getContext === 'function' ? canvas.getContext('2d') : null;
+                if (ctx) {
+                    const startTime = Date.now();
+                    const visuals = customMove.visuals || { speed: 1, size: 1, count: 30, shape: 'particle', element: battle.playerType };
+                    const color = getElementNeonColor(visuals.element);
+                    const count = visuals.count || 30;
+                    
+                    const tempParticles = [];
+                    for (let i = 0; i < count; i++) {
+                        tempParticles.push({
+                            x: canvas.width / 2,
+                            y: canvas.height / 2,
+                            vx: (Math.random() - 0.5) * 8 * visuals.speed,
+                            vy: (Math.random() - 0.5) * 8 * visuals.speed,
+                            radius: (Math.random() * 4 + 2) * visuals.size,
+                            alpha: 1.0,
+                            color: color,
+                            life: 1.0,
+                            decay: Math.random() * 0.04 + 0.02
+                        });
+                    }
+                    
+                    const scheduleFrame = typeof requestAnimationFrame === 'function' 
+                        ? requestAnimationFrame 
+                        : (fn) => setTimeout(fn, 16);
+                        
+                    function runBattleCanvasFrame() {
+                        if (!canvas.parentElement) return; 
+                        const elapsed = Date.now() - startTime;
+                        if (elapsed > 1500) {
+                            canvas.remove();
+                        } else {
+                            ctx.fillStyle = 'rgba(8, 8, 12, 0.25)';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            
+                            const oldPreview = activeCustomMovePreview;
+                            activeCustomMovePreview = {
+                                move: customMove,
+                                startTime: startTime,
+                                duration: 1500,
+                                particles: tempParticles
+                            };
+                            drawCustomMovePreviewFrame(ctx, canvas.width, canvas.height, elapsed);
+                            activeCustomMovePreview = oldPreview;
+                            
+                            scheduleFrame(runBattleCanvasFrame);
+                        }
+                    }
+                    scheduleFrame(runBattleCanvasFrame);
+                }
+            }
+
             function getComicActionText(type, stepIndex) {
                 const name = String(attackName || "").toLowerCase();
                 const t = String(type || "").toLowerCase();
                 
-                // Specific move keywords
-                if (name.includes('scald') || name.includes('vapor') || name.includes('steam')) {
+                // Specific move or prompt keywords
+                if (name.includes('scald') || name.includes('vapor') || name.includes('steam') || promptText.includes('scald') || promptText.includes('steam')) {
                     const words = ["HISS!", "BOIL!", "SCALD!", "STEAM!", "EVAPORATE!"];
                     return words[stepIndex] || "STEAM!";
-                } else if (name.includes('pressure') || name.includes('slam') || name.includes('heavy') || name.includes('bamboo') || name.includes('paw') || name.includes('kick')) {
+                } else if (name.includes('pressure') || name.includes('slam') || name.includes('heavy') || name.includes('bamboo') || name.includes('paw') || name.includes('kick') || promptText.includes('slam') || promptText.includes('smash') || promptText.includes('strike')) {
                     const words = ["CRASH!", "POW!", "WHACK!", "SLAM!", "SMASH!"];
                     return words[stepIndex] || "SLAM!";
-                } else if (name.includes('tsunami') || name.includes('tidal') || name.includes('wave') || name.includes('abyssal') || name.includes('aqua')) {
+                } else if (name.includes('tsunami') || name.includes('tidal') || name.includes('wave') || name.includes('abyssal') || name.includes('aqua') || promptText.includes('tsunami') || promptText.includes('wave') || promptText.includes('water')) {
                     const words = ["SPLASH!", "FLOOD!", "CRASH!", "SURGE!", "WAVE!"];
                     return words[stepIndex] || "WAVE!";
-                } else if (name.includes('pyro') || name.includes('fire') || name.includes('inferno') || name.includes('blaze') || name.includes('flame') || name.includes('ember') || name.includes('nova')) {
+                } else if (name.includes('pyro') || name.includes('fire') || name.includes('inferno') || name.includes('blaze') || name.includes('flame') || name.includes('ember') || name.includes('nova') || promptText.includes('fire') || promptText.includes('burn') || promptText.includes('flame') || promptText.includes('explode')) {
                     const words = ["BURN!", "FLAME!", "IGNITE!", "BOOM!", "SUPERNOVA!"];
                     return words[stepIndex] || "BURN!";
-                } else if (name.includes('volt') || name.includes('bolt') || name.includes('charge') || name.includes('thunder') || name.includes('lightning') || name.includes('tesla') || name.includes('spark') || name.includes('plasma')) {
+                } else if (name.includes('volt') || name.includes('bolt') || name.includes('charge') || name.includes('thunder') || name.includes('lightning') || name.includes('tesla') || name.includes('spark') || name.includes('plasma') || promptText.includes('electric') || promptText.includes('shock') || promptText.includes('lightning') || promptText.includes('thunder')) {
                     const words = ["ZZZAP!", "SHOCK!", "CRACKLE!", "BOLT!", "VOLT!"];
                     return words[stepIndex] || "SHOCK!";
-                } else if (name.includes('glacial') || name.includes('absolute') || name.includes('zero') || name.includes('freeze') || name.includes('frost') || name.includes('ice') || name.includes('cryo') || name.includes('icicle')) {
+                } else if (name.includes('glacial') || name.includes('absolute') || name.includes('zero') || name.includes('freeze') || name.includes('frost') || name.includes('ice') || name.includes('cryo') || name.includes('icicle') || promptText.includes('ice') || promptText.includes('frost') || promptText.includes('freeze') || promptText.includes('cold')) {
                     const words = ["FREEZE!", "SHATTER!", "CRACK!", "COLD!", "GLACIER!"];
                     return words[stepIndex] || "FREEZE!";
-                } else if (name.includes('shadow') || name.includes('dark') || name.includes('umbral') || name.includes('abyssal') || name.includes('void') || name.includes('nightmare')) {
+                } else if (name.includes('shadow') || name.includes('dark') || name.includes('umbral') || name.includes('abyssal') || name.includes('void') || name.includes('nightmare') || promptText.includes('void') || promptText.includes('darkness') || promptText.includes('shadow')) {
                     const words = ["VOID!", "CRUSH!", "OBLIVION!", "SHADOW!", "DARKNESS!"];
                     return words[stepIndex] || "VOID!";
-                } else if (name.includes('light') || name.includes('solar') || name.includes('sun') || name.includes('radiant') || name.includes('daybreak') || name.includes('corona') || name.includes('fortune')) {
+                } else if (name.includes('light') || name.includes('solar') || name.includes('sun') || name.includes('radiant') || name.includes('daybreak') || name.includes('corona') || name.includes('fortune') || promptText.includes('light') || promptText.includes('sun') || promptText.includes('beam')) {
                     const words = ["FLASH!", "BEAM!", "GLARE!", "LIGHT!", "DAYBREAK!"];
                     return words[stepIndex] || "FLASH!";
-                } else if (name.includes('storm') || name.includes('wind') || name.includes('cyclone') || name.includes('hurricane') || name.includes('breeze') || name.includes('tempest')) {
+                } else if (name.includes('storm') || name.includes('wind') || name.includes('cyclone') || name.includes('hurricane') || name.includes('breeze') || name.includes('tempest') || promptText.includes('wind') || promptText.includes('storm') || promptText.includes('cyclone')) {
                     const words = ["WHOOSH!", "BLOW!", "STRIKE!", "WIND!", "TEMPEST!"];
                     return words[stepIndex] || "WIND!";
-                } else if (name.includes('golem') || name.includes('earth') || name.includes('mountain') || name.includes('rock') || name.includes('quake') || name.includes('terra')) {
+                } else if (name.includes('golem') || name.includes('earth') || name.includes('mountain') || name.includes('rock') || name.includes('quake') || name.includes('terra') || promptText.includes('earth') || promptText.includes('rock') || promptText.includes('quake')) {
                     const words = ["CRUMBLE!", "QUAKE!", "SMASH!", "ROCK!", "SHAKE!"];
                     return words[stepIndex] || "QUAKE!";
-                } else if (name.includes('cosmic') || name.includes('celestial') || name.includes('astral') || name.includes('dimension') || name.includes('nebula') || name.includes('harmony') || name.includes('rift')) {
+                } else if (name.includes('cosmic') || name.includes('celestial') || name.includes('astral') || name.includes('dimension') || name.includes('nebula') || name.includes('harmony') || name.includes('rift') || promptText.includes('cosmic') || promptText.includes('space') || promptText.includes('rift')) {
                     const words = ["COSMIC!", "WARP!", "BEAM!", "RIFT!", "CELESTIAL!"];
                     return words[stepIndex] || "COSMIC!";
-                } else if (name.includes('crystal') || name.includes('prism') || name.includes('quartz')) {
+                } else if (name.includes('crystal') || name.includes('prism') || name.includes('quartz') || promptText.includes('crystal') || promptText.includes('prism') || promptText.includes('shard')) {
                     const words = ["REFRACT!", "SHARD!", "GLARE!", "SPARKLE!", "CRYSTAL!"];
                     return words[stepIndex] || "CRYSTAL!";
                 } else if (name.includes('arcane') || name.includes('mana') || name.includes('runic') || name.includes('mystic')) {
@@ -3923,6 +4010,35 @@
                 if (trainSub) trainSub.innerText = `Next: +5% Player damage in arena`;
             }
             
+            // 3.5. Neural Training Slots
+            const slotsLvl = (gameState.upgrades && gameState.upgrades.slots) || 0;
+            const slotsLvlEl = document.getElementById('upgrade-slots-level');
+            const slotsValEl = document.getElementById('upgrade-slots-value');
+            const slotsBarEl = document.getElementById('upgrade-slots-bar');
+            const slotsBtn = document.getElementById('upgrade-slots-btn');
+            const slotsSub = document.getElementById('upgrade-slots-sub');
+            
+            if (slotsLvlEl) slotsLvlEl.innerText = `LVL ${slotsLvl} / 4`;
+            if (slotsValEl) slotsValEl.innerText = `${slotsLvl + 1} Slot${slotsLvl + 1 > 1 ? 's' : ''}`;
+            if (slotsBarEl) slotsBarEl.style.width = `${(slotsLvl / 4) * 100}%`;
+            
+            if (slotsLvl >= 4) {
+                if (slotsBtn) {
+                    slotsBtn.innerText = 'MAX LEVEL';
+                    slotsBtn.disabled = true;
+                    slotsBtn.className = 'px-4 py-2 text-xs rounded-xl bg-gray-800 text-gray-500 font-medium w-full xs:w-auto cursor-not-allowed';
+                }
+                if (slotsSub) slotsSub.innerText = 'Neural pathways fully unlocked.';
+            } else {
+                const nextCost = 500 + slotsLvl * 250;
+                if (slotsBtn) {
+                    slotsBtn.innerText = `UPGRADE • ${nextCost} EP`;
+                    slotsBtn.disabled = gameState.ep < nextCost;
+                    slotsBtn.className = `px-4 py-2 text-xs rounded-xl font-medium w-full xs:w-auto ${gameState.ep >= nextCost ? 'bg-emerald-400 text-black hover:bg-emerald-300' : 'bg-emerald-400/10 text-emerald-400 opacity-60 cursor-not-allowed'}`;
+                }
+                if (slotsSub) slotsSub.innerText = `Next: +1 custom move slot per panda`;
+            }
+            
             // 4. Boosters
             const b = gameState.boosters || { blazing: false, cryo: false, lightning: false };
             
@@ -3968,7 +4084,10 @@
 
         function buyUpgrade(type) {
             if (!gameState.upgrades) {
-                gameState.upgrades = { efficiency: 0, stability: 0, training: 0 };
+                gameState.upgrades = { efficiency: 0, stability: 0, training: 0, slots: 0 };
+            }
+            if (gameState.upgrades.slots === undefined) {
+                gameState.upgrades.slots = 0;
             }
             const currentLvl = gameState.upgrades[type] || 0;
             let cost = 0;
@@ -3983,6 +4102,9 @@
             } else if (type === 'training') {
                 cost = 300 + currentLvl * 200;
                 maxLvl = 15;
+            } else if (type === 'slots') {
+                cost = 500 + currentLvl * 250;
+                maxLvl = 4;
             }
             
             if (currentLvl >= maxLvl) {
@@ -3998,11 +4120,16 @@
             gameState.ep -= cost;
             gameState.upgrades[type]++;
             
+            if (type === 'slots') {
+                gameState.maxCustomMoveSlots = 1 + gameState.upgrades.slots;
+            }
+            
             saveGameState();
             const upgradeNames = {
                 efficiency: 'Fusion Efficiency',
                 stability: 'Genetic Stability',
-                training: 'Battle Training'
+                training: 'Battle Training',
+                slots: 'Neural Slots'
             };
             const upgradeName = upgradeNames[type] || type;
             showToast(`Upgrade purchased successfully! ${upgradeName} is now level ${gameState.upgrades[type]}.`, "success");
@@ -4040,6 +4167,9 @@
         }
 
         function navigateTo(section) {
+            // Stop any running training canvas loop
+            trainingCanvasLoopActive = false;
+            
             // Hide all sections
             document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
             
@@ -4071,6 +4201,601 @@
             if (section === "codex") {
                 switchCodexTab("bestiary");
             }
+            if (section === 'training') {
+                renderTrainingPandaList();
+                if (!selectedTrainingPandaId && userPandas.length > 0) {
+                    selectPandaForTraining(userPandas[0].id);
+                } else if (selectedTrainingPandaId) {
+                    selectPandaForTraining(selectedTrainingPandaId);
+                }
+                startTrainingCanvasLoop();
+            }
+        }
+
+        // --- NEURAL TRAINING ROOM LOGIC ---
+
+        function renderTrainingPandaList() {
+            const listEl = document.getElementById('training-panda-list');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+            
+            if (userPandas.length === 0) {
+                listEl.innerHTML = `<div class="text-xs text-gray-500 text-center py-8">You have no pandas in your collection yet.</div>`;
+                return;
+            }
+            
+            userPandas.forEach(p => {
+                const card = document.createElement('div');
+                const isSelected = selectedTrainingPandaId === p.id;
+                card.className = `p-3 rounded-2xl border ${isSelected ? 'border-emerald-400 bg-emerald-500/10' : 'border-gray-800 bg-[#131620]/40'} hover:border-emerald-400/50 transition-all cursor-pointer flex items-center gap-3`;
+                card.onclick = () => selectPandaForTraining(p.id);
+                
+                const rarityColor = getRarityColor(p.rarity);
+                const customCount = (p.customMoves || []).length;
+                const maxSlots = 1 + (gameState.upgrades.slots || 0);
+                
+                card.innerHTML = `
+                    <div class="w-12 h-12 rounded-xl overflow-hidden border border-gray-700 bg-black flex-shrink-0 relative">
+                        <img src="${p.image || 'assets/pandas/classic_panda.jpg'}" class="w-full h-full object-cover" />
+                        ${customCount > 0 ? `<div class="absolute bottom-0.5 right-0.5 bg-emerald-500 text-black font-black text-[7px] px-1 rounded-sm">${customCount} Custom</div>` : ''}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="font-bold text-sm text-white truncate">${p.name}</div>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-[9px] px-1.5 py-0.5 rounded font-mono uppercase" style="color: ${rarityColor}; background: ${rarityColor}15">${p.rarity}</span>
+                            <span class="text-[9px] text-gray-400 font-mono">LVL ${p.level || 1}</span>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs font-mono text-emerald-400 font-bold">${p.power} PWR</div>
+                        <div class="text-[9px] text-gray-500 mt-1">${customCount}/${maxSlots} Slots</div>
+                    </div>
+                `;
+                
+                listEl.appendChild(card);
+            });
+        }
+        window.renderTrainingPandaList = renderTrainingPandaList;
+
+        function selectPandaForTraining(pandaId) {
+            selectedTrainingPandaId = pandaId;
+            renderTrainingPandaList();
+            
+            const panda = userPandas.find(p => p.id === pandaId);
+            const previewEl = document.getElementById('training-selected-panda-preview');
+            const slotsCountEl = document.getElementById('training-slots-count');
+            
+            if (!panda) {
+                if (previewEl) {
+                    previewEl.innerHTML = `<span>No champion selected. Pick a panda from the left to start training.</span>`;
+                }
+                if (slotsCountEl) {
+                    slotsCountEl.innerText = `0 / ${(1 + (gameState.upgrades.slots || 0))}`;
+                }
+                return;
+            }
+            
+            const customCount = (panda.customMoves || []).length;
+            const maxSlots = 1 + (gameState.upgrades.slots || 0);
+            
+            if (slotsCountEl) {
+                slotsCountEl.innerText = `${customCount} / ${maxSlots}`;
+            }
+            
+            const rarityColor = getRarityColor(panda.rarity);
+            
+            let movesHTML = '';
+            if (panda.customMoves && panda.customMoves.length > 0) {
+                movesHTML = `
+                    <div class="mt-3 border-t border-gray-800 pt-3 w-full">
+                        <div class="text-xs text-gray-400 font-mono mb-2">SYNTHESIZED CUSTOM MOVES</div>
+                        <div class="space-y-2">
+                            ${panda.customMoves.map((m, i) => `
+                                <div class="bg-black/40 border border-gray-800 rounded-xl p-2.5 flex items-start justify-between gap-3 text-xs">
+                                    <div class="min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-bold text-white font-mono">${m.name}</span>
+                                            <span class="text-[8px] px-1.5 py-0.2 rounded font-mono uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${m.type}</span>
+                                        </div>
+                                        <div class="text-[10px] text-gray-500 mt-1 italic truncate max-w-md">"${m.prompt}"</div>
+                                    </div>
+                                    <button onclick="deleteCustomMove('${panda.id}', '${m.id}')" class="text-red-400 hover:text-red-300 font-mono text-[9px] hover:underline flex-shrink-0"><i class="fas fa-trash-alt mr-1"></i>DELETE</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                movesHTML = `
+                    <div class="mt-3 border-t border-gray-800 pt-3 text-[11px] text-gray-500 italic">
+                        No custom moves synthesized yet. Enter a concept prompt below to train your first custom attack!
+                    </div>
+                `;
+            }
+            
+            if (previewEl) {
+                previewEl.className = "cyber-card bg-[#131620]/30 rounded-2xl border border-gray-800 p-4 flex flex-col gap-3 text-sm text-gray-300 w-full";
+                previewEl.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-16 h-16 rounded-2xl overflow-hidden border border-gray-700 bg-black flex-shrink-0">
+                            <img src="${panda.image || 'assets/pandas/classic_panda.jpg'}" class="w-full h-full object-cover" />
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="font-black text-lg text-white font-mono">${panda.name}</div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[10px] px-2 py-0.5 rounded font-mono uppercase" style="color: ${rarityColor}; background: ${rarityColor}15">${panda.rarity}</span>
+                                <span class="text-xs text-gray-400 font-mono">LVL ${panda.level || 1} · ${panda.type} Type</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm font-black text-emerald-400 font-mono">${panda.power} Power</div>
+                            <div class="text-xs text-gray-500 mt-1">Active Fighter</div>
+                        </div>
+                    </div>
+                    ${movesHTML}
+                `;
+            }
+            
+            const placeholderEl = document.getElementById('training-screen-placeholder');
+            if (placeholderEl) {
+                placeholderEl.innerHTML = `
+                    <div class="w-12 h-12 rounded-full border border-emerald-500/30 flex items-center justify-center text-emerald-400 bg-emerald-500/10 animate-pulse"><i class="fas fa-satellite-dish text-lg"></i></div>
+                    <div class="text-xs text-emerald-400 font-mono tracking-wider">NEURAL MONITOR LINKED TO ${panda.name.toUpperCase()}</div>
+                `;
+            }
+        }
+        window.selectPandaForTraining = selectPandaForTraining;
+
+        function deleteCustomMove(pandaId, moveId) {
+            if (!confirm("Are you sure you want to delete this custom move? This cannot be undone and will not refund EP.")) {
+                return;
+            }
+            const panda = userPandas.find(p => p.id === pandaId);
+            if (panda && panda.customMoves) {
+                panda.customMoves = panda.customMoves.filter(m => m.id !== moveId);
+                saveGameState();
+                selectPandaForTraining(pandaId);
+                showToast("Custom move deleted successfully.", "info");
+            }
+        }
+        window.deleteCustomMove = deleteCustomMove;
+
+        function initiateNeuralSynthesis() {
+            if (!selectedTrainingPandaId) {
+                showToast("Select a champion panda to train first!", "error");
+                return;
+            }
+            const panda = userPandas.find(p => p.id === selectedTrainingPandaId);
+            if (!panda) return;
+            
+            const moveNameEl = document.getElementById('training-move-name');
+            const movePromptEl = document.getElementById('training-move-prompt');
+            if (!moveNameEl || !movePromptEl) return;
+            
+            const moveName = moveNameEl.value.trim();
+            const movePrompt = movePromptEl.value.trim();
+            
+            if (!moveName) {
+                showToast("Please enter a name for your custom move!", "error");
+                return;
+            }
+            if (!movePrompt) {
+                showToast("Please write a concept prompt description!", "error");
+                return;
+            }
+            
+            const maxSlots = 1 + (gameState.upgrades.slots || 0);
+            if ((panda.customMoves || []).length >= maxSlots) {
+                showToast("No empty Neural Slots! Upgrade training slots in the Upgrades shop.", "error");
+                return;
+            }
+            
+            if (gameState.ep < 150) {
+                showToast("Insufficient Energy Points (EP)! Synthesis costs 150 EP.", "error");
+                return;
+            }
+            
+            let moveType = 'attack';
+            const radioEls = document.getElementsByName('training-move-type');
+            for (let r of radioEls) {
+                if (r.checked) {
+                    moveType = r.value;
+                    break;
+                }
+            }
+            
+            gameState.ep -= 150;
+            saveGameState();
+            updateDashboard();
+            
+            const synthBtn = document.getElementById('btn-synthesize-move');
+            if (synthBtn) synthBtn.disabled = true;
+            
+            const loader = document.getElementById('synthesis-loader');
+            const progress = document.getElementById('synthesis-progress');
+            const percent = document.getElementById('synthesis-percent');
+            const statusText = document.getElementById('synthesis-status-text');
+            const logsEl = document.getElementById('synthesis-logs');
+            
+            if (loader) loader.classList.remove('hidden');
+            if (progress) progress.style.width = '0%';
+            if (percent) percent.innerText = '0%';
+            if (statusText) statusText.innerText = 'Initializing...';
+            if (logsEl) logsEl.innerHTML = `<div class="text-emerald-500/60">> CONNECTED TO NEURAL SYNTHESIS HOST</div>`;
+            
+            const steps = [
+                { pct: 15, msg: "Parsing custom concept vector...", log: `> Vectorizing prompt: "${movePrompt.slice(0, 40)}${movePrompt.length > 40 ? '...' : ''}"` },
+                { pct: 40, msg: "Initializing latent noise grid...", log: `> Generator seed created. Mapping element types for ${panda.type.toUpperCase()}` },
+                { pct: 70, msg: "Synthesizing kinetic frames...", log: `> Stable Diffusion: computing visual frames. Applying element weights...` },
+                { pct: 90, msg: "Compiling holographic matrix...", log: `> Video Synthesizer: stitching motion layers. Encoding animation stream...` },
+                { pct: 100, msg: "Synthesis complete!", log: `> Synthesis complete. Custom move compiled successfully.` }
+            ];
+            
+            let currentStepIdx = 0;
+            
+            function runStep() {
+                if (currentStepIdx >= steps.length) {
+                    setTimeout(() => {
+                        if (loader) loader.classList.add('hidden');
+                        if (synthBtn) synthBtn.disabled = false;
+                        
+                        if (!panda.customMoves) panda.customMoves = [];
+                        const customMove = {
+                            id: 'move_' + Date.now(),
+                            name: moveName,
+                            prompt: movePrompt,
+                            type: moveType,
+                            isSpecial: moveType === 'special',
+                            element: panda.type,
+                            seed: String(Math.floor(Math.random() * 999999)),
+                            power: panda.power + 6,
+                            visuals: parsePromptForVisuals(movePrompt, panda.type)
+                        };
+                        panda.customMoves.push(customMove);
+                        saveGameState();
+                        
+                        moveNameEl.value = '';
+                        movePromptEl.value = '';
+                        
+                        selectPandaForTraining(panda.id);
+                        showToast(`Successfully synthesized custom move: "${moveName}"!`, "success");
+                        
+                        triggerCustomMoveCanvasPreview(customMove);
+                    }, 500);
+                    return;
+                }
+                
+                const step = steps[currentStepIdx];
+                if (statusText) statusText.innerText = step.msg;
+                if (progress) progress.style.width = `${step.pct}%`;
+                if (percent) percent.innerText = `${step.pct}%`;
+                
+                if (logsEl) {
+                    const line = document.createElement('div');
+                    line.className = 'text-emerald-400';
+                    line.innerText = step.log;
+                    logsEl.appendChild(line);
+                    logsEl.scrollTop = logsEl.scrollHeight;
+                }
+                
+                currentStepIdx++;
+                setTimeout(runStep, 600);
+            }
+            
+            setTimeout(runStep, 200);
+        }
+        window.initiateNeuralSynthesis = initiateNeuralSynthesis;
+
+        function parsePromptForVisuals(prompt, element) {
+            const text = String(prompt || "").toLowerCase();
+            
+            let speed = 1.0;
+            let size = 1.0;
+            let count = 30;
+            let shape = 'particle'; 
+            
+            if (text.includes('fast') || text.includes('speed') || text.includes('sonic') || text.includes('quick') || text.includes('flash') || text.includes('velocity') || text.includes('laser')) {
+                speed = 2.0;
+            }
+            if (text.includes('slow') || text.includes('heavy') || text.includes('delay') || text.includes('giant')) {
+                speed = 0.5;
+            }
+            
+            if (text.includes('massive') || text.includes('giant') || text.includes('huge') || text.includes('big') || text.includes('large') || text.includes('mega')) {
+                size = 2.0;
+            }
+            if (text.includes('tiny') || text.includes('small') || text.includes('micro') || text.includes('needle') || text.includes('shard')) {
+                size = 0.5;
+            }
+            
+            if (text.includes('many') || text.includes('swarm') || text.includes('shower') || text.includes('rain') || text.includes('storm') || text.includes('barrage') || text.includes('torrent')) {
+                count = 70;
+            }
+            if (text.includes('few') || text.includes('single') || text.includes('one') || text.includes('pulse')) {
+                count = 10;
+            }
+            
+            if (text.includes('slash') || text.includes('cut') || text.includes('blade') || text.includes('sword') || text.includes('beam') || text.includes('laser') || text.includes('strike')) {
+                shape = 'slash';
+            } else if (text.includes('wave') || text.includes('ripple') || text.includes('tsunami') || text.includes('tide') || text.includes('stream')) {
+                shape = 'wave';
+            } else if (text.includes('burst') || text.includes('explode') || text.includes('explosion') || text.includes('nova') || text.includes('eruption') || text.includes('shatter')) {
+                shape = 'burst';
+            } else if (text.includes('ring') || text.includes('circle') || text.includes('orb') || text.includes('sphere') || text.includes('vortex') || text.includes('black hole')) {
+                shape = 'ring';
+            }
+            
+            return { speed, size, count, shape, element };
+        }
+
+        function getElementNeonColor(element) {
+            const e = String(element || "").toLowerCase();
+            if (e.includes('fire') || e.includes('inferno') || e.includes('blaze')) return '#ff3b30'; 
+            if (e.includes('ice') || e.includes('frost') || e.includes('cryo')) return '#5ac8fa'; 
+            if (e.includes('electric') || e.includes('thunder') || e.includes('lightning') || e.includes('volt')) return '#ffcc00'; 
+            if (e.includes('dark') || e.includes('void') || e.includes('eclipse')) return '#af52de'; 
+            if (e.includes('light') || e.includes('solar') || e.includes('sun')) return '#ff9500'; 
+            if (e.includes('steam')) return '#e5e5ea'; 
+            if (e.includes('plasma')) return '#ff2d55'; 
+            if (e.includes('balanced') || e.includes('bamboo')) return '#34c759'; 
+            return '#007aff'; 
+        }
+
+        function drawIdleElementParticles(ctx, w, h, element, particles) {
+            const color = getElementNeonColor(element);
+            
+            if (particles.length < 25) {
+                while (particles.length < 25) {
+                    particles.push({
+                        x: Math.random() * w,
+                        y: Math.random() * h,
+                        vx: (Math.random() - 0.5) * 1.0,
+                        vy: (Math.random() - 0.5) * 1.0 - 0.4, 
+                        radius: Math.random() * 2 + 1,
+                        alpha: Math.random() * 0.5 + 0.3
+                    });
+                }
+            }
+            
+            ctx.strokeStyle = color + '08';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < w; i += 30) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, h);
+                ctx.stroke();
+            }
+            for (let j = 0; j < h; j += 30) {
+                ctx.beginPath();
+                ctx.moveTo(0, j);
+                ctx.lineTo(w, j);
+                ctx.stroke();
+            }
+            
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = color;
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                
+                if (p.y < 0 || p.x < 0 || p.x > w) {
+                    p.x = Math.random() * w;
+                    p.y = h + Math.random() * 10;
+                    p.alpha = Math.random() * 0.5 + 0.3;
+                }
+                
+                ctx.fillStyle = color + Math.floor(p.alpha * 255).toString(16).padStart(2, '0');
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.shadowBlur = 0;
+        }
+
+        let scanLineY = 0;
+        function drawGenericScanningLines(ctx, w, h) {
+            const color = '#10b981';
+            ctx.strokeStyle = color + '08';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < w; i += 20) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, h);
+                ctx.stroke();
+            }
+            for (let j = 0; j < h; j += 20) {
+                ctx.beginPath();
+                ctx.moveTo(0, j);
+                ctx.lineTo(w, j);
+                ctx.stroke();
+            }
+            
+            scanLineY = (scanLineY + 1.5) % h;
+            ctx.strokeStyle = color + '30';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, scanLineY);
+            ctx.lineTo(w, scanLineY);
+            ctx.stroke();
+        }
+
+        function drawCustomMovePreviewFrame(ctx, w, h, elapsed) {
+            if (!activeCustomMovePreview) return;
+            const move = activeCustomMovePreview.move;
+            const visuals = move.visuals;
+            const color = getElementNeonColor(visuals.element);
+            
+            if (visuals.shape === 'slash') {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 4 * visuals.size;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = color;
+                
+                const slashIndex = Math.floor(elapsed / 250);
+                for (let i = 0; i <= slashIndex && i < 8; i++) {
+                    const slashSeed = i * 43;
+                    const startX = (slashSeed % 3 === 0) ? 0 : w;
+                    const endX = (slashSeed % 3 === 0) ? w : 0;
+                    const startY = (slashSeed * 17) % h;
+                    const endY = (slashSeed * 37) % h;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY);
+                    ctx.lineTo(endX, endY);
+                    ctx.stroke();
+                }
+            } else if (visuals.shape === 'wave') {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3 * visuals.size;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = color;
+                
+                const waveCount = 3;
+                for (let wIdx = 0; wIdx < waveCount; wIdx++) {
+                    ctx.beginPath();
+                    for (let x = 0; x < w; x++) {
+                        const frequency = 0.015 * (wIdx + 1);
+                        const amplitude = 35 * visuals.size * Math.sin(elapsed * 0.005);
+                        const y = h / 2 + amplitude * Math.sin(x * frequency + elapsed * 0.01 * visuals.speed) + (wIdx - 1) * 20;
+                        if (x === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                }
+            } else if (visuals.shape === 'burst') {
+                ctx.strokeStyle = color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = color;
+                
+                const maxRadius = Math.max(w, h) * 0.8;
+                const progressRatio = (elapsed % 1000) / 1000;
+                const radius = progressRatio * maxRadius;
+                ctx.lineWidth = 4 * (1 - progressRatio);
+                ctx.beginPath();
+                ctx.arc(w / 2, h / 2, radius, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                activeCustomMovePreview.particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    ctx.fillStyle = color + Math.floor(p.alpha * 255).toString(16).padStart(2, '0');
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            } else if (visuals.shape === 'ring') {
+                ctx.strokeStyle = color;
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = color;
+                ctx.lineWidth = 4;
+                
+                const angle = (elapsed * 0.003 * visuals.speed);
+                ctx.beginPath();
+                ctx.arc(w / 2, h / 2, 60 * visuals.size, angle, angle + Math.PI * 1.5);
+                ctx.stroke();
+                
+                const orbits = 4;
+                for (let i = 0; i < orbits; i++) {
+                    const orbitAngle = angle + (i * Math.PI / 2);
+                    const ox = w / 2 + Math.cos(orbitAngle) * 80 * visuals.size;
+                    const oy = h / 2 + Math.sin(orbitAngle) * 80 * visuals.size;
+                    
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(ox, oy, 6 * visuals.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else {
+                ctx.fillStyle = color;
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = color;
+                
+                const pCount = visuals.count;
+                for (let i = 0; i < pCount; i++) {
+                    const pSeed = i * 29 + elapsed * 0.005 * visuals.speed;
+                    const r = (100 * (1 - (elapsed / 2000))) * Math.sin(i * 1.5);
+                    const px = w / 2 + Math.cos(pSeed) * r;
+                    const py = h / 2 + Math.sin(pSeed) * r;
+                    
+                    ctx.beginPath();
+                    ctx.arc(px, py, 3 * visuals.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            ctx.shadowBlur = 0;
+        }
+
+        function triggerCustomMoveCanvasPreview(move) {
+            activeCustomMovePreview = {
+                move: move,
+                startTime: Date.now(),
+                duration: 2000,
+                particles: []
+            };
+            
+            const visuals = move.visuals;
+            const count = visuals.count || 30;
+            const element = visuals.element || "Balanced";
+            const color = getElementNeonColor(element);
+            
+            for (let i = 0; i < count; i++) {
+                activeCustomMovePreview.particles.push({
+                    x: 200,
+                    y: 125,
+                    vx: (Math.random() - 0.5) * 8 * visuals.speed,
+                    vy: (Math.random() - 0.5) * 8 * visuals.speed,
+                    radius: (Math.random() * 4 + 2) * visuals.size,
+                    alpha: 1.0,
+                    color: color,
+                    life: 1.0,
+                    decay: Math.random() * 0.04 + 0.02
+                });
+            }
+        }
+
+        function startTrainingCanvasLoop() {
+            trainingCanvasLoopActive = true;
+            
+            const canvas = document.getElementById('training-preview-canvas');
+            if (!canvas || typeof canvas.getContext !== 'function') return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            
+            let idleParticles = [];
+            
+            const scheduleFrame = typeof requestAnimationFrame === 'function' 
+                ? requestAnimationFrame 
+                : (fn) => setTimeout(fn, 16);
+            
+            function frame() {
+                if (!trainingCanvasLoopActive) return;
+                
+                ctx.fillStyle = 'rgba(8, 8, 12, 0.25)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const panda = selectedTrainingPandaId ? userPandas.find(p => p.id === selectedTrainingPandaId) : null;
+                
+                if (activeCustomMovePreview) {
+                    const elapsed = Date.now() - activeCustomMovePreview.startTime;
+                    if (elapsed > activeCustomMovePreview.duration) {
+                        activeCustomMovePreview = null;
+                    } else {
+                        drawCustomMovePreviewFrame(ctx, canvas.width, canvas.height, elapsed);
+                        scheduleFrame(frame);
+                        return;
+                    }
+                }
+                
+                if (panda) {
+                    drawIdleElementParticles(ctx, canvas.width, canvas.height, panda.type, idleParticles);
+                } else {
+                    drawGenericScanningLines(ctx, canvas.width, canvas.height);
+                }
+                
+                scheduleFrame(frame);
+            }
+            
+            scheduleFrame(frame);
         }
 
         function showToast(message, type = "success") {

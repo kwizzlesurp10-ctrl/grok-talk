@@ -931,6 +931,97 @@ async function runTests() {
         assert.notEqual(popup1.style.left, popup2.style.left, "Popups from different moves should have unique positioning coordinates");
     }
 
+    // -------------------- TEST 20: Custom Move Synthesis & Slots Upgrade --------------------
+    {
+        const { read, write } = runAppWithGameState();
+        const buyUpgrade = read("buyUpgrade");
+        const getGameState = () => read("gameState");
+        const parsePromptForVisuals = read("parsePromptForVisuals");
+        
+        // Test 20.1: Prompt parser
+        const visuals1 = parsePromptForVisuals("Summon a fast slash beam", "Electric");
+        assert.equal(visuals1.speed, 2.0, "Speed keyword 'fast' should trigger 2.0 speed");
+        assert.equal(visuals1.shape, "slash", "Shape keyword 'slash' should map to 'slash'");
+        
+        const visuals2 = parsePromptForVisuals("massive burst explosion", "Fire");
+        assert.equal(visuals2.size, 2.0, "Size keyword 'massive' should trigger 2.0 size");
+        assert.equal(visuals2.shape, "burst", "Shape keyword 'explosion' should map to 'burst'");
+        
+        // Test 20.2: Upgrade Slots
+        const state1 = getGameState();
+        state1.ep = 1000;
+        state1.upgrades = { efficiency: 0, stability: 0, training: 0, slots: 0 };
+        
+        buyUpgrade("slots");
+        
+        const state2 = getGameState();
+        assert.equal(state2.upgrades.slots, 1, "Upgrading slots should increment level to 1");
+        assert.equal(state2.maxCustomMoveSlots, 2, "maxCustomMoveSlots should be 2 after slots upgrade level 1");
+        assert.equal(state2.ep, 500, "EP should be decremented by cost 500");
+    }
+
+    // -------------------- TEST 21: Battle Arena Custom Moves & Onomatopoeia --------------------
+    {
+        const { read, write, sandbox } = runAppWithGameState();
+        const __createBattleMatch = read("__createBattleMatch");
+        const simulateBattleAttack = read("simulateBattleAttack");
+        const getChampionMoves = read("getChampionMoves");
+        
+        const customMove = {
+            name: "Hellfire Meteor",
+            prompt: "Summon a massive fire storm explosion",
+            type: "special",
+            isSpecial: true,
+            element: "Fire",
+            seed: "12345",
+            visuals: { speed: 1.0, size: 2.0, count: 50, shape: "burst", element: "Fire" }
+        };
+        
+        const champ = {
+            name: "Inferno Spark",
+            power: 10,
+            level: 1,
+            type: "Fire",
+            rarity: "rare",
+            image: "assets/pandas/inferno_panda.jpg",
+            customMoves: [customMove]
+        };
+        
+        // Test 21.1: Custom move overrides default specials in getChampionMoves
+        const moves = getChampionMoves(champ);
+        assert.ok(moves.specials.includes("Hellfire Meteor"), "Custom moves should be included in special moves list");
+        
+        // Test 21.2: Battle simulation with custom move triggers comic panels and maps text
+        const battle = __createBattleMatch(champ, "void-howler");
+        battle.playerCur = 100;
+        battle.enemyCur = 100;
+        battle.playerBaseDamage = 10;
+        write("__activeBattle", battle);
+        
+        const originalSetTimeout = sandbox.setTimeout;
+        sandbox.setTimeout = (fn, delay) => { fn(); return 1; };
+        
+        const stage = sandbox.document.getElementById('battle-stage');
+        stage.children = [];
+        
+        simulateBattleAttack(null, true, "Hellfire Meteor");
+        
+        sandbox.setTimeout = originalSetTimeout;
+        
+        const popups = stage.children.filter(c => c.tag === 'div' && c.className.includes('special-clip-popup'));
+        assert.ok(popups.length >= 3, "Special custom move attack should spawn at least 3 comic panels");
+        
+        // Check custom onomatopoeia was checked
+        const hasFlameOnomatopoeia = popups.some(p => 
+            p.innerHTML.includes("BURN!") || 
+            p.innerHTML.includes("FLAME!") || 
+            p.innerHTML.includes("IGNITE!") || 
+            p.innerHTML.includes("BOOM!") || 
+            p.innerHTML.includes("SUPERNOVA!")
+        );
+        assert.ok(hasFlameOnomatopoeia, "Comic panels should map keywords from custom move concept prompt to appropriate fire-themed onomatopoeias");
+    }
+
     process.stdout.write("mechanics ok\n");
 }
 
