@@ -34,7 +34,7 @@ Version 2 introduces closed-loop feedback systems, multi-stage Critic review gat
 
 1. **Orchestration Layer**: Orchestrates state transitions, analyzes tasks for risk metrics, and handles agent escalation.
 2. **Memory & Context Layer**: Integrates persistent task backlogs (`tasks.json`), live runtime state tracking (`task_state.json`), and project-scoped Git repository checkpoints.
-3. **Execution Layer**: Specialized subagents (Architect, Developer, Tester) carrying out coding tasks.
+3. **Execution Layer**: Specialized subagents (Architect, Developer, Gameplay Tactician, Tester) carrying out coding and gameplay optimization tasks.
 4. **Review & Correction Layer**: Proactive Critics checking planning models and developer code diffs, and the Fixer agent restoring workspace integrity and generating patches on test regressions.
 5. **Observability & Governance Layer**: Logs transition traces (`traces/`), measures failure categories (Failure Heat Map), and writes global patterns (Evolutionary Memory Bank).
 
@@ -47,6 +47,7 @@ Version 2 introduces closed-loop feedback systems, multi-stage Critic review gat
 * **Plan Critic**: Gates design models. Reviews structure, safety guards, and stub definitions.
 * **Developer**: Codifies edits using diff-based modifications.
 * **Code Critic**: Inspects changesets for syntax correctness, reference matches, and DOM-safe guards.
+* **Gameplay Tactician**: Optimization specialist auditing and refining combat balancing, controls responsiveness, latency reduction, and visual aesthetics.
 * **Tester**: Verifies structural layout builds and executes assertion pipelines.
 * **Fixer**: Parses test/compilation errors, proposes repairs, rolls back bad code, and requests retries.
 
