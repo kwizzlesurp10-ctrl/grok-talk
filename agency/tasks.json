@@ -229,5 +229,16 @@
         "createdAt": "2026-06-19T22:24:00Z",
         "completedAt": "2026-06-19T22:40:36.522Z",
         "notes": "Completed after 0 fix retries. Trace recorded in traces/task_021.json."
+    },
+    {
+        "id": "task_022",
+        "title": "Next Level Upgrades & Training Room Improvements",
+        "description": "Implement Quantum Synthesis upgrade card, custom move loadouts/presets per champion, advanced multi-color prompt parsing, and target ring rhythm calibration minigames.",
+        "status": "pending",
+        "assignedTo": "orchestrator",
+        "plan": "agency/plans/task_022.md",
+        "createdAt": "2026-06-19T22:56:12.108Z",
+        "completedAt": null,
+        "notes": ""
     }
 ]
