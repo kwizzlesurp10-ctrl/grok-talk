@@ -8,7 +8,7 @@
     "dev": "npx -y serve -l 3000 .",
     "start": "npx -y serve -l 3000 .",
     "build:html": "node strip.cjs",
-    "build:ts": "tsc",
+    "build:ts": "tsc && node post-tsc.cjs",
     "build": "npm run build:ts && npm run build:html && npm test",
     "test": "node tests/build.test.cjs && node tests/reward-gate.test.cjs && node tests/game-core.test.cjs && node tests/mechanics.test.cjs", 
     "lint": "echo 'Vanilla JS - consider ESLint + TypeScript migration in next phase'",
