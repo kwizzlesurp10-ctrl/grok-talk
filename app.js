@@ -4315,8 +4315,16 @@
                         <div class="text-xs text-gray-400 font-mono mb-2">SYNTHESIZED CUSTOM MOVES</div>
                         <div class="space-y-2">
                             ${panda.customMoves.map((m, i) => `
-                                <div class="bg-black/40 border border-gray-800 rounded-xl p-2.5 flex items-start justify-between gap-3 text-xs">
-                                    <div class="min-w-0 font-mono">
+                                <div class="bg-black/40 border border-gray-800 rounded-xl p-2.5 flex items-start gap-3 text-xs w-full">
+                                    ${m.imageUrl ? `
+                                    <div class="w-16 h-12 rounded-lg overflow-hidden border border-gray-800 bg-[#08080c] flex-shrink-0 relative group">
+                                        <img src="${m.imageUrl}" class="w-full h-full object-cover opacity-80" onerror="this.style.display='none';" />
+                                        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onclick="triggerCustomMoveCanvasPreviewById('${panda.id}', '${m.id}')">
+                                            <i class="fas fa-play text-emerald-400 text-[10px]"></i>
+                                        </div>
+                                    </div>
+                                    ` : ''}
+                                    <div class="min-w-0 flex-1 font-mono">
                                         <div class="flex items-center gap-2 flex-wrap">
                                             <span class="font-bold text-white font-mono">${m.name}</span>
                                             <span class="text-[8px] px-1.5 py-0.5 rounded font-mono uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${m.type}</span>
@@ -4773,9 +4781,47 @@
             ctx.stroke();
         }
 
+        const moveImagesCache = {};
+
+        function getLoadedMoveImage(url) {
+            if (!url || typeof Image === 'undefined') return null;
+            if (moveImagesCache[url]) {
+                return moveImagesCache[url].loaded ? moveImagesCache[url].img : null;
+            }
+            try {
+                const img = new Image();
+                moveImagesCache[url] = { img, loaded: false };
+                img.onload = () => {
+                    moveImagesCache[url].loaded = true;
+                };
+                img.src = url;
+            } catch (e) {
+                console.warn("Failed to preload move image:", e);
+            }
+            return null;
+        }
+
         function drawCustomMovePreviewFrame(ctx, w, h, elapsed) {
             if (!activeCustomMovePreview) return;
             const move = activeCustomMovePreview.move;
+            
+            // Draw background image if available
+            if (move.imageUrl) {
+                const img = getLoadedMoveImage(move.imageUrl);
+                if (img) {
+                    ctx.save();
+                    const alpha = Math.min(1.0, elapsed / 500); // 500ms fade-in
+                    ctx.globalAlpha = alpha * 0.75; // 75% max opacity for holographic effect
+                    ctx.drawImage(img, 0, 0, w, h);
+                    ctx.restore();
+                } else {
+                    ctx.fillStyle = "rgba(16, 185, 129, 0.15)";
+                    ctx.font = "bold 10px monospace";
+                    ctx.textAlign = "center";
+                    ctx.fillText("DOWNLOADING LATENT SD FRAMES...", w / 2, h / 2 - 10);
+                }
+            }
+
             const visuals = move.visuals;
             const color = getElementNeonColor(visuals.element);
             

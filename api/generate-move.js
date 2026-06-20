@@ -77,6 +77,10 @@ function localHeuristicFallback(prompt, name, element, moveType) {
     ? Math.floor(Math.random() * 20) + 140
     : Math.floor(Math.random() * 15) + 110;
     
+  const moveSeed = Math.floor(Math.random() * 999999);
+  const promptSanitized = encodeURIComponent((prompt || "").replace(/[^a-zA-Z0-9 ]/g, ''));
+  const imageUrl = `https://image.pollinations.ai/p/neon_cyberpunk_battle_action_${promptSanitized}?width=400&height=250&nologo=true&seed=${moveSeed}`;
+
   return {
     name: finalName,
     description: `A synthesized ${element} move: "${prompt}"`,
@@ -84,6 +88,7 @@ function localHeuristicFallback(prompt, name, element, moveType) {
     onomatopoeia: chosenOnomatopoeia,
     visuals: { speed, size, count, shape },
     visualDescription: `A ${shape} of ${element.toLowerCase()} energy particles generated at speed ${speed} and scale ${size}.`,
+    imageUrl: imageUrl,
     generationModel: "local-heuristic-model"
   };
 }
@@ -182,6 +187,10 @@ You MUST return ONLY a raw JSON object matching this schema. Do not write markdo
       throw parseErr;
     }
 
+    const moveSeed = Math.floor(Math.random() * 999999);
+    const promptSanitized = encodeURIComponent((prompt || "").replace(/[^a-zA-Z0-9 ]/g, ''));
+    const imageUrl = `https://image.pollinations.ai/p/neon_cyberpunk_battle_action_${promptSanitized}?width=400&height=250&nologo=true&seed=${moveSeed}`;
+
     return res.status(200).json({
       name: parsedResult.name || name || "AI Striker",
       description: parsedResult.description || `AI generated move: ${prompt}`,
@@ -194,6 +203,7 @@ You MUST return ONLY a raw JSON object matching this schema. Do not write markdo
         shape: parsedResult.visuals?.shape || 'particle'
       },
       visualDescription: parsedResult.visualDescription || "A custom cyber-neon blast preview.",
+      imageUrl: imageUrl,
       generationModel: "gemini-1.5-flash"
     });
 

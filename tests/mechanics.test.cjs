@@ -1059,6 +1059,7 @@ async function runTests() {
         assert.equal(responseJson.visuals.shape, "wave", "Prompt keyword 'wave' should map to wave shape");
         assert.equal(responseJson.visuals.speed, 2.0, "Prompt keyword 'quick' should trigger speed 2.0");
         assert.equal(responseJson.onomatopoeia, "ZZZAP!", "Should choose appropriate Thunder onomatopoeia");
+        assert.ok(responseJson.imageUrl && responseJson.imageUrl.includes("pollinations.ai"), "API response should include a valid Pollinations AI image URL");
         
         // 22.2: Test Combat Damage Scaling & Onomatopoeia Selection in Battle
         const { read, write, sandbox } = runAppWithGameState();
