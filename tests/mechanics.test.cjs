@@ -1022,6 +1022,118 @@ async function runTests() {
         assert.ok(hasFlameOnomatopoeia, "Comic panels should map keywords from custom move concept prompt to appropriate fire-themed onomatopoeias");
     }
 
+    // -------------------- TEST 22: Vercel AI API Route & Combat Damage Scaling --------------------
+    {
+        // 22.1: Test API handler fallback generation
+        const generateMoveModule = await import("../api/generate-move.js");
+        const handler = generateMoveModule.default;
+        
+        let responseJson = null;
+        let responseStatus = null;
+        
+        const req = {
+            method: 'POST',
+            body: {
+                prompt: "A quick shocking thunder bolt wave",
+                name: "Thunder Strike",
+                element: "Thunder",
+                moveType: "attack"
+            }
+        };
+        
+        const res = {
+            status(code) {
+                responseStatus = code;
+                return this;
+            },
+            json(data) {
+                responseJson = data;
+                return this;
+            }
+        };
+        
+        await handler(req, res);
+        
+        assert.equal(responseStatus, 200, "API handler should return status 200");
+        assert.ok(responseJson, "API handler should return JSON data");
+        assert.equal(responseJson.visuals.shape, "wave", "Prompt keyword 'wave' should map to wave shape");
+        assert.equal(responseJson.visuals.speed, 2.0, "Prompt keyword 'quick' should trigger speed 2.0");
+        assert.equal(responseJson.onomatopoeia, "ZZZAP!", "Should choose appropriate Thunder onomatopoeia");
+        
+        // 22.2: Test Combat Damage Scaling & Onomatopoeia Selection in Battle
+        const { read, write, sandbox } = runAppWithGameState();
+        const __createBattleMatch = read("__createBattleMatch");
+        const simulateBattleAttack = read("simulateBattleAttack");
+        
+        const aiCustomMove = {
+            name: "Hyper Shockwave",
+            prompt: "A quick shocking thunder bolt wave",
+            type: "attack",
+            isSpecial: false,
+            element: "Thunder",
+            power: 150, // 1.5x power multiplier
+            visuals: { speed: 2.0, size: 1.0, count: 50, shape: "wave" },
+            onomatopoeia: "ZAP-CRACKLE!",
+            description: "A lightning speed shockwave that electrifies foes.",
+            aiGenerated: true,
+            generationModel: "local-heuristic-model"
+        };
+        
+        const champ = {
+            name: "Sparky Panda",
+            power: 10,
+            level: 1,
+            type: "Thunder",
+            rarity: "rare",
+            image: "assets/pandas/sparky.jpg",
+            customMoves: [aiCustomMove]
+        };
+        
+        const battle = __createBattleMatch(champ, "void-howler");
+        battle.playerCur = 100;
+        battle.enemyCur = 100;
+        battle.playerBaseDamage = 20; // base damage
+        write("__activeBattle", battle);
+        
+        const originalSetTimeout = sandbox.setTimeout;
+        sandbox.setTimeout = (fn, delay) => { fn(); return 1; };
+        
+        const logStub = sandbox.document.getElementById('battle-log');
+        logStub.children = [];
+        
+        // Run attack
+        await simulateBattleAttack(null, false, "Hyper Shockwave");
+        
+        // Restore setTimeout
+        sandbox.setTimeout = originalSetTimeout;
+        
+        // Check battle log to verify the damage was scaled and description was logged
+        const logLines = logStub.children.map(c => c.innerHTML || "");
+        const logText = logLines.join("\n");
+        const dmgMatch = logText.match(/(\d+)\s+DMG/);
+        assert.ok(dmgMatch, "Should log damage in battle log");
+        const dmgDealt = parseInt(dmgMatch[1], 10);
+        assert.ok(dmgDealt >= 30 && dmgDealt <= 43, `Damage should be scaled by 1.5x. Expected [30, 43], got ${dmgDealt}`);
+        assert.ok(logText.includes("⚡ \"A lightning speed shockwave that electrifies foes.\""), "Combat log should print AI-generated move description");
+        
+        // Verify custom onomatopoeia propagation in special action clips
+        const triggerSpecialActionClips = read("triggerSpecialActionClips");
+        const stage = sandbox.document.getElementById('battle-stage');
+        stage.children = [];
+        
+        const originalSetTimeout2 = sandbox.setTimeout;
+        sandbox.setTimeout = (fn, delay) => { fn(); return 1; };
+        
+        triggerSpecialActionClips(battle, "Hyper Shockwave", true);
+        
+        sandbox.setTimeout = originalSetTimeout2;
+        
+        const popups = stage.children.filter(c => c.tag === 'div' && c.className.includes('special-clip-popup'));
+        assert.ok(popups.length >= 3, "Should trigger comic panels");
+        const hasCustomOnom = popups.some(p => p.innerHTML.includes("ZAP!") || p.innerHTML.includes("CRACKLE!"));
+        assert.ok(hasCustomOnom, "Should parse and display AI custom onomatopoeias (ZAP! or CRACKLE!) in comic panels");
+    }
+
     process.stdout.write("mechanics ok\n");
 }
 

@@ -2763,6 +2763,17 @@
                 const name = String(attackName || "").toLowerCase();
                 const t = String(type || "").toLowerCase();
                 
+                // Use AI-generated onomatopoeia if available!
+                if (customMove && customMove.onomatopoeia) {
+                    if (typeof customMove.onomatopoeia === 'string') {
+                        const words = customMove.onomatopoeia.split(/[,\s!]+/).map(w => w.trim()).filter(w => w.length > 0);
+                        if (words.length > 0) {
+                            return words[stepIndex % words.length].toUpperCase() + "!";
+                        }
+                        return customMove.onomatopoeia.toUpperCase();
+                    }
+                }
+                
                 // Specific move or prompt keywords
                 if (name.includes('scald') || name.includes('vapor') || name.includes('steam') || promptText.includes('scald') || promptText.includes('steam')) {
                     const words = ["HISS!", "BOIL!", "SCALD!", "STEAM!", "EVAPORATE!"];
@@ -3059,9 +3070,16 @@
             const attackName = customMoveName || (isSpecial
                 ? "SPECIAL SURGE"
                 : "BASIC STRIKE");
-            const dmg = isSpecial
+            const customMove = (b.playerCustomMoves || []).find(m => m.name === attackName);
+            let baseDmg = isSpecial
                 ? Math.floor(Math.random() * 14) + b.playerBaseDamage + 12
                 : Math.floor(Math.random() * 10) + b.playerBaseDamage;
+            if (customMove) {
+                const powerFactor = (customMove.power || 100) / 100;
+                baseDmg = Math.floor(baseDmg * powerFactor);
+            }
+            const dmg = baseDmg;
+
             triggerSpecialActionClips(b, attackName, isSpecial);
             pCard.classList.add("battle-anim-attack-left");
             __resetBeam(beam);
@@ -3086,6 +3104,12 @@
                 isSpecial ? "text-fuchsia-300" : "text-emerald-300",
                 `${__escapeBattleText(b.playerName)} used <span class="font-bold">${attackName}</span> <span class="text-white/60">→</span> <span class="font-mono">${dmg} DMG</span>`,
             );
+            if (customMove && customMove.description) {
+                __appendBattleLogLine(
+                    "text-slate-400 font-mono text-[9px] pl-3",
+                    `⚡ "${customMove.description}"`
+                );
+            }
             await __battleWait(450);
             pCard.classList.remove("battle-anim-attack-left");
             eCard.classList.remove("battle-anim-shake");
@@ -4292,14 +4316,20 @@
                         <div class="space-y-2">
                             ${panda.customMoves.map((m, i) => `
                                 <div class="bg-black/40 border border-gray-800 rounded-xl p-2.5 flex items-start justify-between gap-3 text-xs">
-                                    <div class="min-w-0">
-                                        <div class="flex items-center gap-2">
+                                    <div class="min-w-0 font-mono">
+                                        <div class="flex items-center gap-2 flex-wrap">
                                             <span class="font-bold text-white font-mono">${m.name}</span>
-                                            <span class="text-[8px] px-1.5 py-0.2 rounded font-mono uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${m.type}</span>
+                                            <span class="text-[8px] px-1.5 py-0.5 rounded font-mono uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${m.type}</span>
+                                            <span class="text-[8px] px-1.5 py-0.5 rounded font-mono uppercase bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">${m.power} Power</span>
                                         </div>
-                                        <div class="text-[10px] text-gray-500 mt-1 italic truncate max-w-md">"${m.prompt}"</div>
+                                        <div class="text-[10px] text-gray-300 mt-1.5">${m.description || `Concept: "${m.prompt}"`}</div>
+                                        <div class="text-[9px] text-gray-500 mt-0.5">Prompt: "${m.prompt}"</div>
+                                        ${m.aiGenerated ? `<div class="text-[8px] text-emerald-400/80 mt-1 flex items-center gap-1 font-semibold"><i class="fas fa-microchip text-[7px]"></i> AI GEN (${m.generationModel}) · Sound: "${m.onomatopoeia}"</div>` : ''}
                                     </div>
-                                    <button onclick="deleteCustomMove('${panda.id}', '${m.id}')" class="text-red-400 hover:text-red-300 font-mono text-[9px] hover:underline flex-shrink-0"><i class="fas fa-trash-alt mr-1"></i>DELETE</button>
+                                    <div class="flex flex-col gap-1 items-end flex-shrink-0">
+                                        <button onclick="triggerCustomMoveCanvasPreviewById('${panda.id}', '${m.id}')" class="text-emerald-400 hover:text-emerald-300 font-mono text-[9px] hover:underline flex items-center gap-1"><i class="fas fa-play text-[7px]"></i>PREVIEW</button>
+                                        <button onclick="deleteCustomMove('${panda.id}', '${m.id}')" class="text-red-400 hover:text-red-300 font-mono text-[9px] hover:underline flex items-center gap-1"><i class="fas fa-trash-alt text-[7px]"></i>DELETE</button>
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
@@ -4422,6 +4452,34 @@
             if (percent) percent.innerText = '0%';
             if (statusText) statusText.innerText = 'Initializing...';
             if (logsEl) logsEl.innerHTML = `<div class="text-emerald-500/60">> CONNECTED TO NEURAL SYNTHESIS HOST</div>`;
+
+            // Trigger background Vercel AI API call
+            const apiPromise = fetch('/api/generate-move', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: movePrompt,
+                    name: moveName,
+                    element: panda.type,
+                    moveType: moveType
+                })
+            }).then(r => {
+                if (!r.ok) throw new Error(`API error: status ${r.status}`);
+                return r.json();
+            });
+
+            let apiResult = null;
+            let apiError = null;
+            let apiDone = false;
+
+            apiPromise.then(data => {
+                apiResult = data;
+                apiDone = true;
+            }).catch(err => {
+                console.error("Vercel AI Generation Error:", err);
+                apiError = err;
+                apiDone = true;
+            });
             
             const steps = [
                 { pct: 15, msg: "Parsing custom concept vector...", log: `> Vectorizing prompt: "${movePrompt.slice(0, 40)}${movePrompt.length > 40 ? '...' : ''}"` },
@@ -4434,34 +4492,17 @@
             let currentStepIdx = 0;
             
             function runStep() {
+                // If we reach index 3 (90%) but API call isn't done, wait for it
+                if (currentStepIdx === 3 && !apiDone) {
+                    if (statusText) statusText.innerText = "Receiving Vercel AI response...";
+                    if (progress) progress.style.width = '90%';
+                    if (percent) percent.innerText = '90%';
+                    setTimeout(runStep, 200);
+                    return;
+                }
+
                 if (currentStepIdx >= steps.length) {
-                    setTimeout(() => {
-                        if (loader) loader.classList.add('hidden');
-                        if (synthBtn) synthBtn.disabled = false;
-                        
-                        if (!panda.customMoves) panda.customMoves = [];
-                        const customMove = {
-                            id: 'move_' + Date.now(),
-                            name: moveName,
-                            prompt: movePrompt,
-                            type: moveType,
-                            isSpecial: moveType === 'special',
-                            element: panda.type,
-                            seed: String(Math.floor(Math.random() * 999999)),
-                            power: panda.power + 6,
-                            visuals: parsePromptForVisuals(movePrompt, panda.type)
-                        };
-                        panda.customMoves.push(customMove);
-                        saveGameState();
-                        
-                        moveNameEl.value = '';
-                        movePromptEl.value = '';
-                        
-                        selectPandaForTraining(panda.id);
-                        showToast(`Successfully synthesized custom move: "${moveName}"!`, "success");
-                        
-                        triggerCustomMoveCanvasPreview(customMove);
-                    }, 500);
+                    finalizeSynthesis();
                     return;
                 }
                 
@@ -4479,12 +4520,125 @@
                 }
                 
                 currentStepIdx++;
-                setTimeout(runStep, 600);
+                setTimeout(runStep, 500);
+            }
+
+            function finalizeSynthesis() {
+                if (loader) loader.classList.add('hidden');
+                if (synthBtn) synthBtn.disabled = false;
+                
+                let customMove;
+                if (apiResult && !apiError) {
+                    const modelName = apiResult.generationModel || "gemini-1.5-flash";
+                    customMove = {
+                        id: 'move_' + Date.now(),
+                        name: apiResult.name || moveName,
+                        prompt: movePrompt,
+                        type: moveType,
+                        isSpecial: moveType === 'special',
+                        element: apiResult.element || panda.type,
+                        seed: String(Math.floor(Math.random() * 999999)),
+                        power: Number(apiResult.power) || (panda.power + 6),
+                        visuals: {
+                            speed: Number(apiResult.visuals?.speed) || 1.2,
+                            size: Number(apiResult.visuals?.size) || 1.0,
+                            count: Number(apiResult.visuals?.count) || 35,
+                            shape: apiResult.visuals?.shape || 'particle',
+                            element: apiResult.element || panda.type
+                        },
+                        onomatopoeia: apiResult.onomatopoeia || "CRASH!",
+                        description: apiResult.description || `A custom move synthesized from concept: ${movePrompt}`,
+                        aiGenerated: true,
+                        generationModel: modelName,
+                        visualDescription: apiResult.visualDescription || `A ${apiResult.visuals?.shape || 'particle'} kinetic field.`
+                    };
+                    
+                    if (logsEl) {
+                        const line = document.createElement('div');
+                        line.className = 'text-emerald-300 font-bold';
+                        line.innerText = `> [Vercel AI Model]: Connection established with ${modelName}`;
+                        logsEl.appendChild(line);
+                        
+                        const line2 = document.createElement('div');
+                        line2.className = 'text-emerald-300';
+                        line2.innerText = `> [Stable Diffusion]: Generated visual preview schema: shape=${customMove.visuals.shape}, speed=${customMove.visuals.speed}`;
+                        logsEl.appendChild(line2);
+
+                        const line3 = document.createElement('div');
+                        line3.className = 'text-emerald-300';
+                        line3.innerText = `> [Video Generator]: Compiled concept description: "${customMove.visualDescription}"`;
+                        logsEl.appendChild(line3);
+                        
+                        const line4 = document.createElement('div');
+                        line4.className = 'text-cyan-400 font-bold';
+                        line4.innerText = `> [AI Combat Registry]: Onomatopoeia generated: "${customMove.onomatopoeia}"`;
+                        logsEl.appendChild(line4);
+                    }
+                } else {
+                    const localVisuals = parsePromptForVisuals(movePrompt, panda.type);
+                    const defaultOnomatopoeias = {
+                        Fire: "FWOOSH!", Water: "SPLASH!", Ice: "FREEZE!", Steam: "HISS!",
+                        Thunder: "ZZZAP!", Void: "VOID!", Light: "FLASH!", Wind: "WHOOSH!", Earth: "QUAKE!"
+                    };
+                    const fallbackOnomatopoeia = defaultOnomatopoeias[panda.type] || "SLAM!";
+                    
+                    customMove = {
+                        id: 'move_' + Date.now(),
+                        name: moveName,
+                        prompt: movePrompt,
+                        type: moveType,
+                        isSpecial: moveType === 'special',
+                        element: panda.type,
+                        seed: String(Math.floor(Math.random() * 999999)),
+                        power: panda.power + 6,
+                        visuals: localVisuals,
+                        onomatopoeia: fallbackOnomatopoeia,
+                        description: `A local-core custom move: ${movePrompt}`,
+                        aiGenerated: false,
+                        generationModel: "local-heuristic-model",
+                        visualDescription: `A local ${localVisuals.shape} visual projection.`
+                    };
+                    
+                    if (logsEl) {
+                        const line = document.createElement('div');
+                        line.className = 'text-amber-500/80 font-bold';
+                        line.innerText = `> [Vercel AI]: Model offline. Switched to local offline neural core.`;
+                        logsEl.appendChild(line);
+                        
+                        const line2 = document.createElement('div');
+                        line2.className = 'text-emerald-400';
+                        line2.innerText = `> [Local Generator]: Schema parsed: shape=${customMove.visuals.shape}, speed=${customMove.visuals.speed}`;
+                        logsEl.appendChild(line2);
+                    }
+                }
+                
+                if (!panda.customMoves) panda.customMoves = [];
+                panda.customMoves.push(customMove);
+                saveGameState();
+                
+                moveNameEl.value = '';
+                movePromptEl.value = '';
+                
+                selectPandaForTraining(panda.id);
+                showToast(`Successfully synthesized custom move: "${customMove.name}"!`, "success");
+                
+                triggerCustomMoveCanvasPreview(customMove);
             }
             
             setTimeout(runStep, 200);
         }
         window.initiateNeuralSynthesis = initiateNeuralSynthesis;
+
+        function triggerCustomMoveCanvasPreviewById(pandaId, moveId) {
+            const panda = userPandas.find(p => p.id === pandaId);
+            if (panda && panda.customMoves) {
+                const move = panda.customMoves.find(m => m.id === moveId);
+                if (move) {
+                    triggerCustomMoveCanvasPreview(move);
+                }
+            }
+        }
+        window.triggerCustomMoveCanvasPreviewById = triggerCustomMoveCanvasPreviewById;
 
         function parsePromptForVisuals(prompt, element) {
             const text = String(prompt || "").toLowerCase();
